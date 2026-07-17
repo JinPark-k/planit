@@ -1,0 +1,16 @@
+{
+  "name": "planit",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20.19.4"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter @planit/backend start:dev",
+    "dev:mobile:ios": "pnpm --filter @planit/mobile ios",
+    "dev:mobile:android": "pnpm --filter @planit/mobile android",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "batch:run": "pnpm --filter @planit/backend batch:run"
+  }
+}

@@ -1,0 +1,30 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# env
+.env
+.env.local
+apps/*/.env
+
+# backend (Nest)
+apps/backend/dist/
+
+# mobile - iOS
+apps/mobile/ios/Pods/
+apps/mobile/ios/build/
+apps/mobile/ios/*.xcworkspace/xcuserdata/
+apps/mobile/ios/DerivedData/
+
+# mobile - Android
+apps/mobile/android/.gradle/
+apps/mobile/android/app/build/
+apps/mobile/android/build/
+apps/mobile/android/local.properties
+apps/mobile/android/.cxx/
+apps/mobile/android/keystores/*.jks
+
+# misc
+*.log
+.DS_Store
+.vscode/

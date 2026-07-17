@@ -1,0 +1,39 @@
+name: TourAPI Batch Pipeline
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # TODO: 최종 스케줄 확정 (현재는 KST 다음날 03:00)
+  workflow_dispatch:
+    inputs:
+      region_code:
+        description: "수동 실행 시 단일 지역만 (SEOUL|BUSAN|JEJU). 비우면 전체 지역 실행"
+        required: false
+
+jobs:
+  run-batch:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        region: [SEOUL, BUSAN, JEJU]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # TODO: 구현 완료 후 아래로 교체
+      # - run: pnpm --filter @planit/backend batch:run -- ${{ matrix.region }}
+      - name: Run batch pipeline (placeholder)
+        run: echo "TODO: implement TourAPI batch pipeline for region ${{ matrix.region }}"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}

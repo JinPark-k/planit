@@ -1,0 +1,16 @@
+package com.planit.mobile.liveupdate
+
+import com.facebook.react.ReactPackage
+import com.facebook.react.bridge.NativeModule
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.uimanager.ViewManager
+
+class LiveUpdatePackage : ReactPackage {
+    override fun createNativeModules(
+        reactContext: ReactApplicationContext
+    ): List<NativeModule> = listOf(LiveUpdateModule(reactContext))
+
+    override fun createViewManagers(
+        reactContext: ReactApplicationContext
+    ): List<ViewManager<*, *>> = emptyList()
+}
