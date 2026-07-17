@@ -2,7 +2,11 @@ import { resolveTagsForKeywords } from '../keyword-tag';
 import { scoreAndSortPlaces } from '../scoring';
 import { clusterPlacesByDay } from '../clustering';
 import { getTravelTime } from '../travel-time';
-import { GenerateScheduleInput, ScheduleDay, ScheduleItem } from './schedule.types';
+import {
+  GenerateScheduleInput,
+  ScheduleDay,
+  ScheduleItem,
+} from './schedule.types';
 
 /**
  * 일정 생성 파이프라인. LLM 미사용, 규칙 기반.

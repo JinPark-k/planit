@@ -1,4 +1,7 @@
-import { haversineDistanceMeters, URBAN_DISTANCE_CORRECTION_FACTOR } from './haversine';
+import {
+  haversineDistanceMeters,
+  URBAN_DISTANCE_CORRECTION_FACTOR,
+} from './haversine';
 import { GeoPoint, TravelMode, TravelTimeResult } from './travel-time.types';
 
 // TODO: 실제 경로 데이터(카카오모빌리티/구글 Directions 등)로 교체 시 이 파일 내부만 수정한다.
@@ -19,7 +22,8 @@ export function getTravelTime(
   mode: TravelMode = 'CAR',
 ): TravelTimeResult {
   const straightLineDistance = haversineDistanceMeters(placeA, placeB);
-  const distanceMeters = straightLineDistance * URBAN_DISTANCE_CORRECTION_FACTOR;
+  const distanceMeters =
+    straightLineDistance * URBAN_DISTANCE_CORRECTION_FACTOR;
   const speedKmh = AVERAGE_SPEED_KMH[mode];
   const minutes = Math.ceil((distanceMeters / 1000 / speedKmh) * 60);
 

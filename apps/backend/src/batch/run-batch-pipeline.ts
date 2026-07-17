@@ -7,6 +7,8 @@ import { RegionCode } from './regions';
  *  2. 내부 Place 형태로 정제
  *  3. Supabase에 upsert (infra/supabase)
  */
-export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
-  throw new Error(`Not implemented: runBatchPipeline(${regionCode})`);
+export function runBatchPipeline(regionCode: RegionCode): Promise<void> {
+  return Promise.reject(
+    new Error(`Not implemented: runBatchPipeline(${regionCode})`),
+  );
 }
