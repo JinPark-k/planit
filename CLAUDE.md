@@ -45,3 +45,31 @@ LLM 미사용, 규칙 기반으로 구현 (비용 예측 가능성 때문에 확
 - 안드로이드: Live Updates (Android 16+ 표준 API, `Notification.ProgressStyle`) — 갤럭시 NowBar는 이 표준 API를 감지해 자동으로 확장 표시됨. 용도: 현재 일정 / 다음 일정을 잠금화면에 실시간 표시
 - iOS: Live Activities (ActivityKit) — 동일 용도
 - React Native 자체 지원 기능이 아니므로 각각 Kotlin / Swift 네이티브 모듈로 별도 구현
+
+# Notion 연동 (Task → Branch 워크플로)
+
+## 연동 정보
+- Notion Tasks DB("Tasks [UT]", Ultimate Tasks 템플릿 기준)와 연동되어 있습니다.
+- DB ID: 환경변수 `NOTION_DATABASE_ID`
+- 인증: 환경변수 `NOTION_API_KEY` (Bearer 토큰)
+- API 호출은 `curl`로 직접 수행하고, 응답은 `jq`로 필요한 필드만 추출해서 사용합니다 (MCP 서버 미사용).
+- **보안: `NOTION_API_KEY` 값은 절대 출력/로그하지 않습니다.** 항상 `Authorization: Bearer $NOTION_API_KEY`처럼 헤더에서만 참조하고, `curl -v` 등 헤더를 그대로 노출하는 옵션은 쓰지 않습니다. 이 값은 로컬 환경변수 / GitHub Actions Secrets에만 존재하며 코드·문서 어디에도 실제 값을 적지 않습니다.
+
+## Status 속성
+- 타입: `status`
+- 옵션: `To Do` / `Doing` / `Done`
+
+## 로컬 워크플로: 브랜치 생성
+1. 사용자가 "노션에서 '{태스크 이름}' 보고 브랜치 만들어 줘"라고 명령하면, Tasks DB에서 `Name`이 해당 문자열과 일치하는 태스크를 조회합니다.
+   - 정확히 일치하는 태스크가 하나면 그것을 사용합니다.
+   - 여러 개거나 하나도 없으면, 후보 목록(또는 검색 결과 없음)을 보여주고 사용자에게 확인을 요청합니다. 임의로 추측해서 진행하지 않습니다.
+2. 해당 태스크의 `Page ID`와 본문(요구사항)을 조회합니다.
+3. 로컬에서 브랜치를 생성합니다: `git checkout -b feature/notion-{page_id 전체}`
+   - Page ID는 축약하지 않습니다. 태스크 이름(한글 포함)은 브랜치명에 넣지 않고, 대신 커밋 메시지/PR 제목에 적어 가독성을 확보합니다.
+   - PR 머지 시 GitHub Action(`.github/workflows/notion-task-done.yml`)이 브랜치명에서 Page ID를 파싱해 Notion Status를 `Done`으로 변경합니다.
+4. 브랜치 생성 직후, 해당 태스크의 Notion `Status`를 `Doing`으로 업데이트합니다 (다음 실행 시 같은 태스크가 다시 잡히지 않도록).
+5. 노션 페이지 본문의 요구사항을 요약해서 보여주고, 사용자 확인을 받은 뒤에 실제 구현 코드를 작성합니다. 확인 없이 바로 전체 구현을 진행하지 않습니다.
+
+## 원격 워크플로: PR 머지 → Done 처리
+- `.github/workflows/notion-task-done.yml`이 `feature/notion-*` 브랜치의 PR이 머지되면 자동으로 해당 Notion 태스크 Status를 `Done`으로 변경합니다.
+- 필요한 GitHub Actions Secret: `NOTION_API_KEY`
