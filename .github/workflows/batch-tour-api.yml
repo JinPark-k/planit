@@ -32,7 +32,7 @@ jobs:
       # TODO: 구현 완료 후 아래로 교체
       # - run: pnpm --filter @planit/backend batch:run -- ${{ matrix.region }}
       - name: Run batch pipeline (placeholder)
-        run: echo "TODO: implement TourAPI batch pipeline for region ${{ matrix.region }}"
+        run: 'echo "TODO: implement TourAPI batch pipeline for region ${{ matrix.region }}"'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
