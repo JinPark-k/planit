@@ -46,6 +46,12 @@ LLM 미사용, 규칙 기반으로 구현 (비용 예측 가능성 때문에 확
 - iOS: Live Activities (ActivityKit) — 동일 용도
 - React Native 자체 지원 기능이 아니므로 각각 Kotlin / Swift 네이티브 모듈로 별도 구현
 
+# Git 워크플로
+
+- `main`에 직접 push하지 않습니다. 모든 변경은 브랜치를 만들고 PR을 거쳐 머지합니다.
+- Notion 태스크 기반 작업은 `feature/notion-{page_id}` 브랜치를 사용합니다 (아래 Notion 연동 워크플로 참고).
+- 그 외 작업은 `feature/{설명}` 또는 `fix/{설명}` 형태의 브랜치를 사용합니다.
+
 # Notion 연동 (Task → Branch 워크플로)
 
 ## 연동 정보
