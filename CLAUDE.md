@@ -52,6 +52,21 @@ LLM 미사용, 규칙 기반으로 구현 (비용 예측 가능성 때문에 확
 - Notion 태스크 기반 작업은 `feature/notion-{page_id}` 브랜치를 사용합니다 (아래 Notion 연동 워크플로 참고).
 - 그 외 작업은 `feature/{설명}` 또는 `fix/{설명}` 형태의 브랜치를 사용합니다.
 
+## 시크릿 관리
+
+- 비밀번호, API 키/토큰, `.env` 파일 등 민감 정보는 어떤 브랜치에도 커밋하지 않습니다. 코드/문서에는 값이 아니라 환경변수 이름(`$SUPABASE_SERVICE_ROLE_KEY`, `secrets.NOTION_API_KEY` 등)만 참조합니다.
+- 실제 값은 로컬 `.env`(git 추적 제외, `.env.example`만 커밋) 또는 GitHub Actions Secrets에만 둡니다.
+- `curl -v`처럼 요청 헤더를 그대로 출력하는 옵션 등, 터미널 출력에 토큰이 노출될 수 있는 명령은 쓰지 않습니다.
+- `git add` 전에는 `git status`/`git diff`로 스테이징 내용을 확인하고, 커밋 직전 의심스러운 파일(설정 파일, 키 이름이 들어간 파일 등)은 내용을 다시 확인합니다.
+- 실수로 시크릿이 커밋된 경우 즉시 알리고, 단순 삭제 커밋이 아니라 해당 값 자체를 폐기(rotate)하는 것을 우선 검토합니다 — 이미 push된 히스토리에는 값이 남아있기 때문입니다.
+
+### 자동 검사 (pre-commit hook)
+
+- `secretlint`가 husky `pre-commit` 훅으로 연결되어 있어(`.husky/pre-commit`), 스테이징된 파일에 알려진 시크릿 패턴(AWS/GCP/Notion/Supabase 등)이 있으면 커밋 자체가 차단됩니다.
+- 훅은 `pnpm install` 시(`prepare` 스크립트) 자동 설치되므로 별도 설정이 필요 없습니다.
+- 규칙 정의는 `.secretlintrc.json`. 전체 저장소를 수동으로 검사하려면 `pnpm run scan:secrets`.
+- **주의**: 이건 알려진 패턴 기반 탐지라 100% 탐지를 보장하지 않습니다. 위의 수동 체크리스트(값 대신 env 이름 참조, `curl -v` 금지 등)는 계속 지켜야 합니다.
+
 # Notion 연동 (Task → Branch 워크플로)
 
 - "노션에서 '{태스크 이름}' 보고 브랜치 만들어 줘" 같은 요청은 `.claude/skills/notion-task-branch/SKILL.md`를 따릅니다 (전체 절차·보안 규칙 포함).
