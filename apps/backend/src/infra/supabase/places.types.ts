@@ -24,9 +24,23 @@ export interface PlaceRow {
   tags: string[];
   popularity: number;
   rating: number;
+  /** 'YYYY-MM-DD'. 축제(contentTypeId=15)만 non-null. */
+  event_start_date: string | null;
+  event_end_date: string | null;
   created_at: string;
   last_synced_at: string;
 }
+
+/**
+ * places upsert 페이로드 셰이프.
+ * id/created_at은 DB가 채우고, popularity/rating은 의도적으로 제외한다.
+ * (PostgREST upsert는 페이로드에 있는 컬럼만 UPDATE하므로, 제외하면 후속 배치가 계산한
+ *  popularity/rating 값을 이 배치가 덮어쓰지 않는다.)
+ */
+export type PlaceInsert = Omit<
+  PlaceRow,
+  'id' | 'created_at' | 'popularity' | 'rating'
+>;
 
 /** `region_visitor_stats` 테이블 row 셰이프. */
 export interface RegionVisitorStatsRow {
