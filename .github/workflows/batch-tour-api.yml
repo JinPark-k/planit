@@ -13,6 +13,12 @@ jobs:
   run-batch:
     runs-on: ubuntu-latest
     strategy:
+      # 지역을 순차 실행한다. 병렬로 돌리면 3개 job이 apis.data.go.kr를 동시에 호출해
+      # connect timeout으로 실패한 적이 있다(2026-08-27 run 33067133732: SEOUL 실패).
+      max-parallel: 1
+      # 한 지역이 실패해도 나머지 지역은 계속 수집한다.
+      # (위 실패 때 fail-fast 기본값 때문에 JEJU가 통째로 취소됐다.)
+      fail-fast: false
       matrix:
         region: [SEOUL, BUSAN, JEJU]
     steps:
