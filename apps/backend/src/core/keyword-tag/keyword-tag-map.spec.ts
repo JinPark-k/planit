@@ -6,13 +6,13 @@ describe('resolveTagsForKeywords', () => {
   });
 
   it('여러 키워드의 태그가 겹치면 중복 없이 합쳐진다', () => {
-    // '바다'와 '데이트' 둘 다 '뷰맛집' 태그를 포함
-    expect(KEYWORD_TAG_MAP['바다']).toContain('뷰맛집');
-    expect(KEYWORD_TAG_MAP['데이트']).toContain('뷰맛집');
+    // '산'과 '자연' 둘 다 '자연' 태그를 포함
+    expect(KEYWORD_TAG_MAP['산']).toContain('자연');
+    expect(KEYWORD_TAG_MAP['자연']).toContain('자연');
 
-    const result = resolveTagsForKeywords(['바다', '데이트']);
-    const viewMatjipCount = result.filter((t) => t === '뷰맛집').length;
-    expect(viewMatjipCount).toBe(1);
+    const result = resolveTagsForKeywords(['산', '자연']);
+    const natureCount = result.filter((t) => t === '자연').length;
+    expect(natureCount).toBe(1);
   });
 
   it('매핑에 없는 키워드는 빈 배열로 취급하고 에러를 던지지 않는다', () => {
