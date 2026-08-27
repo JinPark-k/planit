@@ -12,6 +12,12 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "batch:run": "pnpm --filter @planit/backend batch:run",
+    "batch:run:prod": "pnpm --filter @planit/backend batch:run:prod",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:status": "supabase status",
+    "db:reset": "supabase db reset",
+    "db:push:prod": "supabase db push",
     "scan:secrets": "secretlint --secretlintrc .secretlintrc.json \"**/*\"",
     "prepare": "husky"
   },
