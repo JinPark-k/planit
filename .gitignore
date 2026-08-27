@@ -24,6 +24,10 @@ apps/mobile/android/local.properties
 apps/mobile/android/.cxx/
 apps/mobile/android/keystores/*.jks
 
+# supabase (CLI 로컬 상태/임시 파일)
+supabase/.temp/
+supabase/.branches/
+
 # misc
 *.log
 .DS_Store
