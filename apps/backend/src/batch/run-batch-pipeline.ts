@@ -12,7 +12,11 @@ import {
   TourApiFestivalItem,
   TourApiRawItem,
 } from '../infra/tour-api/tour-api.types';
-import { REGION_CODES, REGION_LDONG_CODES, RegionCode } from './regions';
+import {
+  REGION_CODES,
+  REGION_LDONG_CODES,
+  RegionCode,
+} from '../infra/tour-api/regions';
 import { transformPlaces } from './transform-place';
 
 /**

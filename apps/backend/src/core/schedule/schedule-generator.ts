@@ -26,6 +26,15 @@ const DEFAULT_VISIT_DURATION_MINUTES: Record<PlaceCategory, number> = {
 const DAY_START_TIME = '09:00';
 const LUNCH_WINDOW_EARLIEST = '12:00';
 const DINNER_WINDOW_EARLIEST = '18:00';
+/**
+ * 하루 일정 마감 시각. 이 시각 이후로는 새 장소를 배치하지 않는다.
+ *
+ * 상한이 없으면 그날 클러스터의 후보를 전부 밀어넣어 하루 465곳 같은 결과가 나오고,
+ * formatClock의 24시간 랩어라운드 때문에 시각이 23:07 -> 00:09로 되돌아가
+ * 형식만 멀쩡하고 의미는 없는 일정이 만들어진다(실데이터로 확인).
+ * 후보에 다 담지 못한 장소는 그냥 제외한다 — 하루에 소화 가능한 만큼만 추천한다.
+ */
+const DAY_END_TIME = '21:00';
 
 /**
  * 일정 생성 파이프라인. LLM 미사용, 규칙 기반.
@@ -117,12 +126,23 @@ function orderWithinDay(
     currentLocation = place.location;
   };
 
+  const dayEnd = parseClock(DAY_END_TIME);
+
+  /** 마감 시각 이후에는 새 장소를 시작하지 않는다. */
+  const canPlace = (place: Place): boolean => {
+    const travel = currentLocation
+      ? getTravelTime(currentLocation, place.location, travelMode).minutes
+      : 0;
+    return clock + travel <= dayEnd;
+  };
+
   const drainUntil = (clockLimit: number | null): void => {
     while (
       remaining.length > 0 &&
       (clockLimit === null || clock < clockLimit)
     ) {
       const next = nearestPlace(remaining, currentLocation);
+      if (!canPlace(next)) break;
       placeNext(next);
       remaining = remaining.filter((p) => p !== next);
     }
@@ -136,7 +156,7 @@ function orderWithinDay(
     if (clock < parseClock(LUNCH_WINDOW_EARLIEST)) {
       clock = parseClock(LUNCH_WINDOW_EARLIEST);
     }
-    placeNext(lunchPlace);
+    if (canPlace(lunchPlace)) placeNext(lunchPlace);
   }
 
   // 오후
@@ -147,10 +167,10 @@ function orderWithinDay(
     if (clock < parseClock(DINNER_WINDOW_EARLIEST)) {
       clock = parseClock(DINNER_WINDOW_EARLIEST);
     }
-    placeNext(dinnerPlace);
+    if (canPlace(dinnerPlace)) placeNext(dinnerPlace);
   }
 
-  // 저녁 이후 (상한 없이 소진) — TODO: 하루 최대 일정 수/마감 시각 제한 도입 검토
+  // 저녁 이후 ~ 마감 시각(DAY_END_TIME)까지. drainUntil이 canPlace로 마감을 지킨다.
   drainUntil(null);
 
   return items;

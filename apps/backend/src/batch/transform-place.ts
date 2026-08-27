@@ -7,7 +7,7 @@ import {
   TourApiFestivalItem,
   TourApiRawItem,
 } from '../infra/tour-api/tour-api.types';
-import { REGION_CODES, RegionCode } from './regions';
+import { REGION_CODES, RegionCode } from '../infra/tour-api/regions';
 
 /** 빈 문자열/공백만 있는 값은 DB에 null로 저장한다. */
 function nullable(value: unknown): string | null {
