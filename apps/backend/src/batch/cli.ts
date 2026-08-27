@@ -1,5 +1,5 @@
 import { runBatchPipeline } from './run-batch-pipeline';
-import { REGION_CODES, RegionCode } from './regions';
+import { REGION_CODES, RegionCode } from '../infra/tour-api/regions';
 
 const arg = process.argv[2] as RegionCode | undefined;
 

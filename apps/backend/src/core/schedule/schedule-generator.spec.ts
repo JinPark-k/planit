@@ -255,3 +255,74 @@ describe('generateSchedule dayStartOverrides', () => {
     expect(day2!.items[0].startTime).toBe('09:00');
   });
 });
+
+describe('하루 마감 시각(DAY_END_TIME)', () => {
+  // 실데이터(제주 930건)로 확인된 문제: 상한이 없으면 하루에 465곳이 들어가고
+  // formatClock의 24시간 랩어라운드로 23:07 -> 00:09처럼 시각이 되돌아갔다.
+  function manyPlaces(count: number): Place[] {
+    return Array.from({ length: count }, (_, i) =>
+      place(
+        `p${i}`,
+        'SIGHTSEEING',
+        // 서로 아주 가깝게 두어 이동시간이 아니라 마감 시각이 상한이 되게 한다
+        33.45 + i * 0.0005,
+        126.55 + i * 0.0005,
+        1 - i * 0.001,
+        1 - i * 0.001,
+      ),
+    );
+  }
+
+  it('후보가 아무리 많아도 21:00 이후에는 새 장소를 배치하지 않는다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: manyPlaces(200),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    expect(day.items.length).toBeGreaterThan(0);
+    for (const item of day.items) {
+      expect(minutesFromClock(item.startTime)).toBeLessThanOrEqual(
+        minutesFromClock('21:00'),
+      );
+    }
+  });
+
+  it('시각이 자정을 넘어 되돌아가지 않는다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: manyPlaces(200),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const minutes = day.items.map((i) => minutesFromClock(i.startTime));
+    for (let i = 1; i < minutes.length; i += 1) {
+      expect(minutes[i]).toBeGreaterThanOrEqual(minutes[i - 1]);
+    }
+  });
+
+  it('하루 일정 수가 현실적인 범위로 제한된다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: manyPlaces(200),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    // 09:00~21:00(12시간)에 관광 90분 + 이동시간이면 10곳을 넘기 어렵다.
+    expect(day.items.length).toBeLessThanOrEqual(12);
+  });
+
+  it('마감 시각을 넘기면 남은 후보는 그냥 제외한다 (에러 없이)', () => {
+    expect(() =>
+      generateSchedule({
+        keywords: [],
+        candidatePlaces: manyPlaces(500),
+        dayCount: 2,
+        travelMode: 'CAR',
+      }),
+    ).not.toThrow();
+  });
+});
