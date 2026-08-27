@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# 같은 PR에 연속 push하면 이전 실행을 취소해 CI 시간을 아낀다.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (lint / build / test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # 로컬 lint 스크립트는 --fix가 붙어 있어 자동 수정 후 통과해버린다.
+      # CI에서는 수정하지 않고 위반을 그대로 실패시켜야 하므로 eslint를 직접 호출한다.
+      - name: Lint
+        run: pnpm --filter @planit/backend exec eslint "{src,apps,libs,test}/**/*.ts"
+
+      - name: Build
+        run: pnpm --filter @planit/backend run build
+
+      - name: Test
+        run: pnpm --filter @planit/backend test
