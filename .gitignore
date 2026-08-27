@@ -3,9 +3,14 @@ node_modules/
 .pnpm-store/
 
 # env
+# .env.example만 커밋한다. 실제 값이 든 파일은 전부 무시.
+# (특히 .env.production에는 Supabase service_role 키가 들어가므로 반드시 제외)
 .env
-.env.local
+.env.*
+!.env.example
 apps/*/.env
+apps/*/.env.*
+!apps/*/.env.example
 
 # backend (Nest)
 apps/backend/dist/

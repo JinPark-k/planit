@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "batch:run": "DOTENV_CONFIG_PATH=../../.env ts-node -r dotenv/config src/batch/cli.ts"
+    "batch:run": "ts-node -r dotenv/config src/batch/cli.ts",
+    "batch:run:prod": "DOTENV_CONFIG_PATH=.env.production ts-node -r dotenv/config src/batch/cli.ts"
   },
   "dependencies": {
     "@codegenie/serverless-express": "^5.0.0",
