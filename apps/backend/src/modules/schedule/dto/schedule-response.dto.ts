@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ScheduleDay } from '../../../core';
-import { PlaceRow } from '../../../infra/supabase/places.types';
+import { PlaceListRow } from '../../../infra/supabase/places.types';
 import {
   PlaceResponseDto,
   toPlaceResponse,
@@ -35,7 +35,7 @@ export class ScheduleDayResponseDto {
  */
 export function toScheduleResponse(
   days: ScheduleDay[],
-  rowById: ReadonlyMap<string, PlaceRow>,
+  rowById: ReadonlyMap<string, PlaceListRow>,
 ): ScheduleDayResponseDto[] {
   return days.map((day) => ({
     day: day.day,

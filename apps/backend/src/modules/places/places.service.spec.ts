@@ -19,13 +19,20 @@ function fakeSupabase(pages: PlaceRow[][], error?: { message: string }) {
   let pageIndex = 0;
 
   const builder = {
-    select: () => builder,
+    select: (columns: string) => {
+      filters['select'] = columns;
+      return builder;
+    },
     eq: (col: string, val: unknown) => {
       filters[`eq:${col}`] = val;
       return builder;
     },
     not: (col: string, op: string, val: unknown) => {
       filters[`not:${col}`] = `${op}:${String(val)}`;
+      return builder;
+    },
+    overlaps: (col: string, val: unknown) => {
+      filters[`overlaps:${col}`] = val;
       return builder;
     },
     order: (col: string) => {
@@ -140,15 +147,68 @@ describe('PlacesService.findRowsByRegion', () => {
     ).rejects.toThrow(/findRowsByRegion\(JEJU\) failed: permission denied/);
   });
 
+  it('raw_response 같은 미사용 컬럼은 조회하지 않는다', async () => {
+    // select('*')을 쓰면 raw_response(jsonb)까지 딸려온다.
+    // 제주 930건 기준 전송량 966kB 중 657kB(68%)가 raw_response이고 런타임에 아무도 안 읽는다.
+    const { client, filters } = fakeSupabase([makeRows(1)]);
+    await new PlacesService(client).findRowsByRegion('JEJU');
+    const selected = String(filters['select']);
+    expect(selected).not.toBe('*');
+    expect(selected).not.toContain('raw_response');
+    expect(selected).not.toContain('overview');
+    // 화면/스코어링에 필요한 컬럼은 반드시 있어야 한다.
+    for (const column of [
+      'content_id',
+      'name',
+      'lat',
+      'lng',
+      'tags',
+      'addr1',
+      'image_url',
+    ]) {
+      expect(selected).toContain(column);
+    }
+  });
+
+  it('category 필터를 주면 DB 쿼리에 건다', async () => {
+    const { client, filters } = fakeSupabase([makeRows(1)]);
+    await new PlacesService(client).findRowsByRegion('JEJU', {
+      category: 'FOOD',
+    });
+    expect(filters['eq:category']).toBe('FOOD');
+  });
+
+  it('anyTags를 주면 태그가 하나라도 겹치는 행만 조회한다', async () => {
+    // 앱에서 걸러내면 안 쓸 행까지 전부 받아와야 한다(제주 문화예술 930건 -> 62건).
+    const { client, filters } = fakeSupabase([makeRows(1)]);
+    await new PlacesService(client).findRowsByRegion('JEJU', {
+      anyTags: ['문화', '전시', '공연'],
+    });
+    expect(filters['overlaps:tags']).toEqual(['문화', '전시', '공연']);
+  });
+
+  it('anyTags가 비어 있으면 태그 필터를 걸지 않는다', async () => {
+    // 키워드 없는 조회까지 0건이 되면 안 된다.
+    const { client, filters } = fakeSupabase([makeRows(1)]);
+    await new PlacesService(client).findRowsByRegion('JEJU', { anyTags: [] });
+    expect(filters['overlaps:tags']).toBeUndefined();
+  });
+
+  it('필터를 안 주면 지역/카테고리NULL 조건만 건다', async () => {
+    const { client, filters } = fakeSupabase([makeRows(1)]);
+    await new PlacesService(client).findRowsByRegion('JEJU');
+    expect(filters['eq:category']).toBeUndefined();
+    expect(filters['overlaps:tags']).toBeUndefined();
+  });
+
   it('row를 변환하지 않고 그대로 반환한다', async () => {
     // 이 서비스는 조회까지만 책임진다. 계산용(toPlace)/표현용(toPlaceResponse) 변환은
     // 호출하는 서비스가 정하므로, 표시 필드가 살아 있는 채로 넘어와야 한다.
     const { client } = fakeSupabase([makeRows(1)]);
     const [row] = await new PlacesService(client).findRowsByRegion('SEOUL');
     expect(row.content_id).toBe('0');
-    expect(row.region_code).toBe('1');
-    expect(row.raw_response).toBeNull();
-    expect(row.last_synced_at).toBe('2026-08-27T00:00:00Z');
+    expect(row.tags).toEqual(['자연']);
+    expect(row.popularity).toBe(0);
   });
 
   it('알 수 없는 지역 코드는 500이 아니라 400으로 나간다', async () => {

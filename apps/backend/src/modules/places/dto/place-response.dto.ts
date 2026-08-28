@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { PlaceCategory } from '../../../core';
-import type { PlaceRow } from '../../../infra/supabase/places.types';
+import type { PlaceListRow } from '../../../infra/supabase/places.types';
 
 export class GeoPointDto {
   @ApiProperty({ example: 33.2489 })
@@ -49,7 +49,7 @@ function optional(value: string | null | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-export function toPlaceResponse(row: PlaceRow): PlaceResponseDto {
+export function toPlaceResponse(row: PlaceListRow): PlaceResponseDto {
   const address = [optional(row.addr1), optional(row.addr2)]
     .filter(Boolean)
     .join(' ');

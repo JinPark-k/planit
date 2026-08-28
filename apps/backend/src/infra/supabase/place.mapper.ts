@@ -1,5 +1,5 @@
 import { Place, PlaceCategory } from '../../core/schedule/schedule.types';
-import { PlaceRow } from './places.types';
+import { PlaceListRow } from './places.types';
 
 /**
  * places 테이블 row -> 도메인 Place.
@@ -9,7 +9,7 @@ import { PlaceRow } from './places.types';
  * (core가 특정 데이터 소스의 필드에 물들지 않게 하기 위함).
  * 화면에 그 값들이 필요해지면 core의 Place가 아니라 응답 DTO를 따로 만들어 붙인다.
  */
-export function toPlace(row: PlaceRow): Place {
+export function toPlace(row: PlaceListRow): Place {
   return {
     id: row.content_id,
     name: row.name,

@@ -2,7 +2,9 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PlacesService } from './places.service';
 import { PlacesQueryDto } from './dto/places-query.dto';
-import { PlaceResponseDto, toPlaceResponse } from './dto/place-response.dto';
+import { PagedPlacesDto } from './dto/paged-places.dto';
+import { paginate } from './dto/pagination.dto';
+import { toPlaceResponse } from './dto/place-response.dto';
 
 @ApiTags('places')
 @Controller('places')
@@ -13,13 +15,13 @@ export class PlacesController {
   @ApiOperation({
     summary: '지역별 장소 목록',
     description:
-      '해당 지역의 장소를 전부 반환한다. TODO: 개수 제한/페이지네이션/카테고리 필터는 "추천 장소 노출 API" 작업에서 붙인다.',
+      '지역 내 장소를 content_id 순으로 반환한다. 키워드 스코어링은 하지 않는다(그건 POST /recommend).',
   })
-  @ApiOkResponse({ type: [PlaceResponseDto] })
-  async findByRegion(
-    @Query() query: PlacesQueryDto,
-  ): Promise<PlaceResponseDto[]> {
-    const rows = await this.placesService.findRowsByRegion(query.regionCode);
-    return rows.map(toPlaceResponse);
+  @ApiOkResponse({ type: PagedPlacesDto })
+  async findByRegion(@Query() query: PlacesQueryDto): Promise<PagedPlacesDto> {
+    const rows = await this.placesService.findRowsByRegion(query.regionCode, {
+      category: query.category,
+    });
+    return paginate(rows.map(toPlaceResponse), query.limit, query.offset);
   }
 }
