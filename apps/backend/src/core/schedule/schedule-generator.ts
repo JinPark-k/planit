@@ -101,10 +101,16 @@ function orderWithinDay(
     return [];
   }
 
+  // FOOD는 점심/저녁 앵커로만 쓰고 일반 후보 풀에는 넣지 않는다.
+  //
+  // 예전엔 앵커로 뽑고 남은 음식점(food.slice(2))이 일반 풀에 합류했는데,
+  // 제주는 후보의 53%가 음식점이고 식당이 밀집해 있어서 최근접 탐색이 계속 식당을 집었다.
+  // 그 결과 키워드가 '문화예술'이어도 하루 9곳 중 7곳이 음식점이 됐다(실데이터 확인).
+  // 하루에 끼니는 두 번이면 충분하므로, 나머지 시간대는 관광/액티비티에서만 고른다.
   const food = places.filter((p) => p.category === 'FOOD');
   const lunchPlace = food[0];
   const dinnerPlace = food[1];
-  let remaining = places.filter((p) => p !== lunchPlace && p !== dinnerPlace);
+  let remaining = places.filter((p) => p.category !== 'FOOD');
 
   let clock = parseClock(startOverride?.time ?? DAY_START_TIME);
   let currentLocation: GeoPoint | null = startOverride?.location ?? null;

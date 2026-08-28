@@ -326,3 +326,85 @@ describe('하루 마감 시각(DAY_END_TIME)', () => {
     ).not.toThrow();
   });
 });
+
+describe('카테고리 균형 (FOOD는 끼니 슬롯에만)', () => {
+  // 실데이터 문제: 제주 후보의 53%가 음식점이라, 앵커로 안 뽑힌 음식점이
+  // 일반 풀에 섞이면 최근접 탐색이 계속 식당을 집어 하루 9곳 중 7곳이 음식점이 됐다.
+  function foodHeavyPlaces(foodCount: number, sightCount: number): Place[] {
+    const foods = Array.from({ length: foodCount }, (_, i) =>
+      // 식당끼리 아주 가깝게 배치 = 최근접 탐색이 식당을 선호하게 되는 실제 상황 재현
+      place(
+        `food${i}`,
+        'FOOD',
+        33.25 + i * 0.0002,
+        126.41 + i * 0.0002,
+        0.9,
+        0.9,
+      ),
+    );
+    const sights = Array.from({ length: sightCount }, (_, i) =>
+      place(
+        `sight${i}`,
+        'SIGHTSEEING',
+        33.3 + i * 0.01,
+        126.5 + i * 0.01,
+        0.5,
+        0.5,
+      ),
+    );
+    return [...foods, ...sights];
+  }
+
+  it('음식점이 아무리 많아도 하루 FOOD는 2곳(점심/저녁)을 넘지 않는다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: foodHeavyPlaces(50, 10),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const foodCount = day.items.filter(
+      (i) => i.place.category === 'FOOD',
+    ).length;
+    expect(foodCount).toBeLessThanOrEqual(2);
+  });
+
+  it('끼니 외 시간대는 관광/액티비티로 채운다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: foodHeavyPlaces(50, 10),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const nonFood = day.items.filter((i) => i.place.category !== 'FOOD');
+    expect(nonFood.length).toBeGreaterThan(0);
+  });
+
+  it('음식점이 1곳뿐이면 점심만 배치하고 나머지는 관광으로 채운다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: foodHeavyPlaces(1, 5),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const foods = day.items.filter((i) => i.place.category === 'FOOD');
+    expect(foods).toHaveLength(1);
+    expect(minutesFromClock(foods[0].startTime)).toBeGreaterThanOrEqual(
+      minutesFromClock('12:00'),
+    );
+  });
+
+  it('음식점이 없어도 관광 일정이 정상 생성된다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: foodHeavyPlaces(0, 5),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    expect(day.items.length).toBeGreaterThan(0);
+    expect(day.items.every((i) => i.place.category !== 'FOOD')).toBe(true);
+  });
+});
