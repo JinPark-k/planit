@@ -13,7 +13,19 @@ const PAGE_SIZE = 1000;
 const REQUEST_DELAY_MS = 200;
 /** 응답 totalCount가 비정상일 때 무한루프를 막는 안전장치. */
 const MAX_PAGES = 50;
-const MAX_ATTEMPTS = 2;
+/**
+ * 네트워크 오류/5xx 재시도 횟수.
+ *
+ * 2회 + 고정 1초 간격이었을 때, GitHub Actions 크론에서 부산 잡이
+ * `ConnectTimeoutError (apis.data.go.kr:443, timeout: 10000ms)`로 죽었다.
+ * 2번의 시도가 26초 만에 소진됐는데, 바로 뒤에 순차 실행된 제주/서울은 성공했으니
+ * 장애는 1분도 가지 않았다 — 재시도 창이 짧아서 놓친 것이다.
+ * 해외 러너에서 data.go.kr 접속은 간헐적으로 10초를 넘기므로 창을 넓힌다.
+ */
+const MAX_ATTEMPTS = 4;
+/** 재시도 간격(ms): 1s -> 3s -> 9s. 총 재시도 창 ~13초 + 시도별 연결 타임아웃. */
+const RETRY_BASE_DELAY_MS = 1000;
+const RETRY_BACKOFF_FACTOR = 3;
 
 type TourApiPath = 'areaBasedList2' | 'searchFestival2';
 
@@ -106,7 +118,14 @@ async function requestPage<TItem>(
     } catch (err) {
       lastError = err;
       if ((err as FatalError).fatal || attempt === MAX_ATTEMPTS) break;
-      await delay(1000); // 네트워크 오류/5xx만 1회 재시도
+      // 네트워크 오류/5xx만 재시도. 지수 백오프로 일시적 장애가 지나갈 시간을 준다.
+      const waitMs =
+        RETRY_BASE_DELAY_MS * RETRY_BACKOFF_FACTOR ** (attempt - 1);
+      console.warn(
+        `[tour-api] ${path} attempt ${attempt}/${MAX_ATTEMPTS} failed ` +
+          `(${err instanceof Error ? err.message : String(err)}), retrying in ${waitMs}ms`,
+      );
+      await delay(waitMs);
     }
   }
   throw lastError instanceof Error ? lastError : new Error(String(lastError));

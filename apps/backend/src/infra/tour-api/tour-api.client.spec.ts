@@ -119,6 +119,89 @@ describe('fetchPlacesByRegion 응답 처리', () => {
   });
 });
 
+describe('네트워크 오류 재시도', () => {
+  // GitHub Actions 크론에서 부산 잡이 ConnectTimeoutError(apis.data.go.kr:443)로 죽었다.
+  // 2회 + 고정 1초 간격이라 재시도가 26초 만에 소진됐는데, 바로 뒤 순차 실행된
+  // 제주/서울은 성공했다 = 장애는 1분도 안 갔고 재시도 창이 짧아서 놓친 것이다.
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('네트워크 오류는 MAX_ATTEMPTS(4)회까지 시도한다', async () => {
+    const fetchFn = mockFetch();
+    fetchFn.mockRejectedValue(new Error('fetch failed'));
+
+    const assertion = expect(fetchPlacesByRegion('1', '12')).rejects.toThrow(
+      /fetch failed/,
+    );
+    await jest.runAllTimersAsync();
+    await assertion;
+
+    expect(fetchFn).toHaveBeenCalledTimes(4);
+  });
+
+  it('재시도 도중 성공하면 결과를 그대로 반환한다', async () => {
+    const fetchFn = mockFetch();
+    fetchFn
+      .mockRejectedValueOnce(new Error('fetch failed'))
+      .mockRejectedValueOnce(new Error('fetch failed'))
+      .mockResolvedValue(
+        jsonResponse(envelope({ item: [{ contentid: 'a' }] }, 1)),
+      );
+
+    const promise = fetchPlacesByRegion('1', '12');
+    await jest.runAllTimersAsync();
+
+    await expect(promise).resolves.toHaveLength(1);
+    expect(fetchFn).toHaveBeenCalledTimes(3);
+  });
+
+  it('재시도 간격이 지수적으로 늘어난다 (1s -> 3s -> 9s)', async () => {
+    const fetchFn = mockFetch();
+    fetchFn.mockRejectedValue(new Error('fetch failed'));
+
+    const assertion = expect(fetchPlacesByRegion('1', '12')).rejects.toThrow();
+
+    // 각 간격의 직전/직후를 확인해 백오프가 실제로 그 시각에 일어나는지 고정한다.
+    await jest.advanceTimersByTimeAsync(0);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(999);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    await jest.advanceTimersByTimeAsync(2999);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(fetchFn).toHaveBeenCalledTimes(3);
+    await jest.advanceTimersByTimeAsync(8999);
+    expect(fetchFn).toHaveBeenCalledTimes(3);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(fetchFn).toHaveBeenCalledTimes(4);
+
+    await assertion;
+  });
+
+  it('5xx도 재시도 대상이다', async () => {
+    const fetchFn = mockFetch();
+    fetchFn
+      .mockResolvedValueOnce(textResponse('server error', 503))
+      .mockResolvedValue(
+        jsonResponse(envelope({ item: [{ contentid: 'a' }] }, 1)),
+      );
+
+    const promise = fetchPlacesByRegion('1', '12');
+    await jest.runAllTimersAsync();
+
+    await expect(promise).resolves.toHaveLength(1);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('fetchPlacesByRegion 페이지네이션', () => {
   it('totalCount만큼 여러 페이지를 순차 조회한다', async () => {
     const page1 = Array.from({ length: 1000 }, (_, i) => ({
