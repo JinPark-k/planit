@@ -12,11 +12,7 @@ import {
   TourApiFestivalItem,
   TourApiRawItem,
 } from '../infra/tour-api/tour-api.types';
-import {
-  REGION_CODES,
-  REGION_LDONG_CODES,
-  RegionCode,
-} from '../infra/tour-api/regions';
+import { REGION_LDONG_CODES, RegionCode } from '../infra/tour-api/regions';
 import { transformPlaces } from './transform-place';
 
 /**
@@ -47,16 +43,16 @@ export function chunk<T>(items: T[], size: number): T[][] {
  */
 export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
   const log = (msg: string) => console.log(`[batch:${regionCode}] ${msg}`);
-  const areaCode = REGION_CODES[regionCode];
   const lDongRegnCd = REGION_LDONG_CODES[regionCode];
   const syncedAt = new Date().toISOString();
 
   // 1) 수집
   const rawItems: (TourApiRawItem | TourApiFestivalItem)[] = [];
   for (const contentTypeId of AREA_BASED_CONTENT_TYPE_IDS) {
-    const items = await fetchPlacesByRegion(areaCode, contentTypeId);
+    const items = await fetchPlacesByRegion(lDongRegnCd, contentTypeId);
     log(
-      `areaBasedList2 contentTypeId=${contentTypeId} fetched=${items.length}`,
+      `areaBasedList2 lDongRegnCd=${lDongRegnCd} contentTypeId=${contentTypeId} ` +
+        `fetched=${items.length}`,
     );
     rawItems.push(...items);
   }
