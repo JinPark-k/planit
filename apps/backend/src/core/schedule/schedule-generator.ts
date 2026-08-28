@@ -20,6 +20,7 @@ const DEFAULT_VISIT_DURATION_MINUTES: Record<PlaceCategory, number> = {
 
 const DAY_START_TIME = '09:00';
 const LUNCH_WINDOW_EARLIEST = '12:00';
+const CAFE_WINDOW_EARLIEST = '14:00';
 const DINNER_WINDOW_EARLIEST = '18:00';
 /**
  * 하루 일정 마감 시각. 이 시각 이후로는 새 장소를 배치하지 않는다.
@@ -47,6 +48,19 @@ const RELEVANCE_WEIGHT = 0.4;
 const PROXIMITY_WEIGHT = 1 - RELEVANCE_WEIGHT;
 /** 이 시간 이상 걸리는 이동은 전부 똑같이 최악(근접성 0)으로 본다. */
 const MAX_REASONABLE_TRAVEL_MINUTES = 40;
+
+/**
+ * 카페를 끼니(점심/저녁)와 구분하기 위한 태그.
+ *
+ * TourAPI는 contentTypeId 39를 통째로 FOOD로 주기 때문에 카페/전통찻집도 category가 FOOD다.
+ * 카테고리만 보고 끼니 앵커를 고르면 저녁이 베이커리가 된다(제주 FOOD 492곳 중 172곳이 카페).
+ * 카테고리를 4개로 늘리는 대신 태그로 구분하는 이유는 DB CHECK 제약과 체류시간 테이블 등
+ * PlaceCategory에 묶인 것이 많고, '카페'는 이미 KEYWORD_TAG_MAP에 있는 도메인 어휘이기 때문이다.
+ *
+ * NOTE: core/는 데이터 소스에 의존하지 않으므로 여기서 infra의 DERIVABLE_TAGS를 import하지 않는다.
+ * 이 값이 실제 수집 태그와 일치하는지는 batch/keyword-tag-coverage.spec.ts에서 검증한다.
+ */
+export const CAFE_TAG = '카페';
 
 /**
  * 일정 생성 파이프라인. LLM 미사용, 규칙 기반.
@@ -122,7 +136,7 @@ function makeRelevance(
 
 /**
  * 카테고리(관광/맛집/액티비티) + 시간대 기준으로 일차 내 순서를 배치한다.
- * 점심/저녁 시간대에 FOOD 장소를 앵커로 배치하고, 그 사이 구간은 관련도+근접성 가중합으로 채운다.
+ * 점심/오후 카페/저녁을 시간대 앵커로 배치하고, 그 사이 구간은 관련도+근접성 가중합으로 채운다.
  * startOverride가 있으면(숙소/기차역 등) 그 지점부터 첫 장소까지의 이동시간을 계산에 반영하고,
  * 없으면 스코어 1위 장소부터 시작한다 (오버라이드 지점 자체는 일정 아이템으로 표시되지 않음).
  */
@@ -136,19 +150,27 @@ function orderWithinDay(
     return [];
   }
 
-  // FOOD는 점심/저녁 앵커로만 쓰고 일반 후보 풀에는 넣지 않는다.
+  // FOOD는 끼니/카페 슬롯으로만 쓰고 일반 후보 풀에는 넣지 않는다.
   //
   // 예전엔 앵커로 뽑고 남은 음식점이 일반 풀에 합류했는데, 제주는 후보의 53%가 음식점이고
   // 식당이 밀집해 있어서 탐색이 계속 식당을 집었다. 그 결과 키워드가 '문화예술'이어도
   // 하루 9곳 중 7곳이 음식점이 됐다(실데이터 확인).
   // 하루에 끼니는 두 번이면 충분하므로, 나머지 시간대는 관광/액티비티에서만 고른다.
-  let foodPool = places.filter((p) => p.category === 'FOOD');
+  const foodPlaces = places.filter((p) => p.category === 'FOOD');
+  const cafes = foodPlaces.filter((p) => p.tags.includes(CAFE_TAG));
+  const restaurants = foodPlaces.filter((p) => !p.tags.includes(CAFE_TAG));
+
+  // 끼니는 식당에서만 고르고, 카페는 오후 슬롯 1곳으로 따로 뺀다.
+  // 다만 그날 후보에 식당이 하나도 없으면 끼니를 통째로 비우는 것보다 카페라도 넣는 게 낫다.
+  let mealPool = restaurants.length > 0 ? restaurants : cafes;
+  let cafePool = restaurants.length > 0 ? cafes : [];
   let remaining = places.filter((p) => p.category !== 'FOOD');
 
   // 관련도 정규화는 풀별로 따로 잡는다. 한 기준으로 묶으면 음식점이 상위를 독식하는 지역에서
   // 관광지 관련도가 전부 0으로 눌려 키워드 신호가 사라진다.
   const generalRelevance = makeRelevance(remaining, scoreById);
-  const foodRelevance = makeRelevance(foodPool, scoreById);
+  const mealRelevance = makeRelevance(mealPool, scoreById);
+  const cafeRelevance = makeRelevance(cafePool, scoreById);
 
   let clock = parseClock(startOverride?.time ?? DAY_START_TIME);
   let currentLocation: GeoPoint | null = startOverride?.location ?? null;
@@ -221,27 +243,58 @@ function orderWithinDay(
     }
   };
 
-  /** 끼니 앵커: 지정 시각 이전이면 그 시각까지 기다렸다가 FOOD를 배치한다. */
-  const anchorMeal = (earliestTime: string): void => {
-    if (foodPool.length === 0) return;
+  /**
+   * 시간대 앵커(점심/카페/저녁): earliestTime 이전이면 그 시각까지 기다렸다가 한 곳을 배치한다.
+   * latestTime을 주면 이미 그 시각을 지난 경우 슬롯 자체를 건너뛴다
+   * (일정이 늦어졌을 때 저녁 시간에 '오후 카페'를 밀어넣지 않기 위함).
+   * 배치한 장소를 반환하므로 호출측이 자기 풀에서 제거한다.
+   */
+  const anchor = (
+    pool: Place[],
+    relevance: (place: Place) => number,
+    earliestTime: string,
+    latestTime?: string,
+  ): Place | undefined => {
+    if (pool.length === 0) return undefined;
+    if (latestTime !== undefined && clock >= parseClock(latestTime)) {
+      return undefined;
+    }
     const earliest = parseClock(earliestTime);
     if (clock < earliest) {
       clock = earliest;
     }
-    const next = pickNext(foodPool, foodRelevance);
-    if (!next || !canPlace(next)) return;
+    const next = pickNext(pool, relevance);
+    if (!next || !canPlace(next)) return undefined;
     placeNext(next);
-    foodPool = foodPool.filter((p) => p !== next);
+    return next;
   };
 
   // 오전
   drainUntil(parseClock(LUNCH_WINDOW_EARLIEST));
+
   // 점심
-  anchorMeal(LUNCH_WINDOW_EARLIEST);
+  const lunch = anchor(mealPool, mealRelevance, LUNCH_WINDOW_EARLIEST);
+  if (lunch) mealPool = mealPool.filter((p) => p !== lunch);
+
+  // 점심 ~ 카페 타임
+  drainUntil(parseClock(CAFE_WINDOW_EARLIEST));
+
+  // 오후 카페 (하루 최대 1곳, 저녁 시간대로 넘어갔으면 건너뜀)
+  const cafe = anchor(
+    cafePool,
+    cafeRelevance,
+    CAFE_WINDOW_EARLIEST,
+    DINNER_WINDOW_EARLIEST,
+  );
+  if (cafe) cafePool = cafePool.filter((p) => p !== cafe);
+
   // 오후
   drainUntil(parseClock(DINNER_WINDOW_EARLIEST));
+
   // 저녁
-  anchorMeal(DINNER_WINDOW_EARLIEST);
+  const dinner = anchor(mealPool, mealRelevance, DINNER_WINDOW_EARLIEST);
+  if (dinner) mealPool = mealPool.filter((p) => p !== dinner);
+
   // 저녁 이후 ~ 마감 시각(DAY_END_TIME)까지. drainUntil이 canPlace로 마감을 지킨다.
   drainUntil(null);
 

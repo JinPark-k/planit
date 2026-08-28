@@ -527,33 +527,172 @@ describe('키워드 반영 (관련도 + 근접성 가중합)', () => {
 
   it('끼니 장소도 키워드를 반영해 고른다', () => {
     const sight = tagged('sight', 33.45, 126.55, NATURE_TAGS);
-    const nearIrrelevantFood: Place = {
-      id: 'near-food',
-      name: 'near-food',
+    const nearKorean: Place = {
+      id: 'near-korean',
+      name: 'near-korean',
       category: 'FOOD',
       location: { lat: 33.4505, lng: 126.5505 },
       tags: ['맛집', '한식'],
       popularity: 0.4,
       rating: 0.4,
     };
-    const farCafe: Place = {
-      id: 'far-cafe',
-      name: 'far-cafe',
+    const farWorld: Place = {
+      id: 'far-world',
+      name: 'far-world',
       category: 'FOOD',
       location: { lat: 33.47, lng: 126.57 },
-      tags: ['카페', '디저트'],
+      tags: ['맛집', '세계음식'],
       popularity: 0,
       rating: 0,
     };
 
     const [day] = generateSchedule({
-      keywords: ['카페'],
-      candidatePlaces: [sight, nearIrrelevantFood, farCafe],
+      keywords: ['세계음식'],
+      candidatePlaces: [sight, nearKorean, farWorld],
       dayCount: 1,
       travelMode: 'CAR',
     });
 
     const foods = day.items.filter((i) => i.place.category === 'FOOD');
-    expect(foods[0].place.id).toBe('far-cafe');
+    expect(foods[0].place.id).toBe('far-world');
+  });
+});
+
+describe('카페 슬롯 (끼니와 분리)', () => {
+  // TourAPI는 contentTypeId 39를 통째로 FOOD로 주기 때문에 카페/전통찻집도 category가 FOOD다.
+  // 카테고리만 보고 끼니를 고르면 저녁이 베이커리가 된다
+  // (실데이터: 제주 FOOD 492곳 중 172곳이 카페, 키워드 6종 중 3종에서 끼니에 카페가 들어갔다).
+  function food(id: string, lat: number, lng: number, tags: string[]): Place {
+    return {
+      id,
+      name: id,
+      category: 'FOOD',
+      location: { lat, lng },
+      tags,
+      popularity: 0,
+      rating: 0.5,
+    };
+  }
+
+  function sight(id: string, lat: number, lng: number): Place {
+    return {
+      id,
+      name: id,
+      category: 'SIGHTSEEING',
+      location: { lat, lng },
+      tags: ['자연'],
+      popularity: 0,
+      rating: 0.5,
+    };
+  }
+
+  const CAFE_TAGS = ['카페', '디저트', '실내'];
+  const RESTAURANT_TAGS = ['맛집', '한식'];
+
+  /** 카페가 식당보다 많고 더 가까운, 카페가 이기기 쉬운 배치. */
+  function cafeHeavyPlaces(): Place[] {
+    return [
+      sight('sight0', 33.45, 126.55),
+      sight('sight1', 33.4502, 126.5502),
+      sight('sight2', 33.4504, 126.5504),
+      food('cafe0', 33.4501, 126.5501, CAFE_TAGS),
+      food('cafe1', 33.4503, 126.5503, CAFE_TAGS),
+      food('cafe2', 33.4505, 126.5505, CAFE_TAGS),
+      food('rest0', 33.452, 126.552, RESTAURANT_TAGS),
+      food('rest1', 33.4522, 126.5522, RESTAURANT_TAGS),
+    ];
+  }
+
+  it('점심/저녁 슬롯에는 카페가 아니라 식당이 들어간다', () => {
+    const [day] = generateSchedule({
+      keywords: ['카페'], // 카페 키워드여도 끼니는 식당이어야 한다
+      candidatePlaces: cafeHeavyPlaces(),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const meals = day.items.filter(
+      (i) =>
+        i.place.category === 'FOOD' &&
+        (minutesFromClock(i.startTime) >= minutesFromClock('18:00') ||
+          (minutesFromClock(i.startTime) >= minutesFromClock('12:00') &&
+            minutesFromClock(i.startTime) < minutesFromClock('14:00'))),
+    );
+    expect(meals.length).toBeGreaterThan(0);
+    for (const meal of meals) {
+      expect(meal.place.tags).not.toContain('카페');
+    }
+  });
+
+  it('카페는 하루 최대 1곳만 배치한다', () => {
+    const [day] = generateSchedule({
+      keywords: ['카페'],
+      candidatePlaces: cafeHeavyPlaces(),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const cafeItems = day.items.filter((i) => i.place.tags.includes('카페'));
+    expect(cafeItems.length).toBeLessThanOrEqual(1);
+  });
+
+  it('카페는 오후(14:00 이후 ~ 저녁 이전)에 배치한다', () => {
+    const [day] = generateSchedule({
+      keywords: ['카페'],
+      candidatePlaces: cafeHeavyPlaces(),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const cafeItems = day.items.filter((i) => i.place.tags.includes('카페'));
+    expect(cafeItems).toHaveLength(1);
+    expect(minutesFromClock(cafeItems[0].startTime)).toBeGreaterThanOrEqual(
+      minutesFromClock('14:00'),
+    );
+    expect(minutesFromClock(cafeItems[0].startTime)).toBeLessThan(
+      minutesFromClock('18:00'),
+    );
+  });
+
+  it('식당이 하나도 없으면 끼니를 비우지 않고 카페라도 배치한다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [
+        sight('sight0', 33.45, 126.55),
+        food('cafe0', 33.4501, 126.5501, CAFE_TAGS),
+        food('cafe1', 33.4503, 126.5503, CAFE_TAGS),
+      ],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const lunch = day.items.find(
+      (i) =>
+        i.place.category === 'FOOD' &&
+        minutesFromClock(i.startTime) >= minutesFromClock('12:00'),
+    );
+    expect(lunch).toBeDefined();
+  });
+
+  it('카페가 하나도 없어도 점심/저녁이 정상 배치된다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [
+        sight('sight0', 33.45, 126.55),
+        food('rest0', 33.4501, 126.5501, RESTAURANT_TAGS),
+        food('rest1', 33.4503, 126.5503, RESTAURANT_TAGS),
+      ],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const foods = day.items.filter((i) => i.place.category === 'FOOD');
+    expect(foods).toHaveLength(2);
+    expect(minutesFromClock(foods[0].startTime)).toBeGreaterThanOrEqual(
+      minutesFromClock('12:00'),
+    );
+    expect(minutesFromClock(foods[1].startTime)).toBeGreaterThanOrEqual(
+      minutesFromClock('18:00'),
+    );
   });
 });
