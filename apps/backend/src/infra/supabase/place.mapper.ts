@@ -14,7 +14,7 @@ export function toPlace(row: PlaceRow): Place {
     id: row.content_id,
     name: row.name,
     location: { lat: row.lat, lng: row.lng },
-    // 호출측(findByRegion)이 category IS NOT NULL로 걸러서 넘긴다.
+    // 호출측(findRowsByRegion)이 category IS NOT NULL로 걸러서 넘긴다.
     category: row.category as PlaceCategory,
     tags: row.tags,
     popularity: row.popularity,
