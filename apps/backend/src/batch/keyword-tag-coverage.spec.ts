@@ -1,4 +1,5 @@
 import { KEYWORD_TAG_MAP } from '../core/keyword-tag/keyword-tag-map';
+import { CAFE_TAG } from '../core/schedule';
 import { DERIVABLE_TAGS } from '../infra/tour-api/tour-api-mapping';
 
 /**
@@ -22,6 +23,15 @@ describe('KEYWORD_TAG_MAP <-> DERIVABLE_TAGS 정합성', () => {
         });
       }
     }
+  });
+
+  it('일정 생성이 끼니/카페를 가르는 데 쓰는 CAFE_TAG가 실제 수집 태그다', () => {
+    // core의 orderWithinDay는 이 태그로 끼니 앵커에서 카페를 걸러낸다.
+    // 수집 태그가 '카페'가 아니게 되면 저녁이 다시 베이커리가 되므로 여기서 잠근다.
+    expect({ tag: CAFE_TAG, derivable: vocabulary.has(CAFE_TAG) }).toEqual({
+      tag: CAFE_TAG,
+      derivable: true,
+    });
   });
 
   it('모든 도출 가능 태그가 최소 한 키워드에서 참조된다 (고아 태그 탐지)', () => {

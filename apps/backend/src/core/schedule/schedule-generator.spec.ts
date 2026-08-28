@@ -408,3 +408,291 @@ describe('카테고리 균형 (FOOD는 끼니 슬롯에만)', () => {
     expect(day.items.every((i) => i.place.category !== 'FOOD')).toBe(true);
   });
 });
+
+describe('키워드 반영 (관련도 + 근접성 가중합)', () => {
+  // 실데이터 문제: 순수 최근접으로 다음 장소를 고르면 첫 장소에만 스코어가 반영되고
+  // 그 뒤로는 키워드가 완전히 무시된다. 제주에서 '자연'과 '문화예술'의 일정이
+  // 첫 장소만 다르고 나머지가 동일하게 나왔다.
+  function tagged(
+    id: string,
+    lat: number,
+    lng: number,
+    tags: string[],
+    popularity = 0,
+    rating = 0,
+  ): Place {
+    return {
+      id,
+      name: id,
+      category: 'SIGHTSEEING',
+      location: { lat, lng },
+      tags,
+      popularity,
+      rating,
+    };
+  }
+
+  const START = { lat: 33.45, lng: 126.55 };
+  const NATURE_TAGS = ['자연', '산책', '공원'];
+
+  it('시작 지점 바로 옆이어도 키워드에 안 맞으면 건너뛰고 맞는 곳을 고른다', () => {
+    // 예전 최근접 방식이면 무조건 nearIrrelevant가 먼저 나왔다.
+    const nearIrrelevant = tagged('near', 33.4505, 126.5505, [], 0.4, 0.4);
+    const farRelevant = tagged('far', 33.47, 126.57, NATURE_TAGS);
+
+    const [day] = generateSchedule({
+      keywords: ['자연'],
+      candidatePlaces: [nearIrrelevant, farRelevant],
+      dayCount: 1,
+      travelMode: 'CAR',
+      dayStartOverrides: { 1: { location: START } },
+    });
+
+    expect(day.items[0].place.id).toBe('far');
+  });
+
+  it('관련도가 같으면 가까운 쪽을 고른다 (근접성은 여전히 유효하다)', () => {
+    const near = tagged('near', 33.4505, 126.5505, NATURE_TAGS);
+    const far = tagged('far', 33.47, 126.57, NATURE_TAGS);
+
+    const [day] = generateSchedule({
+      keywords: ['자연'],
+      candidatePlaces: [near, far],
+      dayCount: 1,
+      travelMode: 'CAR',
+      dayStartOverrides: { 1: { location: START } },
+    });
+
+    expect(day.items[0].place.id).toBe('near');
+  });
+
+  it('키워드에 맞더라도 이동시간이 과하면(40분 이상) 가까운 쪽을 고른다', () => {
+    // 관련도만 보면 섬 반대편까지 가는 일정이 나오므로 이동시간에 상한을 둔다.
+    const nearIrrelevant = tagged('near', 33.4505, 126.5505, [], 0.4, 0.4);
+    const farRelevant = tagged('far', 33.65, 126.75, NATURE_TAGS);
+
+    const [day] = generateSchedule({
+      keywords: ['자연'],
+      candidatePlaces: [nearIrrelevant, farRelevant],
+      dayCount: 1,
+      travelMode: 'CAR',
+      dayStartOverrides: { 1: { location: START } },
+    });
+
+    expect(day.items[0].place.id).toBe('near');
+    expect(
+      getTravelTime(START, farRelevant.location, 'CAR').minutes,
+    ).toBeGreaterThanOrEqual(40);
+  });
+
+  it('키워드가 다르면 첫 장소뿐 아니라 일정 전체가 달라진다', () => {
+    // 자연/문화 장소를 지리적으로 섞어 두어, 거리만으로는 구분이 안 되게 한다.
+    const places = [
+      tagged('nature1', 33.45, 126.55, NATURE_TAGS),
+      tagged('culture1', 33.4505, 126.5505, ['문화', '전시', '실내']),
+      tagged('nature2', 33.455, 126.555, NATURE_TAGS),
+      tagged('culture2', 33.4555, 126.5555, ['문화', '전시', '실내']),
+      tagged('nature3', 33.46, 126.56, NATURE_TAGS),
+      tagged('culture3', 33.4605, 126.5605, ['문화', '전시', '실내']),
+    ];
+
+    const natureDay = generateSchedule({
+      keywords: ['자연'],
+      candidatePlaces: places,
+      dayCount: 1,
+      travelMode: 'CAR',
+      dayStartOverrides: { 1: { location: START } },
+    })[0];
+    const cultureDay = generateSchedule({
+      keywords: ['문화예술'],
+      candidatePlaces: places,
+      dayCount: 1,
+      travelMode: 'CAR',
+      dayStartOverrides: { 1: { location: START } },
+    })[0];
+
+    const natureIds = natureDay.items.map((i) => i.place.id);
+    const cultureIds = cultureDay.items.map((i) => i.place.id);
+    expect(natureIds).not.toEqual(cultureIds);
+
+    // 첫 장소만이 아니라 앞쪽 절반이 각 키워드에 맞는 장소로 채워져야 한다.
+    const half = Math.ceil(natureIds.length / 2);
+    expect(
+      natureIds.slice(0, half).every((id) => id.startsWith('nature')),
+    ).toBe(true);
+    expect(
+      cultureIds.slice(0, half).every((id) => id.startsWith('culture')),
+    ).toBe(true);
+  });
+
+  it('끼니 장소도 키워드를 반영해 고른다', () => {
+    const sight = tagged('sight', 33.45, 126.55, NATURE_TAGS);
+    const nearKorean: Place = {
+      id: 'near-korean',
+      name: 'near-korean',
+      category: 'FOOD',
+      location: { lat: 33.4505, lng: 126.5505 },
+      tags: ['맛집', '한식'],
+      popularity: 0.4,
+      rating: 0.4,
+    };
+    const farWorld: Place = {
+      id: 'far-world',
+      name: 'far-world',
+      category: 'FOOD',
+      location: { lat: 33.47, lng: 126.57 },
+      tags: ['맛집', '세계음식'],
+      popularity: 0,
+      rating: 0,
+    };
+
+    const [day] = generateSchedule({
+      keywords: ['세계음식'],
+      candidatePlaces: [sight, nearKorean, farWorld],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const foods = day.items.filter((i) => i.place.category === 'FOOD');
+    expect(foods[0].place.id).toBe('far-world');
+  });
+});
+
+describe('카페 슬롯 (끼니와 분리)', () => {
+  // TourAPI는 contentTypeId 39를 통째로 FOOD로 주기 때문에 카페/전통찻집도 category가 FOOD다.
+  // 카테고리만 보고 끼니를 고르면 저녁이 베이커리가 된다
+  // (실데이터: 제주 FOOD 492곳 중 172곳이 카페, 키워드 6종 중 3종에서 끼니에 카페가 들어갔다).
+  function food(id: string, lat: number, lng: number, tags: string[]): Place {
+    return {
+      id,
+      name: id,
+      category: 'FOOD',
+      location: { lat, lng },
+      tags,
+      popularity: 0,
+      rating: 0.5,
+    };
+  }
+
+  function sight(id: string, lat: number, lng: number): Place {
+    return {
+      id,
+      name: id,
+      category: 'SIGHTSEEING',
+      location: { lat, lng },
+      tags: ['자연'],
+      popularity: 0,
+      rating: 0.5,
+    };
+  }
+
+  const CAFE_TAGS = ['카페', '디저트', '실내'];
+  const RESTAURANT_TAGS = ['맛집', '한식'];
+
+  /** 카페가 식당보다 많고 더 가까운, 카페가 이기기 쉬운 배치. */
+  function cafeHeavyPlaces(): Place[] {
+    return [
+      sight('sight0', 33.45, 126.55),
+      sight('sight1', 33.4502, 126.5502),
+      sight('sight2', 33.4504, 126.5504),
+      food('cafe0', 33.4501, 126.5501, CAFE_TAGS),
+      food('cafe1', 33.4503, 126.5503, CAFE_TAGS),
+      food('cafe2', 33.4505, 126.5505, CAFE_TAGS),
+      food('rest0', 33.452, 126.552, RESTAURANT_TAGS),
+      food('rest1', 33.4522, 126.5522, RESTAURANT_TAGS),
+    ];
+  }
+
+  it('점심/저녁 슬롯에는 카페가 아니라 식당이 들어간다', () => {
+    const [day] = generateSchedule({
+      keywords: ['카페'], // 카페 키워드여도 끼니는 식당이어야 한다
+      candidatePlaces: cafeHeavyPlaces(),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const meals = day.items.filter(
+      (i) =>
+        i.place.category === 'FOOD' &&
+        (minutesFromClock(i.startTime) >= minutesFromClock('18:00') ||
+          (minutesFromClock(i.startTime) >= minutesFromClock('12:00') &&
+            minutesFromClock(i.startTime) < minutesFromClock('14:00'))),
+    );
+    expect(meals.length).toBeGreaterThan(0);
+    for (const meal of meals) {
+      expect(meal.place.tags).not.toContain('카페');
+    }
+  });
+
+  it('카페는 하루 최대 1곳만 배치한다', () => {
+    const [day] = generateSchedule({
+      keywords: ['카페'],
+      candidatePlaces: cafeHeavyPlaces(),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const cafeItems = day.items.filter((i) => i.place.tags.includes('카페'));
+    expect(cafeItems.length).toBeLessThanOrEqual(1);
+  });
+
+  it('카페는 오후(14:00 이후 ~ 저녁 이전)에 배치한다', () => {
+    const [day] = generateSchedule({
+      keywords: ['카페'],
+      candidatePlaces: cafeHeavyPlaces(),
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const cafeItems = day.items.filter((i) => i.place.tags.includes('카페'));
+    expect(cafeItems).toHaveLength(1);
+    expect(minutesFromClock(cafeItems[0].startTime)).toBeGreaterThanOrEqual(
+      minutesFromClock('14:00'),
+    );
+    expect(minutesFromClock(cafeItems[0].startTime)).toBeLessThan(
+      minutesFromClock('18:00'),
+    );
+  });
+
+  it('식당이 하나도 없으면 끼니를 비우지 않고 카페라도 배치한다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [
+        sight('sight0', 33.45, 126.55),
+        food('cafe0', 33.4501, 126.5501, CAFE_TAGS),
+        food('cafe1', 33.4503, 126.5503, CAFE_TAGS),
+      ],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const lunch = day.items.find(
+      (i) =>
+        i.place.category === 'FOOD' &&
+        minutesFromClock(i.startTime) >= minutesFromClock('12:00'),
+    );
+    expect(lunch).toBeDefined();
+  });
+
+  it('카페가 하나도 없어도 점심/저녁이 정상 배치된다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [
+        sight('sight0', 33.45, 126.55),
+        food('rest0', 33.4501, 126.5501, RESTAURANT_TAGS),
+        food('rest1', 33.4503, 126.5503, RESTAURANT_TAGS),
+      ],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const foods = day.items.filter((i) => i.place.category === 'FOOD');
+    expect(foods).toHaveLength(2);
+    expect(minutesFromClock(foods[0].startTime)).toBeGreaterThanOrEqual(
+      minutesFromClock('12:00'),
+    );
+    expect(minutesFromClock(foods[1].startTime)).toBeGreaterThanOrEqual(
+      minutesFromClock('18:00'),
+    );
+  });
+});
