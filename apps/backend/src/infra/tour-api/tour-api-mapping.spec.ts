@@ -290,6 +290,15 @@ describe('lclsSystm 폴백', () => {
     }
   });
 
+  it('캠핑(AC05)은 숙박 대분류지만 레포츠로 수집되므로 매핑되어 있다', () => {
+    // 공식 "신분류체계정보 관광타입정보 연계 정의서" 기준 AC05 하위 4개 코드가
+    // 모두 관광타입 28(레포츠)이다. AC를 숙박으로만 보고 통째로 제외하면 빠진다.
+    const tags = resolveTags(
+      src({ contentTypeId: '28', lclsSystm2: 'AC05', lclsSystm3: 'AC050200' }),
+    );
+    expect(tags).toEqual(expect.arrayContaining(['액티비티', '레저', '자연']));
+  });
+
   it('lclsSystm 코드 형태가 올바르다 (2단계 4자, 3단계 8자 + 상위 존재)', () => {
     for (const code of Object.keys(LCLS2_TAG_MAP)) {
       expect(code).toMatch(/^[A-Z]{2}\d{2}$/);
