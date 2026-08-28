@@ -20,3 +20,6 @@ export const REGION_LDONG_CODES = {
 } as const;
 
 export type RegionCode = keyof typeof REGION_CODES;
+
+/** 요청 검증/Swagger 문서용 런타임 목록. REGION_CODES에 지역을 추가하면 자동으로 따라간다. */
+export const REGION_CODE_LIST = Object.keys(REGION_CODES) as RegionCode[];

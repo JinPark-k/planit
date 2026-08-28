@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { PlaceRow } from '../../infra/supabase/places.types';
 import { PlacesService } from './places.service';
@@ -76,23 +77,23 @@ function makeRows(count: number, startId = 0): PlaceRow[] {
   }));
 }
 
-describe('PlacesService.findByRegion', () => {
+describe('PlacesService.findRowsByRegion', () => {
   it('지역 코드를 TourAPI areaCode로 변환해 조회한다', async () => {
     const { client, filters } = fakeSupabase([makeRows(3)]);
-    await new PlacesService(client).findByRegion('JEJU');
+    await new PlacesService(client).findRowsByRegion('JEJU');
     expect(filters['eq:region_code']).toBe('39');
   });
 
   it('category가 NULL인 행은 제외하도록 필터를 건다', async () => {
     const { client, filters } = fakeSupabase([makeRows(1)]);
-    await new PlacesService(client).findByRegion('SEOUL');
+    await new PlacesService(client).findRowsByRegion('SEOUL');
     // 매핑 안 된 행은 category가 NULL이고, 도메인 Place는 category가 필수다.
     expect(filters['not:category']).toBe('is:null');
   });
 
   it('한 페이지에 다 들어오면 추가 조회하지 않는다', async () => {
     const { client, rangeCalls } = fakeSupabase([makeRows(10)]);
-    const places = await new PlacesService(client).findByRegion('BUSAN');
+    const places = await new PlacesService(client).findRowsByRegion('BUSAN');
     expect(places).toHaveLength(10);
     expect(rangeCalls).toHaveLength(1);
     expect(rangeCalls[0]).toEqual({ from: 0, to: 999 });
@@ -104,7 +105,7 @@ describe('PlacesService.findByRegion', () => {
       makeRows(1000, 0),
       makeRows(706, 1000),
     ]);
-    const places = await new PlacesService(client).findByRegion('SEOUL');
+    const places = await new PlacesService(client).findRowsByRegion('SEOUL');
     expect(places).toHaveLength(1706);
     expect(rangeCalls).toEqual([
       { from: 0, to: 999 },
@@ -114,42 +115,47 @@ describe('PlacesService.findByRegion', () => {
 
   it('페이지 간 순서를 보장하기 위해 정렬 조건을 건다', async () => {
     const { client, filters } = fakeSupabase([makeRows(1)]);
-    await new PlacesService(client).findByRegion('SEOUL');
+    await new PlacesService(client).findRowsByRegion('SEOUL');
     expect(filters['order']).toBe('content_id');
   });
 
   it('결과가 없으면 빈 배열을 반환한다', async () => {
     const { client } = fakeSupabase([[]]);
     await expect(
-      new PlacesService(client).findByRegion('SEOUL'),
+      new PlacesService(client).findRowsByRegion('SEOUL'),
     ).resolves.toEqual([]);
   });
 
   it('알 수 없는 지역 코드는 명확한 에러를 던진다', async () => {
     const { client } = fakeSupabase([[]]);
     await expect(
-      new PlacesService(client).findByRegion('TOKYO' as unknown as 'SEOUL'),
+      new PlacesService(client).findRowsByRegion('TOKYO' as unknown as 'SEOUL'),
     ).rejects.toThrow(/Unknown regionCode: TOKYO/);
   });
 
   it('조회 실패 시 지역명을 포함한 에러를 던진다', async () => {
     const { client } = fakeSupabase([[]], { message: 'permission denied' });
     await expect(
-      new PlacesService(client).findByRegion('JEJU'),
-    ).rejects.toThrow(/findByRegion\(JEJU\) failed: permission denied/);
+      new PlacesService(client).findRowsByRegion('JEJU'),
+    ).rejects.toThrow(/findRowsByRegion\(JEJU\) failed: permission denied/);
   });
 
-  it('row를 도메인 Place로 변환해 반환한다', async () => {
+  it('row를 변환하지 않고 그대로 반환한다', async () => {
+    // 이 서비스는 조회까지만 책임진다. 계산용(toPlace)/표현용(toPlaceResponse) 변환은
+    // 호출하는 서비스가 정하므로, 표시 필드가 살아 있는 채로 넘어와야 한다.
     const { client } = fakeSupabase([makeRows(1)]);
-    const [place] = await new PlacesService(client).findByRegion('SEOUL');
-    expect(place).toEqual({
-      id: '0',
-      name: '장소0',
-      location: { lat: 37.5, lng: 127.0 },
-      category: 'SIGHTSEEING',
-      tags: ['자연'],
-      popularity: 0,
-      rating: 0.5,
-    });
+    const [row] = await new PlacesService(client).findRowsByRegion('SEOUL');
+    expect(row.content_id).toBe('0');
+    expect(row.region_code).toBe('1');
+    expect(row.raw_response).toBeNull();
+    expect(row.last_synced_at).toBe('2026-08-27T00:00:00Z');
+  });
+
+  it('알 수 없는 지역 코드는 500이 아니라 400으로 나간다', async () => {
+    // 이전에는 plain Error라 Nest 기본 필터를 타고 500이 됐다.
+    const { client } = fakeSupabase([[]]);
+    await expect(
+      new PlacesService(client).findRowsByRegion('TOKYO' as unknown as 'SEOUL'),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

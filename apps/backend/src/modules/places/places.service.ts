@@ -1,7 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Place } from '../../core';
-import { toPlace } from '../../infra/supabase/place.mapper';
 import { PlaceRow } from '../../infra/supabase/places.types';
 import { SUPABASE_CLIENT } from '../../infra/supabase/supabase.provider';
 import { REGION_CODES, RegionCode } from '../../infra/tour-api/regions';
@@ -23,19 +26,26 @@ export class PlacesService {
   ) {}
 
   /**
-   * 해당 지역의 스케줄링 후보 장소를 조회한다.
+   * 해당 지역의 장소 row를 조회한다.
+   *
+   * 도메인 `Place`가 아니라 row를 돌려주는 이유: 한 번 조회한 row로 두 가지를 만들어야 한다.
+   *   - 계산용: `toPlace(row)` -> core의 Place (스코어링/스케줄링)
+   *   - 표현용: `toPlaceResponse(row)` -> 화면 DTO (주소/이미지/전화 포함)
+   * `toPlace`가 표시 필드를 버리므로 Place만 받으면 응답을 만들 수 없다.
+   * 어느 쪽으로 변환할지는 호출하는 서비스가 정한다.
+   *
    * cat 코드 매핑이 안 된 행은 category가 NULL로 남아 있어 제외한다
    * (core의 Place.category는 non-null이며, 카테고리 없이는 시간대 배치를 할 수 없다).
    */
-  async findByRegion(regionCode: RegionCode): Promise<Place[]> {
+  async findRowsByRegion(regionCode: RegionCode): Promise<PlaceRow[]> {
     const dbRegionCode = REGION_CODES[regionCode];
     if (!dbRegionCode) {
-      throw new Error(
+      throw new BadRequestException(
         `Unknown regionCode: ${regionCode}. Expected one of ${Object.keys(REGION_CODES).join(', ')}`,
       );
     }
 
-    const places: Place[] = [];
+    const rows: PlaceRow[] = [];
     for (let page = 0; page < MAX_PAGES; page += 1) {
       const from = page * PAGE_SIZE;
       const { data, error } = await this.supabase
@@ -48,16 +58,16 @@ export class PlacesService {
 
       if (error) {
         throw new Error(
-          `[places] findByRegion(${regionCode}) failed: ${error.message}`,
+          `[places] findRowsByRegion(${regionCode}) failed: ${error.message}`,
         );
       }
 
-      const rows = (data ?? []) as PlaceRow[];
-      places.push(...rows.map(toPlace));
-      if (rows.length < PAGE_SIZE) break;
+      const page_rows = (data ?? []) as PlaceRow[];
+      rows.push(...page_rows);
+      if (page_rows.length < PAGE_SIZE) break;
     }
 
-    this.logger.log(`findByRegion(${regionCode}) -> ${places.length} places`);
-    return places;
+    this.logger.log(`findRowsByRegion(${regionCode}) -> ${rows.length} places`);
+    return rows;
   }
 }

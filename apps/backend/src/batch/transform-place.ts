@@ -106,7 +106,7 @@ export function transformPlace(
     lat,
     lng,
     // 축제 레코드는 areacode가 빈 문자열이므로 원본 대신 "처리 중인 지역"을 항상 사용한다.
-    // 이렇게 하면 findByRegion이 조회할 값과 항상 일치한다. 원본 areacode는 raw_response에 남는다.
+    // 이렇게 하면 findRowsByRegion이 조회할 값과 항상 일치한다. 원본 areacode는 raw_response에 남는다.
     region_code: REGION_CODES[regionCode],
     sigungu_code: nullable(item.sigungucode),
     category: resolveCategory(contentTypeId),

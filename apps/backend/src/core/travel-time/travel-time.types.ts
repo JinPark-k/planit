@@ -3,7 +3,13 @@ export interface GeoPoint {
   lng: number;
 }
 
-export type TravelMode = 'CAR' | 'TRANSIT' | 'WALK';
+/**
+ * 런타임에서도 목록이 필요해 const 배열로 두고 타입을 파생시킨다
+ * (요청 검증/Swagger 문서는 타입만으로는 값 목록을 알 수 없다).
+ */
+export const TRAVEL_MODES = ['CAR', 'TRANSIT', 'WALK'] as const;
+
+export type TravelMode = (typeof TRAVEL_MODES)[number];
 
 export interface TravelTimeResult {
   /** 추정 이동시간(분). 화면에는 "약 n분" 형태로 표시할 것 */
