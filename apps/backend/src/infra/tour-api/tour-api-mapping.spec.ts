@@ -5,6 +5,8 @@ import {
   CONTENT_TYPE_TAG_MAP,
   DERIVABLE_TAGS,
   isMappedCat3,
+  LCLS2_TAG_MAP,
+  LCLS3_TAG_MAP,
   resolveCategory,
   resolveTags,
   TagSource,
@@ -16,6 +18,8 @@ function src(partial: Partial<TagSource>): TagSource {
     cat1: null,
     cat2: null,
     cat3: null,
+    lclsSystm2: null,
+    lclsSystm3: null,
     ...partial,
   };
 }
@@ -196,5 +200,108 @@ describe('isMappedCat3', () => {
     expect(isMappedCat3('A0101ZZZZ')).toBe(false);
     expect(isMappedCat3('')).toBe(false);
     expect(isMappedCat3(null)).toBe(false);
+  });
+});
+
+describe('lclsSystm 폴백', () => {
+  it('cat 코드가 비어 있으면 lclsSystm으로 태그를 만든다', () => {
+    // 새별오름(contentid=572973)의 실제 응답: cat1/2/3가 전부 빈 문자열이고
+    // lclsSystm만 채워져 있다. 이 경우 태그가 하나도 안 붙는 게 원래 버그였다.
+    const tags = resolveTags(
+      src({
+        contentTypeId: '12',
+        cat1: '',
+        cat2: '',
+        cat3: '',
+        lclsSystm2: 'NA01',
+        lclsSystm3: 'NA010100',
+      }),
+    );
+    expect(tags).toEqual(expect.arrayContaining(['자연', '산', '등산']));
+  });
+
+  it('cat 코드가 있으면 lclsSystm을 쓰지 않는다', () => {
+    // 이미 cat으로 태그가 붙던 행의 결과가 바뀌면 안 된다.
+    const withCat = resolveTags(
+      src({
+        contentTypeId: '12',
+        cat1: 'A01',
+        cat2: 'A0101',
+        cat3: 'A01011200',
+      }),
+    );
+    const withBoth = resolveTags(
+      src({
+        contentTypeId: '12',
+        cat1: 'A01',
+        cat2: 'A0101',
+        cat3: 'A01011200',
+        lclsSystm2: 'FD01',
+        lclsSystm3: 'FD010100',
+      }),
+    );
+    expect(withBoth).toEqual(withCat);
+    expect(withBoth).not.toContain('맛집');
+  });
+
+  it('lclsSystm3가 lclsSystm2를 대체한다 (병합이 아님)', () => {
+    // 해변(NA020900)은 NA02 기본값 ['자연','산책']이 아니라 ['자연','해변']이어야 한다.
+    const tags = resolveTags(
+      src({ contentTypeId: '12', lclsSystm2: 'NA02', lclsSystm3: 'NA020900' }),
+    );
+    expect(tags).toEqual(expect.arrayContaining(['자연', '해변']));
+    expect(tags).not.toContain('산책');
+  });
+
+  it('등록되지 않은 lclsSystm3는 lclsSystm2로 폴백한다', () => {
+    const tags = resolveTags(
+      src({ contentTypeId: '12', lclsSystm2: 'NA01', lclsSystm3: 'NA019999' }),
+    );
+    expect(tags).toEqual(expect.arrayContaining(['자연', '산']));
+  });
+
+  it('카페는 맛집을 갖지 않고 관광식당은 갖는다', () => {
+    const cafe = resolveTags(
+      src({ contentTypeId: '39', lclsSystm2: 'FD05', lclsSystm3: 'FD050100' }),
+    );
+    expect(cafe).toContain('카페');
+    expect(cafe).not.toContain('맛집');
+
+    const restaurant = resolveTags(
+      src({ contentTypeId: '39', lclsSystm2: 'FD01', lclsSystm3: 'FD010100' }),
+    );
+    expect(restaurant).toEqual(expect.arrayContaining(['맛집', '한식']));
+  });
+
+  it('모든 lclsSystm 매핑 값이 DERIVABLE_TAGS 안에 있다', () => {
+    const vocabulary = new Set<string>(DERIVABLE_TAGS);
+    for (const [code, tags] of Object.entries({
+      ...LCLS2_TAG_MAP,
+      ...LCLS3_TAG_MAP,
+    })) {
+      for (const tag of tags) {
+        expect({ code, tag, known: vocabulary.has(tag) }).toEqual({
+          code,
+          tag,
+          known: true,
+        });
+      }
+      expect(new Set(tags).size).toBe(tags.length); // 중복 없음
+    }
+  });
+
+  it('lclsSystm 코드 형태가 올바르다 (2단계 4자, 3단계 8자 + 상위 존재)', () => {
+    for (const code of Object.keys(LCLS2_TAG_MAP)) {
+      expect(code).toMatch(/^[A-Z]{2}\d{2}$/);
+    }
+    for (const code of Object.keys(LCLS3_TAG_MAP)) {
+      expect(code).toMatch(/^[A-Z]{2}\d{6}$/);
+      // 3단계 오버라이드는 반드시 대응하는 2단계 기본값이 있어야 한다
+      // (없으면 오타이거나, 2단계 매핑을 빠뜨린 것이다).
+      expect({ code, parent: code.slice(0, 4) in LCLS2_TAG_MAP }).toEqual({
+        code,
+        parent: true,
+      });
+    }
   });
 });

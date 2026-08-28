@@ -87,6 +87,9 @@ export function transformPlace(
   const cat1 = nullable(item.cat1);
   const cat2 = nullable(item.cat2);
   const cat3 = nullable(item.cat3);
+  // cat 코드가 비어 있는 레코드가 많아(제주 30%) 분류체계 코드를 폴백으로 함께 넘긴다.
+  const lclsSystm2 = nullable(item.lclsSystm2);
+  const lclsSystm3 = nullable(item.lclsSystm3);
   const festival = item;
 
   return {
@@ -110,7 +113,14 @@ export function transformPlace(
     region_code: REGION_CODES[regionCode],
     sigungu_code: nullable(item.sigungucode),
     category: resolveCategory(contentTypeId),
-    tags: resolveTags({ contentTypeId, cat1, cat2, cat3 }),
+    tags: resolveTags({
+      contentTypeId,
+      cat1,
+      cat2,
+      cat3,
+      lclsSystm2,
+      lclsSystm3,
+    }),
     event_start_date: parseTourApiDate(festival.eventstartdate),
     event_end_date: parseTourApiDate(festival.eventenddate),
     last_synced_at: syncedAt,
