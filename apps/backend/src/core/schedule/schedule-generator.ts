@@ -1,12 +1,7 @@
 import { resolveTagsForKeywords } from '../keyword-tag';
 import { scoreAndSortPlaces } from '../scoring';
 import { clusterPlacesByDay } from '../clustering';
-import {
-  getTravelTime,
-  haversineDistanceMeters,
-  GeoPoint,
-  TravelMode,
-} from '../travel-time';
+import { getTravelTime, GeoPoint, TravelMode } from '../travel-time';
 import {
   DayStartOverride,
   GenerateScheduleInput,
@@ -37,16 +32,39 @@ const DINNER_WINDOW_EARLIEST = '18:00';
 const DAY_END_TIME = '21:00';
 
 /**
+ * 다음 장소를 고를 때 관련도(키워드 스코어)와 근접성(이동시간)에 주는 가중치.
+ *
+ * 예전엔 순수 최근접(nearest neighbor)으로만 골랐는데, 그러면 첫 장소만 스코어가 반영되고
+ * 그 뒤로는 스코어가 완전히 무시된다. 실데이터(제주)에서 '자연'과 '문화예술'의 일정이
+ * 첫 장소만 다르고 나머지는 동일하게 나온 원인이 이것이다 — 후보가 밀집해 있으면
+ * 키워드와 무관한 바로 옆 장소가 항상 이긴다.
+ *
+ * 관련도만 보면 반대로 하루 종일 섬 반대편까지 이동하는 일정이 나오므로 둘을 합산한다.
+ * 관련도 0.4 / 근접성 0.6 + 최대 이동 40분 기준이면,
+ * "관련도 최상위 후보를 위해 최대 ~26분(=0.4/0.6*40)까지는 더 이동한다"는 정책이 된다.
+ */
+const RELEVANCE_WEIGHT = 0.4;
+const PROXIMITY_WEIGHT = 1 - RELEVANCE_WEIGHT;
+/** 이 시간 이상 걸리는 이동은 전부 똑같이 최악(근접성 0)으로 본다. */
+const MAX_REASONABLE_TRAVEL_MINUTES = 40;
+
+/**
  * 일정 생성 파이프라인. LLM 미사용, 규칙 기반.
  * 1) 키워드 -> 태그 매핑으로 필터링
  * 2) 스코어링 (태그 일치도 + 인기도 + 평점)
  * 3) 그리디 지역 클러스터링으로 일차별 그룹 분리
- * 4) 카테고리 + 시간대 기준 일차 내 순서 배치
+ * 4) 카테고리 + 시간대 + 스코어/거리 가중합으로 일차 내 순서 배치
  * 출력은 스케줄표 데이터(장소명/시간/이동시간)만. 문장/설명 생성 없음.
  */
 export function generateSchedule(input: GenerateScheduleInput): ScheduleDay[] {
   const keywordTags = resolveTagsForKeywords(input.keywords);
   const scored = scoreAndSortPlaces(input.candidatePlaces, keywordTags);
+
+  // 스코어는 클러스터링 이후 순서 배치 단계에서도 필요하므로 id로 들고 다닌다.
+  // (Place에 score를 얹으면 응답 DTO까지 새어나가므로 별도 맵으로 유지)
+  const scoreById = new Map(
+    scored.map(({ place, score }) => [place.id, score]),
+  );
 
   const dayClusters = clusterPlacesByDay(
     scored.map(({ place }) => place),
@@ -58,6 +76,7 @@ export function generateSchedule(input: GenerateScheduleInput): ScheduleDay[] {
     items: orderWithinDay(
       cluster.places,
       input.travelMode,
+      scoreById,
       input.dayStartOverrides?.[cluster.day],
     ),
   }));
@@ -74,27 +93,43 @@ function formatClock(totalMinutes: number): string {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
-function nearestPlace<T extends Place>(pool: T[], from: GeoPoint | null): T {
-  if (!from) {
-    return pool[0];
+/**
+ * 후보 풀 안에서의 상대 관련도(0~1)를 계산하는 함수를 만든다.
+ *
+ * 절대 스코어를 그대로 쓰지 않는 이유: 현재 실데이터는 popularity가 전부 0, rating이 전부 0.5라
+ * 스코어가 0.1~0.6의 좁은 구간에 몰려 있어서, 고정 가중치로 근접성과 비교하면 관련도가 항상 진다.
+ * 풀 단위 min-max 정규화를 하면 스코어 스케일이 바뀌어도(popularity 도입 등) 가중치가 그대로 유효하다.
+ *
+ * 풀은 배치가 진행되며 줄어들지만 정규화 기준은 처음 한 번만 잡는다
+ * (풀이 줄 때마다 다시 잡으면 남은 후보가 하나뿐일 때 관련도가 1로 튀어 비교가 무의미해진다).
+ */
+function makeRelevance(
+  pool: Place[],
+  scoreById: ReadonlyMap<string, number>,
+): (place: Place) => number {
+  let min = Infinity;
+  let max = -Infinity;
+  for (const place of pool) {
+    const score = scoreById.get(place.id) ?? 0;
+    if (score < min) min = score;
+    if (score > max) max = score;
   }
-  return pool.reduce((closest, candidate) =>
-    haversineDistanceMeters(from, candidate.location) <
-    haversineDistanceMeters(from, closest.location)
-      ? candidate
-      : closest,
-  );
+  const range = max - min;
+  // 전원 동점이면 관련도로는 우열을 못 가리므로 근접성만 보게 한다.
+  return (place) =>
+    range === 0 ? 1 : ((scoreById.get(place.id) ?? 0) - min) / range;
 }
 
 /**
  * 카테고리(관광/맛집/액티비티) + 시간대 기준으로 일차 내 순서를 배치한다.
- * 점심/저녁 시간대에 FOOD 장소를 앵커로 배치하고, 그 사이 구간은 최근접 이동으로 채운다.
+ * 점심/저녁 시간대에 FOOD 장소를 앵커로 배치하고, 그 사이 구간은 관련도+근접성 가중합으로 채운다.
  * startOverride가 있으면(숙소/기차역 등) 그 지점부터 첫 장소까지의 이동시간을 계산에 반영하고,
  * 없으면 스코어 1위 장소부터 시작한다 (오버라이드 지점 자체는 일정 아이템으로 표시되지 않음).
  */
 function orderWithinDay(
   places: Place[],
   travelMode: TravelMode,
+  scoreById: ReadonlyMap<string, number>,
   startOverride?: DayStartOverride,
 ): ScheduleItem[] {
   if (places.length === 0) {
@@ -103,22 +138,58 @@ function orderWithinDay(
 
   // FOOD는 점심/저녁 앵커로만 쓰고 일반 후보 풀에는 넣지 않는다.
   //
-  // 예전엔 앵커로 뽑고 남은 음식점(food.slice(2))이 일반 풀에 합류했는데,
-  // 제주는 후보의 53%가 음식점이고 식당이 밀집해 있어서 최근접 탐색이 계속 식당을 집었다.
-  // 그 결과 키워드가 '문화예술'이어도 하루 9곳 중 7곳이 음식점이 됐다(실데이터 확인).
+  // 예전엔 앵커로 뽑고 남은 음식점이 일반 풀에 합류했는데, 제주는 후보의 53%가 음식점이고
+  // 식당이 밀집해 있어서 탐색이 계속 식당을 집었다. 그 결과 키워드가 '문화예술'이어도
+  // 하루 9곳 중 7곳이 음식점이 됐다(실데이터 확인).
   // 하루에 끼니는 두 번이면 충분하므로, 나머지 시간대는 관광/액티비티에서만 고른다.
-  const food = places.filter((p) => p.category === 'FOOD');
-  const lunchPlace = food[0];
-  const dinnerPlace = food[1];
+  let foodPool = places.filter((p) => p.category === 'FOOD');
   let remaining = places.filter((p) => p.category !== 'FOOD');
+
+  // 관련도 정규화는 풀별로 따로 잡는다. 한 기준으로 묶으면 음식점이 상위를 독식하는 지역에서
+  // 관광지 관련도가 전부 0으로 눌려 키워드 신호가 사라진다.
+  const generalRelevance = makeRelevance(remaining, scoreById);
+  const foodRelevance = makeRelevance(foodPool, scoreById);
 
   let clock = parseClock(startOverride?.time ?? DAY_START_TIME);
   let currentLocation: GeoPoint | null = startOverride?.location ?? null;
   const items: ScheduleItem[] = [];
 
+  const travelMinutesTo = (place: Place): number =>
+    currentLocation
+      ? getTravelTime(currentLocation, place.location, travelMode).minutes
+      : 0;
+
+  /** 이동시간 0분 -> 1, MAX_REASONABLE_TRAVEL_MINUTES 이상 -> 0. */
+  const proximity = (place: Place): number => {
+    if (!currentLocation) return 1; // 시작 지점이 없으면 거리 비교 자체가 불가능
+    const minutes = Math.min(
+      travelMinutesTo(place),
+      MAX_REASONABLE_TRAVEL_MINUTES,
+    );
+    return 1 - minutes / MAX_REASONABLE_TRAVEL_MINUTES;
+  };
+
+  const pickNext = (
+    pool: Place[],
+    relevance: (place: Place) => number,
+  ): Place | undefined => {
+    let best: Place | undefined;
+    let bestUtility = -Infinity;
+    for (const candidate of pool) {
+      const utility =
+        RELEVANCE_WEIGHT * relevance(candidate) +
+        PROXIMITY_WEIGHT * proximity(candidate);
+      if (utility > bestUtility) {
+        bestUtility = utility;
+        best = candidate;
+      }
+    }
+    return best;
+  };
+
   const placeNext = (place: Place): void => {
     const travelFromPreviousMinutes = currentLocation
-      ? getTravelTime(currentLocation, place.location, travelMode).minutes
+      ? travelMinutesTo(place)
       : undefined;
     if (travelFromPreviousMinutes !== undefined) {
       clock += travelFromPreviousMinutes;
@@ -135,47 +206,42 @@ function orderWithinDay(
   const dayEnd = parseClock(DAY_END_TIME);
 
   /** 마감 시각 이후에는 새 장소를 시작하지 않는다. */
-  const canPlace = (place: Place): boolean => {
-    const travel = currentLocation
-      ? getTravelTime(currentLocation, place.location, travelMode).minutes
-      : 0;
-    return clock + travel <= dayEnd;
-  };
+  const canPlace = (place: Place): boolean =>
+    clock + travelMinutesTo(place) <= dayEnd;
 
   const drainUntil = (clockLimit: number | null): void => {
     while (
       remaining.length > 0 &&
       (clockLimit === null || clock < clockLimit)
     ) {
-      const next = nearestPlace(remaining, currentLocation);
-      if (!canPlace(next)) break;
+      const next = pickNext(remaining, generalRelevance);
+      if (!next || !canPlace(next)) break;
       placeNext(next);
       remaining = remaining.filter((p) => p !== next);
     }
   };
 
+  /** 끼니 앵커: 지정 시각 이전이면 그 시각까지 기다렸다가 FOOD를 배치한다. */
+  const anchorMeal = (earliestTime: string): void => {
+    if (foodPool.length === 0) return;
+    const earliest = parseClock(earliestTime);
+    if (clock < earliest) {
+      clock = earliest;
+    }
+    const next = pickNext(foodPool, foodRelevance);
+    if (!next || !canPlace(next)) return;
+    placeNext(next);
+    foodPool = foodPool.filter((p) => p !== next);
+  };
+
   // 오전
   drainUntil(parseClock(LUNCH_WINDOW_EARLIEST));
-
-  // 점심 앵커
-  if (lunchPlace) {
-    if (clock < parseClock(LUNCH_WINDOW_EARLIEST)) {
-      clock = parseClock(LUNCH_WINDOW_EARLIEST);
-    }
-    if (canPlace(lunchPlace)) placeNext(lunchPlace);
-  }
-
+  // 점심
+  anchorMeal(LUNCH_WINDOW_EARLIEST);
   // 오후
   drainUntil(parseClock(DINNER_WINDOW_EARLIEST));
-
-  // 저녁 앵커
-  if (dinnerPlace) {
-    if (clock < parseClock(DINNER_WINDOW_EARLIEST)) {
-      clock = parseClock(DINNER_WINDOW_EARLIEST);
-    }
-    if (canPlace(dinnerPlace)) placeNext(dinnerPlace);
-  }
-
+  // 저녁
+  anchorMeal(DINNER_WINDOW_EARLIEST);
   // 저녁 이후 ~ 마감 시각(DAY_END_TIME)까지. drainUntil이 canPlace로 마감을 지킨다.
   drainUntil(null);
 
