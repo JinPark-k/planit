@@ -1,6 +1,9 @@
 import { GeoPoint, TravelMode } from '../travel-time';
 
-export type PlaceCategory = 'SIGHTSEEING' | 'FOOD' | 'ACTIVITY';
+/** 런타임 목록이 필요해 const 배열로 두고 타입을 파생시킨다(요청 검증/Swagger 문서용). */
+export const PLACE_CATEGORIES = ['SIGHTSEEING', 'FOOD', 'ACTIVITY'] as const;
+
+export type PlaceCategory = (typeof PLACE_CATEGORIES)[number];
 
 export interface Place {
   id: string;

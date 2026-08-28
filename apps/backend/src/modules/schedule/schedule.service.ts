@@ -13,6 +13,8 @@ export class ScheduleService {
   constructor(private readonly placesService: PlacesService) {}
 
   async generate(dto: GenerateScheduleDto): Promise<ScheduleDayResponseDto[]> {
+    // 일정 생성은 키워드로 후보를 좁히지 않는다. 끼니/카페 슬롯과 이동 경로를 채우려면
+    // 키워드와 무관한 장소도 후보에 있어야 한다(예: '문화예술' 일정의 점심 식당).
     const rows = await this.placesService.findRowsByRegion(dto.region);
     const rowById = new Map(rows.map((row) => [row.content_id, row]));
 
