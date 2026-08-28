@@ -35,9 +35,26 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # apis.data.go.kr 접속이 해외 러너에서 수 분 단위로 끊기는 일이 있다
+      # (2026-08-28 run 33134494767: BUSAN이 01:59, 02:04 두 번 ConnectTimeoutError로
+      #  실패하고 02:07 재실행에서 성공 = 약 7분 장애).
+      # 클라이언트 자체 백오프(4회, ~53초)로는 이 길이를 못 넘기므로 잡 레벨에서 한 번 더 감싼다.
+      # 배치는 upsert 기반이라 중복 실행해도 안전하다.
       - name: Run batch pipeline
-        run: pnpm --filter @planit/backend batch:run ${{ matrix.region }}
         env:
+          REGION: ${{ matrix.region }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm --filter @planit/backend batch:run "$REGION"; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "[batch] $REGION attempt $attempt failed, retrying in 180s"
+              sleep 180
+            fi
+          done
+          echo "[batch] $REGION failed after 3 attempts"
+          exit 1
