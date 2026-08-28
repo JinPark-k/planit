@@ -1,4 +1,9 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Place } from '../../core';
 import { toPlace } from '../../infra/supabase/place.mapper';
@@ -23,19 +28,24 @@ export class PlacesService {
   ) {}
 
   /**
-   * 해당 지역의 스케줄링 후보 장소를 조회한다.
+   * 해당 지역의 장소 row를 그대로 조회한다.
+   *
+   * 도메인 `Place`가 아니라 row를 돌려주는 경로가 따로 있는 이유:
+   * 화면 응답에는 주소/이미지/전화가 필요한데 `toPlace`가 그 필드들을 버리기 때문이다.
+   * 알고리즘은 `findByRegion`, 화면 응답은 이 메서드를 쓴다.
+   *
    * cat 코드 매핑이 안 된 행은 category가 NULL로 남아 있어 제외한다
    * (core의 Place.category는 non-null이며, 카테고리 없이는 시간대 배치를 할 수 없다).
    */
-  async findByRegion(regionCode: RegionCode): Promise<Place[]> {
+  async findRowsByRegion(regionCode: RegionCode): Promise<PlaceRow[]> {
     const dbRegionCode = REGION_CODES[regionCode];
     if (!dbRegionCode) {
-      throw new Error(
+      throw new BadRequestException(
         `Unknown regionCode: ${regionCode}. Expected one of ${Object.keys(REGION_CODES).join(', ')}`,
       );
     }
 
-    const places: Place[] = [];
+    const rows: PlaceRow[] = [];
     for (let page = 0; page < MAX_PAGES; page += 1) {
       const from = page * PAGE_SIZE;
       const { data, error } = await this.supabase
@@ -52,12 +62,18 @@ export class PlacesService {
         );
       }
 
-      const rows = (data ?? []) as PlaceRow[];
-      places.push(...rows.map(toPlace));
-      if (rows.length < PAGE_SIZE) break;
+      const page_rows = (data ?? []) as PlaceRow[];
+      rows.push(...page_rows);
+      if (page_rows.length < PAGE_SIZE) break;
     }
 
-    this.logger.log(`findByRegion(${regionCode}) -> ${places.length} places`);
-    return places;
+    this.logger.log(`findByRegion(${regionCode}) -> ${rows.length} places`);
+    return rows;
+  }
+
+  /** 스케줄링/스코어링용 도메인 Place 목록. */
+  async findByRegion(regionCode: RegionCode): Promise<Place[]> {
+    const rows = await this.findRowsByRegion(regionCode);
+    return rows.map(toPlace);
   }
 }

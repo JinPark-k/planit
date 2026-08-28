@@ -37,6 +37,15 @@ pnpm install
 pnpm dev:backend
 ```
 
+### API 문서 (Swagger)
+
+서버 기동 후 http://127.0.0.1:3000/docs 에서 엔드포인트를 확인하고 바로 호출해볼 수 있다.
+OpenAPI JSON은 http://127.0.0.1:3000/docs-json 이며, Postman 등으로 임포트할 수 있다.
+
+문서는 DTO의 `class-validator` 데코레이터에서 자동 생성된다(`nest-cli.json`의 `@nestjs/swagger` 플러그인).
+따라서 요청 스펙을 바꿀 때는 DTO만 고치면 되고 문서를 따로 관리하지 않는다.
+운영(`NODE_ENV=production`)에서는 기본 비활성이며 `SWAGGER_ENABLED=true`로 켤 수 있다.
+
 ### 로컬 DB (Docker Supabase)
 
 개발은 기본적으로 **로컬 DB**를 사용한다. 운영 클라우드 DB는 명시적으로 `:prod` 명령을 쓸 때만 접근한다.
