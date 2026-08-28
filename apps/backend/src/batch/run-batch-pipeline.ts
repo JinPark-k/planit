@@ -58,11 +58,10 @@ export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
   }
 
   const eventStartDate = todayInKst();
-  const allFestivals = await fetchFestivals(eventStartDate);
-  const festivals = allFestivals.filter((f) => f.lDongRegnCd === lDongRegnCd);
+  const festivals = await fetchFestivals(eventStartDate, lDongRegnCd);
   log(
-    `searchFestival2 eventStartDate=${eventStartDate} fetched=${allFestivals.length} ` +
-      `matched(lDongRegnCd=${lDongRegnCd})=${festivals.length}`,
+    `searchFestival2 eventStartDate=${eventStartDate} lDongRegnCd=${lDongRegnCd} ` +
+      `fetched=${festivals.length}`,
   );
   rawItems.push(...festivals);
 

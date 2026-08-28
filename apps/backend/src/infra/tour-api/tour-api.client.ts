@@ -187,14 +187,22 @@ export function fetchPlacesByRegion(
 }
 
 /**
- * 축제 조회. areaCode는 축제 레코드의 areacode가 비어 있어 0건이 되므로 쓰지 않고,
- * 전국을 받아 호출측에서 lDongRegnCd로 필터링한다.
+ * 축제 조회. 장소와 같은 이유로 areaCode가 아니라 lDongRegnCd로 거른다
+ * (축제 레코드는 areacode가 빈 문자열이라 areaCode 필터가 0건이 된다).
+ *
+ * 2026-08 실측으로 서버 필터와 전국 조회 후 클라이언트 필터의 결과가
+ * 완전히 동일함을 확인했다(제주 5 / 서울 50 / 부산 19건, contentid 집합 일치).
+ * 전국 264건을 받아 버리던 것을 지역분만 받도록 바꾼다.
+ *
  * @param eventStartDate YYYYMMDD. 이 날짜 기준 진행중/예정 축제를 반환.
+ * @param lDongRegnCd 법정동 시도코드.
  */
 export function fetchFestivals(
   eventStartDate: string,
+  lDongRegnCd: string,
 ): Promise<TourApiFestivalItem[]> {
   return fetchAllPages<TourApiFestivalItem>('searchFestival2', {
     eventStartDate,
+    lDongRegnCd,
   });
 }

@@ -247,15 +247,16 @@ describe('fetchPlacesByRegion 페이지네이션', () => {
 });
 
 describe('fetchFestivals', () => {
-  it('eventStartDate를 싣고 areaCode는 싣지 않는다', async () => {
+  it('eventStartDate와 lDongRegnCd를 싣고 areaCode는 싣지 않는다', async () => {
     const fetchFn = mockFetch();
     fetchFn.mockResolvedValue(jsonResponse(envelope('', 0)));
 
-    await fetchFestivals('20260801');
+    await fetchFestivals('20260801', '50');
 
     const url = new URL(fetchFn.mock.calls[0][0]);
     expect(url.pathname).toContain('/searchFestival2');
     expect(url.searchParams.get('eventStartDate')).toBe('20260801');
+    expect(url.searchParams.get('lDongRegnCd')).toBe('50');
     // areaCode를 붙이면 축제 레코드의 areacode가 비어 있어 0건이 된다.
     expect(url.searchParams.get('areaCode')).toBeNull();
   });
