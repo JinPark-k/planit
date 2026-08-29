@@ -13,6 +13,13 @@ export class ScheduleItemResponseDto {
   @ApiProperty({ description: 'HH:MM', example: '09:00' })
   startTime!: string;
 
+  @ApiProperty({
+    description:
+      '이 장소에 머무는 시간(분). 카테고리별 기본값(관광 90 / 맛집 60 / 액티비티 120)이라 추정치다.',
+    example: 90,
+  })
+  stayMinutes!: number;
+
   @ApiPropertyOptional({
     description:
       '직전 장소로부터의 추정 이동시간(분). 첫 장소는 없음. 하버사인 근사치.',
@@ -46,6 +53,7 @@ export function toScheduleResponse(
         {
           place: toPlaceResponse(row),
           startTime: item.startTime,
+          stayMinutes: item.stayMinutes,
           travelFromPreviousMinutes: item.travelFromPreviousMinutes,
         },
       ];

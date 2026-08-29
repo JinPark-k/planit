@@ -19,6 +19,8 @@ export interface ScheduleItem {
   place: Place;
   /** ISO time string, e.g. "10:00" */
   startTime: string;
+  /** 이 장소에 머무는 시간(분). 카테고리별 기본값이라 추정치다. */
+  stayMinutes: number;
   /** 직전 장소로부터의 이동시간(분). 첫 장소는 undefined */
   travelFromPreviousMinutes?: number;
 }

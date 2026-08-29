@@ -216,12 +216,14 @@ function orderWithinDay(
     if (travelFromPreviousMinutes !== undefined) {
       clock += travelFromPreviousMinutes;
     }
+    const stayMinutes = DEFAULT_VISIT_DURATION_MINUTES[place.category];
     items.push({
       place,
       startTime: formatClock(clock),
+      stayMinutes,
       travelFromPreviousMinutes,
     });
-    clock += DEFAULT_VISIT_DURATION_MINUTES[place.category];
+    clock += stayMinutes;
     currentLocation = place.location;
   };
 
