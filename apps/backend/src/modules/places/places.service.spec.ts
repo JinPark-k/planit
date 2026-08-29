@@ -219,3 +219,76 @@ describe('PlacesService.findRowsByRegion', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 });
+
+describe('PlacesService 캐시', () => {
+  // TTL 만료 자체는 common/ttl-cache.spec.ts에서 시계를 주입해 검증한다.
+  // 여기서는 서비스가 캐시를 "언제 쓰고 언제 안 쓰는지"만 본다.
+
+  it('같은 조회를 반복하면 DB를 한 번만 읽는다', async () => {
+    const { client, rangeCalls } = fakeSupabase([makeRows(3)]);
+    const service = new PlacesService(client);
+
+    const first = await service.findRowsByRegion('JEJU');
+    const second = await service.findRowsByRegion('JEJU');
+
+    expect(rangeCalls).toHaveLength(1);
+    expect(second).toEqual(first);
+  });
+
+  it('필터가 다르면 각각 조회한다', async () => {
+    const { client, rangeCalls } = fakeSupabase([makeRows(3), makeRows(2)]);
+    const service = new PlacesService(client);
+
+    await service.findRowsByRegion('JEJU');
+    await service.findRowsByRegion('JEJU', { category: 'FOOD' });
+
+    expect(rangeCalls).toHaveLength(2);
+  });
+
+  it('지역이 다르면 각각 조회한다', async () => {
+    const { client, rangeCalls } = fakeSupabase([makeRows(3), makeRows(2)]);
+    const service = new PlacesService(client);
+
+    await service.findRowsByRegion('JEJU');
+    await service.findRowsByRegion('BUSAN');
+
+    expect(rangeCalls).toHaveLength(2);
+  });
+
+  it('태그 순서만 다른 조회는 같은 캐시를 쓴다', async () => {
+    // overlaps는 순서를 따지지 않으므로 같은 질의다. 키가 갈리면 헛되이 두 번 읽는다.
+    const { client, rangeCalls } = fakeSupabase([makeRows(3)]);
+    const service = new PlacesService(client);
+
+    await service.findRowsByRegion('JEJU', { anyTags: ['바다', '맛집'] });
+    await service.findRowsByRegion('JEJU', { anyTags: ['맛집', '바다'] });
+
+    expect(rangeCalls).toHaveLength(1);
+  });
+
+  it('반환된 배열을 호출측이 변형해도 캐시가 오염되지 않는다', async () => {
+    const { client } = fakeSupabase([makeRows(3)]);
+    const service = new PlacesService(client);
+
+    const first = await service.findRowsByRegion('JEJU');
+    first.reverse();
+    first.pop();
+
+    const second = await service.findRowsByRegion('JEJU');
+    expect(second).toHaveLength(3);
+    expect(second[0].content_id).toBe('0');
+  });
+
+  it('조회 실패는 캐시하지 않는다', async () => {
+    // 일시적인 오류를 TTL 동안 물고 있으면 회복돼도 계속 실패한다.
+    const { client, rangeCalls } = fakeSupabase([[]], {
+      message: 'permission denied',
+    });
+    const service = new PlacesService(client);
+
+    await expect(service.findRowsByRegion('JEJU')).rejects.toThrow();
+    await expect(service.findRowsByRegion('JEJU')).rejects.toThrow();
+
+    expect(rangeCalls).toHaveLength(2);
+  });
+});

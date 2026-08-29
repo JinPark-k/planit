@@ -11,6 +11,7 @@ import {
 } from '../../infra/supabase/places.types';
 import { SUPABASE_CLIENT } from '../../infra/supabase/supabase.provider';
 import { REGION_CODES, RegionCode } from '../../infra/tour-api/regions';
+import { TtlCache } from '../../common/ttl-cache';
 import type { PlaceCategory } from '../../core';
 
 /**
@@ -21,6 +22,24 @@ const PAGE_SIZE = 1000;
 /** 데이터가 예상보다 많거나 응답이 이상할 때 무한루프를 막는 안전장치. */
 const MAX_PAGES = 20;
 
+/**
+ * 조회 결과 캐시 수명.
+ *
+ * places는 하루 한 번 배치로만 바뀌는데 요청마다 지역 전체를 읽는다
+ * (서울 3,115건 = 4페이지 왕복). 인증이 없어 아무나 호출할 수 있으므로
+ * 반복 호출이 그대로 Supabase 전송량이 된다.
+ *
+ * 10분: 배치 결과가 반영되기까지 최대 이만큼 늦지만 배치가 하루 한 번이라
+ * 실질적인 신선도 손해가 없고, 반복 호출 비용은 크게 준다.
+ */
+const CACHE_TTL_MS = 10 * 60 * 1000;
+/**
+ * 키워드 조합마다 캐시 키가 생기므로 상한이 필요하다.
+ * 지역 3개 × 자주 쓰는 조합 정도를 담고, 넘치면 오래된 것부터 버린다.
+ * 한 항목이 최대 3천여 행(가벼운 컬럼만 select하므로 수 MB 수준)이다.
+ */
+const CACHE_MAX_ENTRIES = 32;
+
 /** 후보 축소 조건. 스코어 정렬 전에 DB에서 걸러 전송량을 줄인다. */
 export interface PlaceFilter {
   category?: PlaceCategory;
@@ -28,9 +47,29 @@ export interface PlaceFilter {
   anyTags?: string[];
 }
 
+/**
+ * 같은 조회를 같은 키로 모은다.
+ *
+ * 태그를 정렬하는 이유: `overlaps`는 순서를 따지지 않으므로 `['바다','맛집']`과
+ * `['맛집','바다']`는 같은 질의다. 정렬하지 않으면 같은 결과가 키만 달라 따로 캐시된다.
+ */
+export function placesCacheKey(
+  regionCode: RegionCode,
+  filter: PlaceFilter,
+): string {
+  const tags = [...(filter.anyTags ?? [])].sort().join(',');
+  return `${regionCode}|${filter.category ?? ''}|${tags}`;
+}
+
 @Injectable()
 export class PlacesService {
   private readonly logger = new Logger(PlacesService.name);
+
+  /** 인스턴스 단위. Nest 싱글턴이라 프로세스 전체가 공유하고, 테스트끼리는 섞이지 않는다. */
+  private readonly cache = new TtlCache<PlaceListRow[]>({
+    ttlMs: CACHE_TTL_MS,
+    maxEntries: CACHE_MAX_ENTRIES,
+  });
 
   constructor(
     @Inject(SUPABASE_CLIENT) private readonly supabase: SupabaseClient,
@@ -57,6 +96,15 @@ export class PlacesService {
       throw new BadRequestException(
         `Unknown regionCode: ${regionCode}. Expected one of ${Object.keys(REGION_CODES).join(', ')}`,
       );
+    }
+
+    const cacheKey = placesCacheKey(regionCode, filter);
+    const cached = this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.log(
+        `findRowsByRegion(${regionCode}) -> ${cached.length} places (cached)`,
+      );
+      return [...cached];
     }
 
     const rows: PlaceListRow[] = [];
@@ -93,7 +141,12 @@ export class PlacesService {
       if (pageRows.length < PAGE_SIZE) break;
     }
 
+    this.cache.set(cacheKey, rows);
+
     this.logger.log(`findRowsByRegion(${regionCode}) -> ${rows.length} places`);
-    return rows;
+    // 얕은 복사를 돌려준다. 호출측이 배열을 in-place로 정렬/변형해도 캐시가 오염되지 않는다
+    // (지금 호출자들은 map/slice만 쓰지만, 이 함수가 배열을 넘겨준다는 사실만 보고
+    //  나중에 정렬을 넣기 쉽다).
+    return [...rows];
   }
 }
