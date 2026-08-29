@@ -131,6 +131,41 @@ describe('generateSchedule / orderWithinDay (day-1 case)', () => {
   });
 });
 
+describe('체류시간(stayMinutes)', () => {
+  it('카테고리별 기본 체류시간이 아이템에 실린다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [
+        place('sight', 'SIGHTSEEING', 37.5, 127, 1, 1),
+        place('food', 'FOOD', 37.501, 127.001, 1, 1),
+        place('act', 'ACTIVITY', 37.502, 127.002, 1, 1),
+      ],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+    const byId = new Map(day.items.map((i) => [i.place.id, i.stayMinutes]));
+    expect(byId.get('sight')).toBe(90);
+    expect(byId.get('food')).toBe(60);
+    expect(byId.get('act')).toBe(120);
+  });
+
+  it('다음 장소의 시작 시각은 체류시간과 이동시간의 합만큼 뒤다', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [
+        place('a', 'SIGHTSEEING', 37.5, 127, 2, 1),
+        place('b', 'SIGHTSEEING', 37.51, 127.01, 1, 1),
+      ],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+    const [first, second] = day.items;
+    expect(minutesFromClock(second.startTime) - minutesFromClock(first.startTime)).toBe(
+      first.stayMinutes + (second.travelFromPreviousMinutes ?? 0),
+    );
+  });
+});
+
 describe('generateSchedule multi-day smoke test', () => {
   it('dayCount만큼 ScheduleDay를 생성하고 startTime 포맷이 유효하다', () => {
     const places = [

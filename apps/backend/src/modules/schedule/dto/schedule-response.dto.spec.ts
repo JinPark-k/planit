@@ -48,6 +48,7 @@ function day(): ScheduleDay {
           rating: 0.5,
         },
         startTime: '09:00',
+        stayMinutes: 90,
       },
       {
         place: {
@@ -60,6 +61,7 @@ function day(): ScheduleDay {
           rating: 0.5,
         },
         startTime: '10:39',
+        stayMinutes: 60,
         travelFromPreviousMinutes: 9,
       },
     ],
@@ -78,6 +80,7 @@ describe('toScheduleResponse', () => {
     expect(result.items.map((i) => i.startTime)).toEqual(['09:00', '10:39']);
     expect(result.items[0].travelFromPreviousMinutes).toBeUndefined();
     expect(result.items[1].travelFromPreviousMinutes).toBe(9);
+    expect(result.items.map((i) => i.stayMinutes)).toEqual([90, 60]);
   });
 
   it('core의 Place에 없는 표시 필드를 row에서 다시 붙인다', () => {
