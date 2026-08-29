@@ -31,6 +31,12 @@ export const KEYWORD_TAG_MAP: Record<string, string[]> = {
   데이트: ['카페', '산책', '전시'],
 };
 
+/**
+ * 선택 가능한 키워드 목록. 화면이 키워드를 하드코딩하지 않도록 API로 노출한다
+ * (KEYWORD_TAG_MAP을 고치면 화면이 자동으로 따라간다).
+ */
+export const KEYWORD_LIST = Object.keys(KEYWORD_TAG_MAP);
+
 export function resolveTagsForKeywords(keywords: string[]): string[] {
   const tags = new Set<string>();
   for (const keyword of keywords) {
