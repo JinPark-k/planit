@@ -83,6 +83,18 @@ pnpm dev:mobile:android
 
 iOS는 최초 1회 `cd apps/mobile/ios && pod install` 필요. Android는 `ANDROID_HOME` 환경변수 설정 필요.
 
+앱을 띄우기 전에 `apps/mobile/.env.example`을 복사해 `apps/mobile/.env`를 만든다. 이 파일이 없어도
+빌드는 성공하지만 `Config`가 빈 채로 돌아 `API_BASE_URL` 폴백값이 쓰이므로 증상이 눈에 띄지 않는다.
+
+- `.env`를 고친 뒤에는 Metro 리로드로 반영되지 않는다. Android는 `dotenv.gradle`이 Gradle
+  configuration 시점에 값을 읽어 `BuildConfig`로 굽기 때문에 **앱을 다시 빌드**해야 한다.
+- 호스트 주소가 플랫폼마다 다르다. iOS 시뮬레이터는 `localhost`, Android 에뮬레이터는
+  `10.0.2.2`가 호스트 PC다.
+- **Android 에뮬레이터는 Wi-Fi를 꺼야 호스트에 붙는다** (`adb shell svc wifi disable`).
+  Wi-Fi가 켜져 있으면 `wlan0`가 `10.0.2.0/24` 라우트를 가져가 앱의 기본 네트워크가
+  `10.0.2.2`(= 호스트)에 도달하지 못하고, Metro 연결이 5초 타임아웃 뒤
+  `Unable to load script`로 죽는다. `adb reverse`는 이 우회로가 되지 못한다(동작하지 않음).
+
 ## 환경 변수
 
 | 파일 | 용도 | git |

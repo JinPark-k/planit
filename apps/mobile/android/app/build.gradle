@@ -5,6 +5,13 @@ apply plugin: "com.facebook.react"
 // apps/mobile/android/app -> 레포 루트
 def monorepoRoot = file("../../../..")
 
+// react-native-config: .env 값을 BuildConfig 필드로 굽는다.
+// 네이티브 모듈 자체는 autolinking으로 붙지만, 이 apply가 없으면 BuildConfig가 비어서
+// JS의 Config가 {}가 된다(빌드는 조용히 성공한다).
+// 경로를 하드코딩하지 않고 autolinking이 등록한 프로젝트를 통해 찾는다
+// — pnpm이 hoisted라 node_modules가 앱 디렉터리 밖(레포 루트)에 있기 때문.
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
