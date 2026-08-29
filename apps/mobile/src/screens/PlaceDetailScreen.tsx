@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Place } from '../api/types';
+import { Chip } from '../components/Chip';
 import { CATEGORY_LABELS } from '../constants/categories';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
 import { formatVisit, telHref, VisitContext } from './placeDetail.format';
@@ -86,18 +87,18 @@ export function PlaceDetailScreen({ place, visit, onBack }: Props) {
           <View style={styles.titleRow}>
             <Text style={styles.name}>{place.name}</Text>
             <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>
-                {CATEGORY_LABELS[place.category]}
-              </Text>
+              <Chip
+                label={CATEGORY_LABELS[place.category]}
+                variant="soft"
+                size="sm"
+              />
             </View>
           </View>
 
           {place.tags.length > 0 && (
             <View style={styles.tagRow}>
               {place.tags.map(tag => (
-                <View key={tag} style={styles.tag}>
-                  <Text style={styles.tagText}>#{tag}</Text>
-                </View>
+                <Chip key={tag} label={`#${tag}`} size="sm" />
               ))}
             </View>
           )}
@@ -211,33 +212,14 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   categoryBadge: {
+    // 이름 첫 줄에 시각적으로 맞추는 오프셋. 모양 자체는 Chip이 갖는다.
     marginTop: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-    backgroundColor: colors.primaryLight,
-  },
-  categoryText: {
-    ...typography.microStrong,
-    color: colors.primary,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
     marginTop: spacing.sm,
-  },
-  tag: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  tagText: {
-    ...typography.micro,
-    color: colors.textMuted,
   },
   visitCard: {
     marginTop: spacing.lg,

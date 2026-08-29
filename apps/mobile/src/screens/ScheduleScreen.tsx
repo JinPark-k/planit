@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { ScheduleDay, ScheduleItem } from '../api/types';
+import { Chip } from '../components/Chip';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
 import {
   DayTab,
@@ -64,12 +65,16 @@ export function ScheduleScreen({
         // flexGrow를 막지 않으면 세로로 눌려 탭 글자가 잘린다.
         style={styles.tabScroll}
         contentContainerStyle={styles.tabRow}>
-        <Tab label="전체 보기" active={tab === 'ALL'} onPress={() => setTab('ALL')} />
+        <Chip
+          label="전체 보기"
+          selected={tab === 'ALL'}
+          onPress={() => setTab('ALL')}
+        />
         {days.map(day => (
-          <Tab
+          <Chip
             key={day.day}
             label={`${day.day}일차`}
-            active={tab === day.day}
+            selected={tab === day.day}
             onPress={() => setTab(day.day)}
           />
         ))}
@@ -117,28 +122,6 @@ export function ScheduleScreen({
         </Pressable>
       </View>
     </View>
-  );
-}
-
-function Tab({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      onPress={onPress}
-      style={[styles.tab, active && styles.tabActive]}>
-      <Text style={[styles.tabText, active && styles.tabTextActive]}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -233,26 +216,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  tab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  tabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  tabText: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  tabTextActive: {
-    ...typography.label,
-    color: colors.surface,
   },
   list: {
     paddingHorizontal: spacing.lg,

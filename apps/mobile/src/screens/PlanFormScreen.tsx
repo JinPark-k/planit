@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Chip } from '../components/Chip';
 import { fetchKeywords } from '../api/keywords';
 import { GenerateScheduleRequest, RegionCode } from '../api/types';
 import { REGION_OPTIONS } from '../constants/regions';
@@ -169,34 +170,6 @@ function Section({
   );
 }
 
-function Chip({
-  label,
-  selected,
-  dimmed,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  dimmed?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={[
-        styles.chip,
-        selected && styles.chipSelected,
-        dimmed && styles.chipDimmed,
-      ]}>
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -227,29 +200,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipDimmed: {
-    opacity: 0.4,
-  },
-  chipText: {
-    ...typography.small,
-    color: colors.text,
-  },
-  chipTextSelected: {
-    ...typography.smallStrong,
-    color: colors.surface,
   },
   inlineSpinner: {
     alignSelf: 'flex-start',
