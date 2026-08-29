@@ -66,12 +66,15 @@ export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
   rawItems.push(...festivals);
 
   // 2) 정제
-  const { rows, skipped, deduped } = transformPlaces(
+  const { rows, skipped, excluded, deduped } = transformPlaces(
     rawItems,
     regionCode,
     syncedAt,
   );
-  log(`transformed=${rows.length} skipped=${skipped} deduped=${deduped}`);
+  log(
+    `transformed=${rows.length} skipped=${skipped} ` +
+      `excluded=${excluded} deduped=${deduped}`,
+  );
 
   // 매핑 튜닝용: cat3 오버라이드가 없는 코드를 상위 10개만 노출.
   const unmapped = new Map<string, number>();
@@ -111,5 +114,8 @@ export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
     log(`upserted ${upserted}/${rows.length}`);
   }
 
-  log(`done. upserted=${upserted} skipped=${skipped} deduped=${deduped}`);
+  log(
+    `done. upserted=${upserted} skipped=${skipped} ` +
+      `excluded=${excluded} deduped=${deduped}`,
+  );
 }

@@ -170,8 +170,6 @@ export const CAT3_TAG_MAP: Record<string, DerivableTag[]> = {
  * cat 계열과 마찬가지로 3단계가 2단계를 "대체"한다(병합 아님).
  */
 export const LCLS2_TAG_MAP: Record<string, DerivableTag[]> = {
-  // AC 숙박 — 숙박은 수집 대상이 아니지만 캠핑(AC05)만 관광타입 28(레포츠)이라 들어온다.
-  AC05: ['액티비티', '레저', '자연'],
   // EV 축제/공연/행사
   EV01: ['축제'],
   EV02: ['공연', '문화'],
@@ -218,8 +216,9 @@ export const LCLS2_TAG_MAP: Record<string, DerivableTag[]> = {
   VE09: ['문화', '실내'],
   VE10: ['액티비티', '레저'],
   VE12: ['문화'],
-  // 매핑하지 않음: AC05를 제외한 AC(숙박)/C01(추천코스)/SH(쇼핑)은 수집 대상 관광타입이 아니고,
+  // 매핑하지 않음: AC(숙박)/C01(추천코스)/SH(쇼핑)은 수집 대상 관광타입이 아니고,
   // VE11(교통시설)은 여행지로서 의미 있는 태그가 없다.
+  // AC05(캠핑)는 관광타입 28로 들어오지만 숙박이라 아예 제외한다 — EXCLUDED_LCLS2_CODES 참고.
 };
 
 /** 2단계 기본값이 맞지 않는 코드만 3단계에서 덮어쓴다. */
@@ -245,6 +244,23 @@ export const LCLS3_TAG_MAP: Record<string, DerivableTag[]> = {
   VE010800: ['자연', '해변', '산책'], // 등대
   VE040300: ['산책', '자연'], // 둘레길
 };
+
+/**
+ * 관광타입은 수집 대상이지만 실제로는 숙박이라 일정에 넣을 수 없는 분류.
+ *
+ * AC05(캠핑: 일반야영장/오토캠핑장/카라반/글램핑장)는 공식 정의서상 관광타입 28(레포츠)이라
+ * 레포츠 수집에 딸려 들어온다. 하지만 잠을 자는 곳이지 낮에 들르는 일정 항목이 아니다.
+ * 그대로 두면 '별헤는밤글램핑' 같은 숙소가 ACTIVITY로 오후 시간대에 배치된다.
+ * contentTypeId 32(숙박)를 수집하지 않기로 한 결정과 같은 기준으로 제외한다.
+ *
+ * 2026-08 실측: 제주 22건 + 부산 12건. 34건 전부 lclsSystm2로 걸러지고,
+ * 구 cat 코드가 A0302x인 행 중 캠핑이 아닌 49건은 전부 LS01(육상레저스포츠)이라 오탐이 없다.
+ */
+export const EXCLUDED_LCLS2_CODES = new Set(['AC05']);
+
+export function isExcludedLcls2(lclsSystm2: string | null): boolean {
+  return lclsSystm2 !== null && EXCLUDED_LCLS2_CODES.has(lclsSystm2);
+}
 
 export interface TagSource {
   contentTypeId: string | null;

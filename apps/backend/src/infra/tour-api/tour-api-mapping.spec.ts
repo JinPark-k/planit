@@ -4,6 +4,7 @@ import {
   CAT3_TAG_MAP,
   CONTENT_TYPE_TAG_MAP,
   DERIVABLE_TAGS,
+  isExcludedLcls2,
   isMappedCat3,
   LCLS2_TAG_MAP,
   LCLS3_TAG_MAP,
@@ -296,13 +297,13 @@ describe('lclsSystm 폴백', () => {
     }
   });
 
-  it('캠핑(AC05)은 숙박 대분류지만 레포츠로 수집되므로 매핑되어 있다', () => {
-    // 공식 "신분류체계정보 관광타입정보 연계 정의서" 기준 AC05 하위 4개 코드가
-    // 모두 관광타입 28(레포츠)이다. AC를 숙박으로만 보고 통째로 제외하면 빠진다.
-    const tags = resolveTags(
-      src({ contentTypeId: '28', lclsSystm2: 'AC05', lclsSystm3: 'AC050200' }),
-    );
-    expect(tags).toEqual(expect.arrayContaining(['액티비티', '레저', '자연']));
+  it('캠핑(AC05)은 태그 매핑 대상이 아니다', () => {
+    // 숙박이라 수집 단계에서 제외한다(isExcludedLcls2). 매핑을 남겨두면
+    // 제외 로직이 빠졌을 때 조용히 ACTIVITY로 배치되므로 의도적으로 비운다.
+    expect(LCLS2_TAG_MAP.AC05).toBeUndefined();
+    expect(isExcludedLcls2('AC05')).toBe(true);
+    expect(isExcludedLcls2('LS01')).toBe(false);
+    expect(isExcludedLcls2(null)).toBe(false);
   });
 
   it('lclsSystm 코드 형태가 올바르다 (2단계 4자, 3단계 8자 + 상위 존재)', () => {

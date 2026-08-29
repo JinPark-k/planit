@@ -250,7 +250,41 @@ describe('transformPlaces', () => {
     expect(transformPlaces([], 'SEOUL', SYNCED_AT)).toEqual({
       rows: [],
       skipped: 0,
+      excluded: 0,
       deduped: 0,
     });
+  });
+});
+
+describe('숙박 제외', () => {
+  it('캠핑(AC05)은 저장하지 않고 excluded로 센다', () => {
+    const result = transformPlaces(
+      [
+        {
+          contentid: '1',
+          title: '별헤는밤글램핑',
+          mapx: '126.5',
+          mapy: '33.4',
+          contenttypeid: '28',
+          lclsSystm2: 'AC05',
+          lclsSystm3: 'AC050400',
+        },
+        {
+          contentid: '2',
+          title: '제주승마장',
+          mapx: '126.5',
+          mapy: '33.4',
+          contenttypeid: '28',
+          lclsSystm2: 'LS01',
+          lclsSystm3: 'LS010700',
+        },
+      ],
+      'JEJU',
+      '2026-08-29T00:00:00.000Z',
+    );
+
+    expect(result.rows.map((r) => r.name)).toEqual(['제주승마장']);
+    expect(result.excluded).toBe(1);
+    expect(result.skipped).toBe(0);
   });
 });

@@ -1,5 +1,6 @@
 import { PlaceInsert } from '../infra/supabase/places.types';
 import {
+  isExcludedLcls2,
   resolveCategory,
   resolveTags,
 } from '../infra/tour-api/tour-api-mapping';
@@ -132,7 +133,10 @@ export function transformPlace(
 
 export interface TransformResult {
   rows: PlaceInsert[];
+  /** 좌표/필수 필드가 없어 저장할 수 없던 건수. */
   skipped: number;
+  /** 데이터는 멀쩡하지만 일정에 넣을 수 없어(숙박 등) 의도적으로 뺀 건수. */
+  excluded: number;
   /** 같은 content_id가 중복으로 들어와 제거된 건수. */
   deduped: number;
 }
@@ -150,9 +154,15 @@ export function transformPlaces(
 ): TransformResult {
   const byContentId = new Map<string, PlaceInsert>();
   let skipped = 0;
+  let excluded = 0;
   let deduped = 0;
 
   for (const item of items) {
+    // 숙박(캠핑)은 관광타입 28로 딸려 들어오지만 일정 항목이 아니라 저장하지 않는다.
+    if (isExcludedLcls2(nullable(item.lclsSystm2))) {
+      excluded += 1;
+      continue;
+    }
     const row = transformPlace(item, regionCode, syncedAt);
     if (row === null) {
       skipped += 1;
@@ -162,5 +172,5 @@ export function transformPlaces(
     byContentId.set(row.content_id, row); // 나중 값이 이긴다
   }
 
-  return { rows: [...byContentId.values()], skipped, deduped };
+  return { rows: [...byContentId.values()], skipped, excluded, deduped };
 }
