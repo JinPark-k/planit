@@ -161,27 +161,48 @@ async function fetchAllPages<TItem>(
   return all;
 }
 
-/** 지역기반 관광정보 조회. 콘텐츠타입 단위로 호출한다(12/14/28/39). */
+/**
+ * 지역기반 관광정보 조회. 콘텐츠타입 단위로 호출한다(12/14/28/39).
+ *
+ * areaCode가 아니라 lDongRegnCd(법정동 시도코드)로 거른다.
+ * TourAPI의 areacode 필드가 채워지지 않은 레코드가 많아, areaCode로 조회하면
+ * 그런 레코드가 통째로 빠진다 (새별오름 contentid=572973, 카멜리아힐 741109 등
+ * 제주 대표 관광지가 areacode='' 라서 누락됐다).
+ *
+ * 2026-08 실측 — 우리가 수집하는 타입(12/14/28/39) 합계:
+ *   제주 920 -> 1512, 서울 1658 -> 3080, 부산 537 -> 1054.
+ * lDongRegnCd 결과가 areaCode 결과를 완전히 포함하는 것도 확인했다
+ * (areaCode에만 있는 contentid 0건). 그래서 합집합이 아니라 단순 전환으로 충분하다.
+ *
+ * 같은 원인으로 축제(searchFestival2)는 이미 lDongRegnCd로 필터링하고 있었다.
+ */
 export function fetchPlacesByRegion(
-  areaCode: string,
+  lDongRegnCd: string,
   contentTypeId: string,
 ): Promise<TourApiRawItem[]> {
   return fetchAllPages<TourApiRawItem>('areaBasedList2', {
-    areaCode,
+    lDongRegnCd,
     contentTypeId,
   });
 }
 
 /**
- * 축제 조회. areaCode를 붙이면 0건이 된다 —
- * 현재 축제 레코드는 areacode/sigungucode가 빈 문자열로 오기 때문.
- * 전국을 받아 호출측에서 lDongRegnCd(법정동 시도코드)로 필터링한다.
+ * 축제 조회. 장소와 같은 이유로 areaCode가 아니라 lDongRegnCd로 거른다
+ * (축제 레코드는 areacode가 빈 문자열이라 areaCode 필터가 0건이 된다).
+ *
+ * 2026-08 실측으로 서버 필터와 전국 조회 후 클라이언트 필터의 결과가
+ * 완전히 동일함을 확인했다(제주 5 / 서울 50 / 부산 19건, contentid 집합 일치).
+ * 전국 264건을 받아 버리던 것을 지역분만 받도록 바꾼다.
+ *
  * @param eventStartDate YYYYMMDD. 이 날짜 기준 진행중/예정 축제를 반환.
+ * @param lDongRegnCd 법정동 시도코드.
  */
 export function fetchFestivals(
   eventStartDate: string,
+  lDongRegnCd: string,
 ): Promise<TourApiFestivalItem[]> {
   return fetchAllPages<TourApiFestivalItem>('searchFestival2', {
     eventStartDate,
+    lDongRegnCd,
   });
 }

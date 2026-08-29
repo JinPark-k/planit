@@ -230,29 +230,33 @@ describe('fetchPlacesByRegion 페이지네이션', () => {
     ).toBe('1000');
   });
 
-  it('요청 파라미터에 areaCode와 contentTypeId가 실린다', async () => {
+  it('지역 필터로 lDongRegnCd를 싣고 areaCode는 싣지 않는다', async () => {
     const fetchFn = mockFetch();
     fetchFn.mockResolvedValue(jsonResponse(envelope('', 0)));
 
-    await fetchPlacesByRegion('6', '28');
+    await fetchPlacesByRegion('26', '28');
 
     const params = new URL(fetchFn.mock.calls[0][0]).searchParams;
-    expect(params.get('areaCode')).toBe('6');
+    expect(params.get('lDongRegnCd')).toBe('26');
     expect(params.get('contentTypeId')).toBe('28');
     expect(fetchFn.mock.calls[0][0]).toContain('/areaBasedList2?');
+    // areaCode로 조회하면 areacode가 비어 있는 레코드가 통째로 누락된다.
+    // (제주 920 -> 1512, 서울 1658 -> 3080, 부산 537 -> 1054건)
+    expect(params.get('areaCode')).toBeNull();
   });
 });
 
 describe('fetchFestivals', () => {
-  it('eventStartDate를 싣고 areaCode는 싣지 않는다', async () => {
+  it('eventStartDate와 lDongRegnCd를 싣고 areaCode는 싣지 않는다', async () => {
     const fetchFn = mockFetch();
     fetchFn.mockResolvedValue(jsonResponse(envelope('', 0)));
 
-    await fetchFestivals('20260801');
+    await fetchFestivals('20260801', '50');
 
     const url = new URL(fetchFn.mock.calls[0][0]);
     expect(url.pathname).toContain('/searchFestival2');
     expect(url.searchParams.get('eventStartDate')).toBe('20260801');
+    expect(url.searchParams.get('lDongRegnCd')).toBe('50');
     // areaCode를 붙이면 축제 레코드의 areacode가 비어 있어 0건이 된다.
     expect(url.searchParams.get('areaCode')).toBeNull();
   });

@@ -1,5 +1,6 @@
 import { PlaceInsert } from '../infra/supabase/places.types';
 import {
+  isExcludedLcls2,
   resolveCategory,
   resolveTags,
 } from '../infra/tour-api/tour-api-mapping';
@@ -84,17 +85,18 @@ export function transformPlace(
   if (!isWithinKorea(lat, lng)) return null;
 
   const contentTypeId = nullable(item.contenttypeid);
-  const cat1 = nullable(item.cat1);
-  const cat2 = nullable(item.cat2);
-  const cat3 = nullable(item.cat3);
+  // 태그 도출의 근거. 구 cat1~3는 매뉴얼 v4.4(2026-02-10)에서 스펙에서 삭제됐다.
+  const lclsSystm1 = nullable(item.lclsSystm1);
+  const lclsSystm2 = nullable(item.lclsSystm2);
+  const lclsSystm3 = nullable(item.lclsSystm3);
   const festival = item;
 
   return {
     content_id: contentId,
     content_type_id: contentTypeId,
-    cat1,
-    cat2,
-    cat3,
+    lcls_systm1: lclsSystm1,
+    lcls_systm2: lclsSystm2,
+    lcls_systm3: lclsSystm3,
     addr1: nullable(item.addr1),
     addr2: nullable(item.addr2),
     tel: nullable(item.tel),
@@ -108,9 +110,12 @@ export function transformPlace(
     // 축제 레코드는 areacode가 빈 문자열이므로 원본 대신 "처리 중인 지역"을 항상 사용한다.
     // 이렇게 하면 findRowsByRegion이 조회할 값과 항상 일치한다. 원본 areacode는 raw_response에 남는다.
     region_code: REGION_CODES[regionCode],
-    sigungu_code: nullable(item.sigungucode),
+    // 법정동 시군구 코드(lDongSignguCd)를 저장한다.
+    // TourAPI가 sigungucode를 "미사용항목(삭제예정 - 법정동 시군구 코드로 대체)"로 공지했고,
+    // 실측(2588행)에서도 lDongSignguCd는 100%, sigungucode는 56.1%만 채워져 있었다.
+    sigungu_code: nullable(item.lDongSignguCd) ?? nullable(item.sigungucode),
     category: resolveCategory(contentTypeId),
-    tags: resolveTags({ contentTypeId, cat1, cat2, cat3 }),
+    tags: resolveTags({ contentTypeId, lclsSystm2, lclsSystm3 }),
     event_start_date: parseTourApiDate(festival.eventstartdate),
     event_end_date: parseTourApiDate(festival.eventenddate),
     last_synced_at: syncedAt,
@@ -119,7 +124,10 @@ export function transformPlace(
 
 export interface TransformResult {
   rows: PlaceInsert[];
+  /** 좌표/필수 필드가 없어 저장할 수 없던 건수. */
   skipped: number;
+  /** 데이터는 멀쩡하지만 일정에 넣을 수 없어(숙박 등) 의도적으로 뺀 건수. */
+  excluded: number;
   /** 같은 content_id가 중복으로 들어와 제거된 건수. */
   deduped: number;
 }
@@ -137,9 +145,15 @@ export function transformPlaces(
 ): TransformResult {
   const byContentId = new Map<string, PlaceInsert>();
   let skipped = 0;
+  let excluded = 0;
   let deduped = 0;
 
   for (const item of items) {
+    // 숙박(캠핑)은 관광타입 28로 딸려 들어오지만 일정 항목이 아니라 저장하지 않는다.
+    if (isExcludedLcls2(nullable(item.lclsSystm2))) {
+      excluded += 1;
+      continue;
+    }
     const row = transformPlace(item, regionCode, syncedAt);
     if (row === null) {
       skipped += 1;
@@ -149,5 +163,5 @@ export function transformPlaces(
     byContentId.set(row.content_id, row); // 나중 값이 이긴다
   }
 
-  return { rows: [...byContentId.values()], skipped, deduped };
+  return { rows: [...byContentId.values()], skipped, excluded, deduped };
 }

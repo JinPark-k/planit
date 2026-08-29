@@ -6,17 +6,13 @@ import {
 } from '../infra/tour-api/tour-api.client';
 import {
   AREA_BASED_CONTENT_TYPE_IDS,
-  isMappedCat3,
+  isUnmappedLcls,
 } from '../infra/tour-api/tour-api-mapping';
 import {
   TourApiFestivalItem,
   TourApiRawItem,
 } from '../infra/tour-api/tour-api.types';
-import {
-  REGION_CODES,
-  REGION_LDONG_CODES,
-  RegionCode,
-} from '../infra/tour-api/regions';
+import { REGION_LDONG_CODES, RegionCode } from '../infra/tour-api/regions';
 import { transformPlaces } from './transform-place';
 
 /**
@@ -47,42 +43,45 @@ export function chunk<T>(items: T[], size: number): T[][] {
  */
 export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
   const log = (msg: string) => console.log(`[batch:${regionCode}] ${msg}`);
-  const areaCode = REGION_CODES[regionCode];
   const lDongRegnCd = REGION_LDONG_CODES[regionCode];
   const syncedAt = new Date().toISOString();
 
   // 1) 수집
   const rawItems: (TourApiRawItem | TourApiFestivalItem)[] = [];
   for (const contentTypeId of AREA_BASED_CONTENT_TYPE_IDS) {
-    const items = await fetchPlacesByRegion(areaCode, contentTypeId);
+    const items = await fetchPlacesByRegion(lDongRegnCd, contentTypeId);
     log(
-      `areaBasedList2 contentTypeId=${contentTypeId} fetched=${items.length}`,
+      `areaBasedList2 lDongRegnCd=${lDongRegnCd} contentTypeId=${contentTypeId} ` +
+        `fetched=${items.length}`,
     );
     rawItems.push(...items);
   }
 
   const eventStartDate = todayInKst();
-  const allFestivals = await fetchFestivals(eventStartDate);
-  const festivals = allFestivals.filter((f) => f.lDongRegnCd === lDongRegnCd);
+  const festivals = await fetchFestivals(eventStartDate, lDongRegnCd);
   log(
-    `searchFestival2 eventStartDate=${eventStartDate} fetched=${allFestivals.length} ` +
-      `matched(lDongRegnCd=${lDongRegnCd})=${festivals.length}`,
+    `searchFestival2 eventStartDate=${eventStartDate} lDongRegnCd=${lDongRegnCd} ` +
+      `fetched=${festivals.length}`,
   );
   rawItems.push(...festivals);
 
   // 2) 정제
-  const { rows, skipped, deduped } = transformPlaces(
+  const { rows, skipped, excluded, deduped } = transformPlaces(
     rawItems,
     regionCode,
     syncedAt,
   );
-  log(`transformed=${rows.length} skipped=${skipped} deduped=${deduped}`);
+  log(
+    `transformed=${rows.length} skipped=${skipped} ` +
+      `excluded=${excluded} deduped=${deduped}`,
+  );
 
-  // 매핑 튜닝용: cat3 오버라이드가 없는 코드를 상위 10개만 노출.
+  // 매핑 튜닝용: 분류체계로 태그를 못 만드는 코드를 상위 10개만 노출.
   const unmapped = new Map<string, number>();
   for (const row of rows) {
-    if (row.cat3 && !isMappedCat3(row.cat3)) {
-      unmapped.set(row.cat3, (unmapped.get(row.cat3) ?? 0) + 1);
+    if (isUnmappedLcls(row.lcls_systm2, row.lcls_systm3)) {
+      const code = row.lcls_systm3 ?? row.lcls_systm2 ?? '(없음)';
+      unmapped.set(code, (unmapped.get(code) ?? 0) + 1);
     }
   }
   if (unmapped.size > 0) {
@@ -91,7 +90,7 @@ export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
       .slice(0, 10)
       .map(([code, n]) => `${code}:${n}`)
       .join(', ');
-    log(`unmapped cat3 codes (top 10): ${top}`);
+    log(`unmapped lclsSystm3 codes (top 10): ${top}`);
   }
 
   if (rows.length === 0) {
@@ -116,5 +115,8 @@ export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
     log(`upserted ${upserted}/${rows.length}`);
   }
 
-  log(`done. upserted=${upserted} skipped=${skipped} deduped=${deduped}`);
+  log(
+    `done. upserted=${upserted} skipped=${skipped} ` +
+      `excluded=${excluded} deduped=${deduped}`,
+  );
 }
