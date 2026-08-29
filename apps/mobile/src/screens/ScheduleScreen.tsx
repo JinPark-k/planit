@@ -162,7 +162,7 @@ function TimelineRow({
           </Text>
           <Text style={styles.meta}>
             {travel !== undefined && `이동 약 ${formatMinutes(travel)} · `}
-            {formatMinutes(item.stayMinutes)} 소요
+            체류 {formatMinutes(item.stayMinutes)}
           </Text>
         </View>
 
