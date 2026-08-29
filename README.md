@@ -24,6 +24,31 @@ planit/
 
 백엔드는 `apps/backend/src/core`(배포 방식과 무관한 순수 도메인 로직)와 `apps/backend/adapters`(배포 타겟별 얇은 래퍼)를 분리한다. 인프라를 옮길 때는 `adapters`만 추가/교체하면 되고 `core`/`modules`/`infra`는 건드리지 않는다.
 
+## 배포
+
+백엔드는 Vercel에 올라가 있다: **https://planit-backend-omega.vercel.app**
+
+앱의 `API_BASE_URL` 기본값이 이 주소라, 앱만 받아도 백엔드를 로컬에서 띄우지 않고 동작한다.
+
+- Vercel 프로젝트: `jinpark-k/planit-backend`. 배포는 `npx vercel deploy --prod --cwd apps/backend`.
+- 환경변수는 Vercel에 `SUPABASE_URL` / `SUPABASE_ANON_KEY`만 넣는다. `anon` 키는 `places`에
+  `SELECT`만 허용돼 있다(`supabase/migrations/20260828000000_grant_table_privileges.sql`).
+  **`SUPABASE_SERVICE_ROLE_KEY`는 넣지 않는다** — 읽기 API에 필요 없고 노출면만 넓힌다.
+- 함수 리전은 `icn1`(서울). Supabase 프로젝트가 `ap-northeast-2`라 기본값(미국)이면 왕복이 느려진다.
+- `api/index.js`가 **tsc 산출물(`dist/`)을 참조**한다. Vercel의 Node 런타임은 TypeScript를
+  esbuild로 컴파일하는데, esbuild는 `emitDecoratorMetadata`를 지원하지 않아 Nest DI가
+  에러 없이 `undefined`를 주입한다(부팅은 성공하고 엔드포인트 호출 시점에 터진다).
+  그래서 빌드는 `nest build`에 맡긴다. 자세한 이유는 `apps/backend/api/index.js` 주석 참고.
+
+### 아직 안 한 설정
+
+- **GitHub 연동** — 대시보드에서 저장소를 연결하고 Root Directory를 `apps/backend`로 지정하면
+  push마다 자동 배포되고, Vercel이 레포 전체를 클론해 워크스페이스 루트에서 pnpm으로 설치한다.
+  지금은 `--cwd apps/backend`로 그 디렉터리만 올라가서 **npm으로 설치**되며 `apps/backend`에
+  자체 lockfile이 없어 매 배포마다 새로 해석한다(재현 가능한 빌드가 아니다).
+- **Deployment Protection** — `planit-backend-jinpark-k.vercel.app`은 Vercel 인증에 막혀 있다.
+  공개 도메인은 위의 `planit-backend-omega.vercel.app` 하나다.
+
 ## 시작하기
 
 ```bash
