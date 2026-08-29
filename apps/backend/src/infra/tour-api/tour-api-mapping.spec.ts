@@ -204,7 +204,7 @@ describe('isMappedCat3', () => {
 });
 
 describe('lclsSystm 폴백', () => {
-  it('cat 코드가 비어 있으면 lclsSystm으로 태그를 만든다', () => {
+  it('cat 코드가 비어 있어도 lclsSystm으로 태그를 만든다', () => {
     // 새별오름(contentid=572973)의 실제 응답: cat1/2/3가 전부 빈 문자열이고
     // lclsSystm만 채워져 있다. 이 경우 태그가 하나도 안 붙는 게 원래 버그였다.
     const tags = resolveTags(
@@ -220,28 +220,34 @@ describe('lclsSystm 폴백', () => {
     expect(tags).toEqual(expect.arrayContaining(['자연', '산', '등산']));
   });
 
-  it('cat 코드가 있으면 lclsSystm을 쓰지 않는다', () => {
-    // 이미 cat으로 태그가 붙던 행의 결과가 바뀌면 안 된다.
-    const withCat = resolveTags(
+  it('lclsSystm이 cat보다 우선한다', () => {
+    // TourAPI가 cat1~3를 "삭제예정"으로 공지했으므로 lclsSystm이 1순위다.
+    // 둘 다 있으면 lclsSystm 결과가 나와야 한다.
+    const tags = resolveTags(
       src({
-        contentTypeId: '12',
-        cat1: 'A01',
-        cat2: 'A0101',
-        cat3: 'A01011200',
-      }),
-    );
-    const withBoth = resolveTags(
-      src({
-        contentTypeId: '12',
-        cat1: 'A01',
-        cat2: 'A0101',
-        cat3: 'A01011200',
+        contentTypeId: '39',
+        cat1: 'A05',
+        cat2: 'A0502',
+        cat3: 'A05020900', // 카페/전통찻집
         lclsSystm2: 'FD01',
-        lclsSystm3: 'FD010100',
+        lclsSystm3: 'FD010100', // 관광식당
       }),
     );
-    expect(withBoth).toEqual(withCat);
-    expect(withBoth).not.toContain('맛집');
+    expect(tags).toEqual(expect.arrayContaining(['맛집', '한식']));
+    expect(tags).not.toContain('카페');
+  });
+
+  it('lclsSystm이 없으면 cat으로 폴백한다', () => {
+    // 분류체계 코드가 없던 과거 데이터를 위해 cat 매핑을 남겨둔다.
+    const tags = resolveTags(
+      src({
+        contentTypeId: '39',
+        cat1: 'A05',
+        cat2: 'A0502',
+        cat3: 'A05020900',
+      }),
+    );
+    expect(tags).toContain('카페');
   });
 
   it('lclsSystm3가 lclsSystm2를 대체한다 (병합이 아님)', () => {

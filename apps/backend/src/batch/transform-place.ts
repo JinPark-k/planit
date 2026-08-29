@@ -87,7 +87,7 @@ export function transformPlace(
   const cat1 = nullable(item.cat1);
   const cat2 = nullable(item.cat2);
   const cat3 = nullable(item.cat3);
-  // cat 코드가 비어 있는 레코드가 많아(제주 30%) 분류체계 코드를 폴백으로 함께 넘긴다.
+  // 태그 도출의 1순위 근거. TourAPI가 cat1~3를 "삭제예정"으로 공지했다.
   const lclsSystm2 = nullable(item.lclsSystm2);
   const lclsSystm3 = nullable(item.lclsSystm3);
   const festival = item;
@@ -111,7 +111,10 @@ export function transformPlace(
     // 축제 레코드는 areacode가 빈 문자열이므로 원본 대신 "처리 중인 지역"을 항상 사용한다.
     // 이렇게 하면 findRowsByRegion이 조회할 값과 항상 일치한다. 원본 areacode는 raw_response에 남는다.
     region_code: REGION_CODES[regionCode],
-    sigungu_code: nullable(item.sigungucode),
+    // 법정동 시군구 코드(lDongSignguCd)를 저장한다.
+    // TourAPI가 sigungucode를 "미사용항목(삭제예정 - 법정동 시군구 코드로 대체)"로 공지했고,
+    // 실측(2588행)에서도 lDongSignguCd는 100%, sigungucode는 56.1%만 채워져 있었다.
+    sigungu_code: nullable(item.lDongSignguCd) ?? nullable(item.sigungucode),
     category: resolveCategory(contentTypeId),
     tags: resolveTags({
       contentTypeId,

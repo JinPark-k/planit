@@ -156,7 +156,7 @@ export const CAT3_TAG_MAP: Record<string, DerivableTag[]> = {
 };
 
 /**
- * TourAPI 분류체계(lclsSystm) -> 태그. cat 코드가 비어 있는 레코드용 폴백이다.
+ * TourAPI 분류체계(lclsSystm) -> 태그. 태그 도출의 1순위 근거다.
  *
  * 2026-08 실측: 제주 1517건 중 462건(30.5%)이 cat1/2/3가 전부 빈 문자열이라
  * 태그가 하나도 안 붙었다 — 새별오름·카멜리아힐·이호테우해변 같은 대표 관광지가 여기 속한다.
@@ -274,14 +274,19 @@ export function resolveCategory(
 }
 
 export function resolveTags(src: TagSource): string[] {
-  // cat 코드를 우선하고, 비어 있을 때만 lclsSystm으로 넘어간다.
-  // 이미 cat으로 태그가 붙은 행의 결과를 바꾸지 않기 위한 순서다.
+  // lclsSystm을 우선하고 cat은 폴백이다. TourAPI가 cat1~3를 공식적으로
+  // "미사용항목(삭제예정 - 분류체계 코드로 대체)"으로 공지했기 때문이다.
+  //
+  // 2026-08 실측(제주+부산 2588행): lclsSystm은 100%, cat은 56.3%에만 있고
+  // "cat만 있고 lclsSystm이 없는" 행은 0건이다. 즉 lclsSystm이 진부분집합이 아니라
+  // 완전한 상위 집합이라, 이 순서면 cat이 삭제돼도 결과가 바뀌지 않는다.
+  // cat 매핑은 과거 데이터를 위해 남겨두지만 실질적으로는 도달하지 않는다.
   const classified =
+    lookup(LCLS3_TAG_MAP, src.lclsSystm3) ??
+    lookup(LCLS2_TAG_MAP, src.lclsSystm2) ??
     lookup(CAT3_TAG_MAP, src.cat3) ??
     lookup(CAT2_TAG_MAP, src.cat2) ??
     lookup(CAT1_TAG_MAP, src.cat1) ??
-    lookup(LCLS3_TAG_MAP, src.lclsSystm3) ??
-    lookup(LCLS2_TAG_MAP, src.lclsSystm2) ??
     [];
   const typeTags = lookup(CONTENT_TYPE_TAG_MAP, src.contentTypeId) ?? [];
   return [...new Set<string>([...typeTags, ...classified])];
