@@ -107,6 +107,13 @@ describe('toScheduleRows', () => {
     ]);
   });
 
+  it('아이템 행은 자기가 몇 일차인지 들고 나온다', () => {
+    // 평평하게 편 뒤에는 ScheduleItem만으로 일차를 되찾을 수 없다.
+    // 상세 화면에 "2일차 · 14:30 도착"을 넘기려면 여기서 실려 나와야 한다.
+    const rows = toScheduleRows(days()).filter(r => r.kind === 'item');
+    expect(rows.map(r => r.kind === 'item' && r.day)).toEqual([1, 1, 2]);
+  });
+
   it('같은 장소가 다른 일차에 나와도 key가 겹치지 않는다', () => {
     const repeated: ScheduleDay[] = [
       { day: 1, items: [item('a', '09:00', 90)] },

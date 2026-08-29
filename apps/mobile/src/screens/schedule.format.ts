@@ -37,6 +37,12 @@ export type ScheduleRow =
   | {
       kind: 'item';
       key: string;
+      /**
+       * 몇 일차의 항목인지. ScheduleItem 자체에는 일차가 없어서(응답이 day별로
+       * 묶여 온다) 평평하게 편 뒤에는 되찾을 수 없다. 상세 화면에 방문 맥락을
+       * 넘길 때 필요해 여기서 같이 들고 나간다.
+       */
+      day: number;
       item: ScheduleItem;
       /** 일차 안에서의 마지막 아이템인지. 타임라인 세로선을 끊는 데 쓴다. */
       isLastOfDay: boolean;
@@ -60,6 +66,7 @@ export function toScheduleRows(days: ScheduleDay[]): ScheduleRow[] {
         kind: 'item',
         // 같은 장소가 다른 일차에 다시 나올 수 있어 일차와 순서를 키에 넣는다.
         key: `item-${day.day}-${index}-${item.place.id}`,
+        day: day.day,
         item,
         isLastOfDay: index === day.items.length - 1,
       });

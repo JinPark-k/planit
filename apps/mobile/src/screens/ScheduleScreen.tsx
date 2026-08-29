@@ -23,6 +23,8 @@ interface Props {
   regionLabel: string;
   onBack: () => void;
   onRestart: () => void;
+  /** 장소를 누르면 상세로. day는 상세 화면의 "n일차 · HH:MM 도착"에 쓴다. */
+  onSelectPlace: (item: ScheduleItem, day: number) => void;
 }
 
 export function ScheduleScreen({
@@ -30,6 +32,7 @@ export function ScheduleScreen({
   regionLabel,
   onBack,
   onRestart,
+  onSelectPlace,
 }: Props) {
   const [tab, setTab] = useState<DayTab>('ALL');
 
@@ -89,6 +92,7 @@ export function ScheduleScreen({
                 key={row.key}
                 item={row.item}
                 isLast={row.isLastOfDay}
+                onPress={() => onSelectPlace(row.item, row.day)}
               />
             ),
           )
@@ -141,9 +145,11 @@ function Tab({
 function TimelineRow({
   item,
   isLast,
+  onPress,
 }: {
   item: ScheduleItem;
   isLast: boolean;
+  onPress: () => void;
 }) {
   const travel = item.travelFromPreviousMinutes;
 
@@ -154,7 +160,11 @@ function TimelineRow({
         {!isLast && <View style={styles.line} />}
       </View>
 
-      <View style={styles.rowBody}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${item.place.name} 상세 보기`}
+        onPress={onPress}
+        style={({ pressed }) => [styles.rowBody, pressed && styles.rowPressed]}>
         <View style={styles.rowText}>
           <Text style={styles.time}>{item.startTime}</Text>
           <Text style={styles.placeName} numberOfLines={2}>
@@ -175,7 +185,7 @@ function TimelineRow({
         ) : (
           <View style={[styles.thumb, styles.thumbPlaceholder]} />
         )}
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -285,6 +295,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  rowPressed: {
+    // 카드가 흰색이라 opacity로는 눌림이 거의 안 보인다. 배경을 바꿔 준다.
+    backgroundColor: colors.primaryLight,
   },
   rowText: {
     flex: 1,
