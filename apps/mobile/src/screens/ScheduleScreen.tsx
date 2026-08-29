@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { ScheduleDay, ScheduleItem } from '../api/types';
-import { colors } from '../theme/colors';
+import { colors, iconSize, radius, spacing, typography } from '../theme';
 import {
   DayTab,
   filterByTab,
@@ -192,6 +192,8 @@ function TimelineRow({
 
 const RAIL_WIDTH = 24;
 const DOT_SIZE = 10;
+/** 카드 안 시각 텍스트의 중앙 높이. 점을 그 줄에 맞춘다. */
+const DOT_OFFSET = 24;
 
 const styles = StyleSheet.create({
   container: {
@@ -201,8 +203,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -214,13 +216,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backIcon: {
-    fontSize: 22,
+    fontSize: iconSize.md,
     color: colors.text,
   },
   headerTitle: {
     flex: 1,
-    fontSize: 17,
-    fontWeight: '700',
+    ...typography.heading,
     color: colors.text,
   },
   tabScroll: {
@@ -228,15 +229,15 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   tabRow: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
   },
   tab: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 16,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -246,22 +247,21 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   tabText: {
-    fontSize: 13,
+    ...typography.caption,
     color: colors.textMuted,
   },
   tabTextActive: {
+    ...typography.label,
     color: colors.surface,
-    fontWeight: '600',
   },
   list: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   dayHeader: {
-    marginTop: 16,
-    marginBottom: 8,
-    fontSize: 14,
-    fontWeight: '700',
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+    ...typography.label,
     color: colors.primary,
   },
   row: {
@@ -274,25 +274,25 @@ const styles = StyleSheet.create({
   dot: {
     width: DOT_SIZE,
     height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
+    borderRadius: radius.pill,
     backgroundColor: colors.primary,
-    marginTop: 22,
+    marginTop: DOT_OFFSET,
   },
   line: {
     flex: 1,
     width: 2,
     backgroundColor: colors.border,
-    marginTop: 2,
+    marginTop: spacing.xxs,
   },
   rowBody: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -304,69 +304,65 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   time: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...typography.label,
     color: colors.primary,
   },
   placeName: {
-    marginTop: 2,
-    fontSize: 15,
-    fontWeight: '600',
+    marginTop: spacing.xxs,
+    ...typography.bodyStrong,
     color: colors.text,
   },
   meta: {
-    marginTop: 4,
-    fontSize: 12,
+    marginTop: spacing.xs,
+    ...typography.micro,
     color: colors.textMuted,
   },
   thumb: {
     width: 64,
     height: 64,
-    borderRadius: 10,
+    borderRadius: radius.md,
     backgroundColor: colors.placeholder,
   },
   thumbPlaceholder: {
     backgroundColor: colors.placeholder,
   },
   totalCard: {
-    marginTop: 12,
-    padding: 14,
-    borderRadius: 12,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
     backgroundColor: colors.primaryLight,
   },
   totalText: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...typography.smallStrong,
     color: colors.primary,
   },
   totalNote: {
-    marginTop: 2,
-    fontSize: 12,
+    marginTop: spacing.xxs,
+    ...typography.micro,
     color: colors.textMuted,
   },
   emptyText: {
-    marginTop: 40,
-    fontSize: 14,
+    marginTop: spacing.xxxl,
+    ...typography.small,
     lineHeight: 21,
     color: colors.textMuted,
     textAlign: 'center',
   },
   footer: {
-    padding: 16,
+    padding: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
   },
   restartButton: {
     height: 50,
-    borderRadius: 14,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
   },
   restartText: {
-    fontSize: 16,
-    fontWeight: '700',
+    ...typography.button,
     color: colors.surface,
   },
 });

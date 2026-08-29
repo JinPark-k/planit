@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Place } from '../api/types';
 import { CATEGORY_LABELS } from '../constants/categories';
-import { colors } from '../theme/colors';
+import { colors, iconSize, radius, spacing, typography } from '../theme';
 import { formatVisit, telHref, VisitContext } from './placeDetail.format';
 
 interface Props {
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scroll: {
-    paddingBottom: 32,
+    paddingBottom: spacing.xxxl,
   },
   hero: {
     backgroundColor: colors.placeholder,
@@ -178,96 +178,92 @@ const styles = StyleSheet.create({
     backgroundColor: colors.placeholder,
   },
   heroEmptyText: {
-    fontSize: 13,
+    ...typography.caption,
     color: colors.textMuted,
   },
   backButton: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: spacing.md,
+    left: spacing.md,
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     // 사진 위에 얹히므로 밝은 사진에서도 보이도록 배경을 깐다.
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   backIcon: {
-    fontSize: 20,
+    fontSize: iconSize.md,
     color: colors.text,
   },
   body: {
-    padding: 20,
+    padding: spacing.xl,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
+    gap: spacing.sm,
   },
   name: {
     flex: 1,
-    fontSize: 22,
-    fontWeight: '700',
+    ...typography.title,
     color: colors.text,
   },
   categoryBadge: {
-    marginTop: 3,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
     backgroundColor: colors.primaryLight,
   },
   categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...typography.microStrong,
     color: colors.primary,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 10,
+    gap: spacing.xs,
+    marginTop: spacing.sm,
   },
   tag: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
   tagText: {
-    fontSize: 12,
+    ...typography.micro,
     color: colors.textMuted,
   },
   visitCard: {
-    marginTop: 18,
-    padding: 14,
-    borderRadius: 12,
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    borderRadius: radius.md,
     backgroundColor: colors.primaryLight,
   },
   visitText: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...typography.smallStrong,
     color: colors.primary,
   },
   visitNote: {
-    marginTop: 2,
-    fontSize: 12,
+    marginTop: spacing.xxs,
+    ...typography.micro,
     color: colors.textMuted,
   },
   section: {
-    marginTop: 20,
+    marginTop: spacing.xl,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...typography.label,
     color: colors.textMuted,
   },
   sectionValue: {
-    marginTop: 6,
-    fontSize: 15,
+    marginTop: spacing.sm,
+    ...typography.body,
     lineHeight: 22,
     color: colors.text,
   },
