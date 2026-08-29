@@ -85,10 +85,8 @@ export function transformPlace(
   if (!isWithinKorea(lat, lng)) return null;
 
   const contentTypeId = nullable(item.contenttypeid);
-  const cat1 = nullable(item.cat1);
-  const cat2 = nullable(item.cat2);
-  const cat3 = nullable(item.cat3);
-  // 태그 도출의 1순위 근거. TourAPI가 cat1~3를 "삭제예정"으로 공지했다.
+  // 태그 도출의 근거. 구 cat1~3는 매뉴얼 v4.4(2026-02-10)에서 스펙에서 삭제됐다.
+  const lclsSystm1 = nullable(item.lclsSystm1);
   const lclsSystm2 = nullable(item.lclsSystm2);
   const lclsSystm3 = nullable(item.lclsSystm3);
   const festival = item;
@@ -96,9 +94,9 @@ export function transformPlace(
   return {
     content_id: contentId,
     content_type_id: contentTypeId,
-    cat1,
-    cat2,
-    cat3,
+    lcls_systm1: lclsSystm1,
+    lcls_systm2: lclsSystm2,
+    lcls_systm3: lclsSystm3,
     addr1: nullable(item.addr1),
     addr2: nullable(item.addr2),
     tel: nullable(item.tel),
@@ -117,14 +115,7 @@ export function transformPlace(
     // 실측(2588행)에서도 lDongSignguCd는 100%, sigungucode는 56.1%만 채워져 있었다.
     sigungu_code: nullable(item.lDongSignguCd) ?? nullable(item.sigungucode),
     category: resolveCategory(contentTypeId),
-    tags: resolveTags({
-      contentTypeId,
-      cat1,
-      cat2,
-      cat3,
-      lclsSystm2,
-      lclsSystm3,
-    }),
+    tags: resolveTags({ contentTypeId, lclsSystm2, lclsSystm3 }),
     event_start_date: parseTourApiDate(festival.eventstartdate),
     event_end_date: parseTourApiDate(festival.eventenddate),
     last_synced_at: syncedAt,

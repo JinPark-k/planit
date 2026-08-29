@@ -73,14 +73,20 @@ describe('transformPlace 필수값', () => {
 describe('transformPlace 필드 정제', () => {
   it('빈 문자열/공백 필드는 null이 된다', () => {
     const row = transformPlace(
-      item({ addr2: '', tel: '   ', sigungucode: '', cat3: '' }),
+      item({
+        addr2: '',
+        tel: '   ',
+        sigungucode: '',
+        lDongSignguCd: '',
+        lclsSystm3: '',
+      }),
       'SEOUL',
       SYNCED_AT,
     )!;
     expect(row.addr2).toBeNull();
     expect(row.tel).toBeNull();
     expect(row.sigungu_code).toBeNull();
-    expect(row.cat3).toBeNull();
+    expect(row.lcls_systm3).toBeNull();
   });
 
   it('image_url은 firstimage가 없으면 firstimage2로 폴백한다', () => {
@@ -129,9 +135,9 @@ describe('transformPlace 필드 정제', () => {
     const restaurant = transformPlace(
       item({
         contenttypeid: '39',
-        cat1: 'A05',
-        cat2: 'A0502',
-        cat3: 'A05020100',
+        lclsSystm1: 'FD',
+        lclsSystm2: 'FD01',
+        lclsSystm3: 'FD010100',
       }),
       'SEOUL',
       SYNCED_AT,
@@ -234,7 +240,7 @@ describe('transformPlaces', () => {
       contentid: '3',
       addr1: undefined,
       tel: undefined,
-      cat1: undefined,
+      lclsSystm1: undefined,
     });
     const { rows } = transformPlaces(
       [item({ contentid: '1' }), festival, minimal],

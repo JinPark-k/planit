@@ -5,9 +5,9 @@ export interface PlaceRow {
   id: string;
   content_id: string;
   content_type_id: string | null;
-  cat1: string | null;
-  cat2: string | null;
-  cat3: string | null;
+  lcls_systm1: string | null;
+  lcls_systm2: string | null;
+  lcls_systm3: string | null;
   addr1: string | null;
   addr2: string | null;
   tel: string | null;
@@ -36,7 +36,7 @@ export interface PlaceRow {
  *
  * `select('*')`을 쓰면 raw_response(jsonb)까지 딸려온다. 제주 930건 기준 전송량 966kB 중
  * 657kB(68%)가 raw_response이고 런타임에 아무도 읽지 않는다(재정제용 보관 컬럼).
- * cat1~3/overview/homepage/created_at 등도 조회 경로에서는 쓰이지 않는다.
+ * lcls_systm1~3/overview/homepage/created_at 등도 조회 경로에서는 쓰이지 않는다.
  *
  * 배열과 타입을 한 곳에서 파생시켜 쿼리 문자열과 타입이 어긋나지 않게 한다.
  */
