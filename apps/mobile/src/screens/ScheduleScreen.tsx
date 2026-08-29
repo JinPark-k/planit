@@ -58,6 +58,8 @@ export function ScheduleScreen({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        // flexGrow를 막지 않으면 세로로 눌려 탭 글자가 잘린다.
+        style={styles.tabScroll}
         contentContainerStyle={styles.tabRow}>
         <Tab label="전체 보기" active={tab === 'ALL'} onPress={() => setTab('ALL')} />
         {days.map(day => (
@@ -211,9 +213,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
+  tabScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   tabRow: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+    alignItems: 'center',
     gap: 8,
   },
   tab: {
