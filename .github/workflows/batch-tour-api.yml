@@ -62,26 +62,34 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # apis.data.go.kr 접속이 해외 러너에서 수 분 단위로 끊기는 일이 있다
-      # (2026-08-28 run 33134494767: BUSAN이 01:59, 02:04 두 번 ConnectTimeoutError로
-      #  실패하고 02:07 재실행에서 성공 = 약 7분 장애).
+      # apis.data.go.kr 접속이 해외 러너에서 분 단위로 끊기는 일이 반복된다.
+      #   2026-08-28 run 33134494767: BUSAN 약 7분 장애
+      #   2026-08-29 run 33223796235: BUSAN/JEJU 00:33~00:51 약 18분 장애
       # 클라이언트 자체 백오프(4회, ~53초)로는 이 길이를 못 넘기므로 잡 레벨에서 한 번 더 감싼다.
       # 배치는 upsert 기반이라 중복 실행해도 안전하다.
+      #
+      # 재시도 창은 5회 x 300초 = 최대 약 25분. 관측된 18분 장애를 덮는 값이다.
+      # 넉넉히 잡는 쪽이 낫다 - 실패하면 다음 크론까지 하루를 기다리거나 수동 재실행해야 하는데,
+      # 헛돌아도 러너 시간 25분이 전부다.
       - name: Run batch pipeline
         env:
           REGION: ${{ matrix.region }}
+          MAX_ATTEMPTS: "5"
+          RETRY_DELAY_SECONDS: "300"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}
         run: |
-          for attempt in 1 2 3; do
+          attempt=1
+          while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
             if pnpm --filter @planit/backend batch:run "$REGION"; then
               exit 0
             fi
-            if [ "$attempt" -lt 3 ]; then
-              echo "[batch] $REGION attempt $attempt failed, retrying in 180s"
-              sleep 180
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "[batch] $REGION attempt $attempt/$MAX_ATTEMPTS failed, retrying in ${RETRY_DELAY_SECONDS}s"
+              sleep "$RETRY_DELAY_SECONDS"
             fi
+            attempt=$((attempt + 1))
           done
-          echo "[batch] $REGION failed after 3 attempts"
+          echo "[batch] $REGION failed after $MAX_ATTEMPTS attempts"
           exit 1
