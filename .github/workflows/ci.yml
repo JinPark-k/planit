@@ -31,7 +31,7 @@ jobs:
       # 로컬 lint 스크립트는 --fix가 붙어 있어 자동 수정 후 통과해버린다.
       # CI에서는 수정하지 않고 위반을 그대로 실패시켜야 하므로 eslint를 직접 호출한다.
       - name: Lint
-        run: pnpm --filter @planit/backend exec eslint "{src,apps,libs,test}/**/*.ts"
+        run: pnpm --filter @planit/backend exec eslint "{src,adapters,apps,libs,test}/**/*.ts"
 
       - name: Build
         run: pnpm --filter @planit/backend run build
