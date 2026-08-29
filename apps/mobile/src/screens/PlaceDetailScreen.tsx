@@ -67,7 +67,7 @@ export function PlaceDetailScreen({ place, visit, onBack }: Props) {
             />
           ) : (
             // 실측 900건 중 16%가 이미지가 없다. 빈 공간 대신 이유를 적어 준다.
-            <View style={[styles.heroImage, styles.heroEmpty]}>
+            <View style={styles.heroEmpty}>
               <Text style={styles.heroEmptyText}>사진 없음</Text>
             </View>
           )}
@@ -169,6 +169,10 @@ const styles = StyleSheet.create({
     aspectRatio: 4 / 3,
   },
   heroEmpty: {
+    width: '100%',
+    // 사진이 있을 때의 4:3을 그대로 쓰면 회색 덩어리가 화면 절반을 먹고
+    // 이름·태그·주소가 스크롤 아래로 밀린다. 자리만 표시하고 본문을 끌어올린다.
+    height: 160,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.placeholder,
