@@ -1,5 +1,6 @@
 {
-  "version": 2,
-  "builds": [{ "src": "adapters/vercel/index.ts", "use": "@vercel/node" }],
-  "rewrites": [{ "source": "/(.*)", "destination": "adapters/vercel/index.ts" }]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm run build",
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "regions": ["icn1"]
 }
