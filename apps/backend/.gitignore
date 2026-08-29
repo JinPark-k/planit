@@ -1,0 +1,4 @@
+# Vercel CLI가 만드는 로컬 링크/환경 파일 (`vercel link`, `vercel env pull`).
+# .env 계열은 루트 .gitignore가 처리한다 — 여기에 `.env*`를 두면
+# 루트의 `!apps/*/.env.example` 예외를 덮어버려 템플릿이 커밋 대상에서 빠진다.
+.vercel
