@@ -1,6 +1,8 @@
-pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
+// pnpm이 node-linker=hoisted라 node_modules는 앱이 아니라 레포 루트에 있다.
+// RN 템플릿 기본값('../node_modules/...')은 이 배치에 존재하지 않는 경로다.
+pluginManagement { includeBuild("../../../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'com.planit.mobile'
 include ':app'
-includeBuild('../node_modules/@react-native/gradle-plugin')
+includeBuild('../../../node_modules/@react-native/gradle-plugin')
