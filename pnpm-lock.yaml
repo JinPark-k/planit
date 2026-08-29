@@ -104,9 +104,6 @@ importers:
 
   apps/backend:
     dependencies:
-      '@codegenie/serverless-express':
-        specifier: ^5.0.0
-        version: 5.0.0
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -1004,10 +1001,6 @@ packages:
 
   '@borewit/text-codec@0.2.2':
     resolution: {integrity: sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ==}
-
-  '@codegenie/serverless-express@5.0.0':
-    resolution: {integrity: sha512-7+PvSBj4KmPC8PVFDoXZp2cwTr13YIgFsZT55uJhpt7Ml1hJ3IK1Xnw36hr6GYVzLDrEW26oBZt50jamfu6kkw==}
-    engines: {node: '>=24'}
 
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -6685,8 +6678,6 @@ snapshots:
   '@bcoe/v8-coverage@0.2.3': {}
 
   '@borewit/text-codec@0.2.2': {}
-
-  '@codegenie/serverless-express@5.0.0': {}
 
   '@colors/colors@1.5.0':
     optional: true
