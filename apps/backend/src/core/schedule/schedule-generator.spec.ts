@@ -160,9 +160,9 @@ describe('체류시간(stayMinutes)', () => {
       travelMode: 'CAR',
     });
     const [first, second] = day.items;
-    expect(minutesFromClock(second.startTime) - minutesFromClock(first.startTime)).toBe(
-      first.stayMinutes + (second.travelFromPreviousMinutes ?? 0),
-    );
+    expect(
+      minutesFromClock(second.startTime) - minutesFromClock(first.startTime),
+    ).toBe(first.stayMinutes + (second.travelFromPreviousMinutes ?? 0));
   });
 });
 
