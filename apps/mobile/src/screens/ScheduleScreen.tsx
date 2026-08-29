@@ -175,8 +175,13 @@ function TimelineRow({
 
 const RAIL_WIDTH = 24;
 const DOT_SIZE = 10;
-/** 카드 안 시각 텍스트의 중앙 높이. 점을 그 줄에 맞춘다. */
-const DOT_OFFSET = 24;
+/**
+ * 점을 카드 안 시각 텍스트("09:00")와 같은 줄에 놓기 위한 위쪽 여백.
+ *
+ * 시각 중앙까지의 높이 = 카드 테두리 1 + 패딩 12 + 13px 한 줄의 절반(약 8) ≈ 21.
+ * 점 중앙을 거기에 맞추려면 점 크기의 절반을 뺀다: 21 - 5 = 16.
+ */
+const DOT_OFFSET = spacing.lg;
 
 const styles = StyleSheet.create({
   container: {
