@@ -40,12 +40,37 @@ planit/
   에러 없이 `undefined`를 주입한다(부팅은 성공하고 엔드포인트 호출 시점에 터진다).
   그래서 빌드는 `nest build`에 맡긴다. 자세한 이유는 `apps/backend/api/index.js` 주석 참고.
 
+### GitHub 연동
+
+대시보드에서 저장소를 연결하고 Root Directory를 `apps/backend`,
+`sourceFilesOutsideRootDirectory`를 켜 두었다. `main` push는 운영에, PR은 프리뷰에
+배포된다. Vercel이 레포 전체를 클론해 워크스페이스 루트에서 pnpm으로 설치한다.
+
+#### 백엔드와 무관한 PR은 배포하지 않는다
+
+프로젝트 설정 `enableAffectedProjectsDeployments`를 켜 두었다. Vercel이 Root Directory와
+워크스페이스 의존 관계를 보고 이 프로젝트가 영향을 받았는지 서버에서 판단한다.
+실측으로 확인한 동작:
+
+| 바뀐 곳 | 결과 |
+|---|---|
+| `apps/backend/**` | 배포 |
+| `apps/mobile/**`만 | `Skipped - Not affected` |
+| 백엔드 커밋 + 모바일 커밋을 한 번에 push | 배포 (tip이 모바일이어도 건너뛰지 않는다) |
+| 루트 파일(`README.md`, `pnpm-lock.yaml`, `.github/**` …) | 배포 |
+
+마지막 줄은 `sourceFilesOutsideRootDirectory`가 켜져 있어 루트도 빌드 입력으로 치기
+때문이다. 문서만 고쳐도 배포가 도는 건 그래서다. 대신 `node-linker=hoisted` 때문에
+루트 의존성이 바뀌면 백엔드 해석도 바뀌는데(PR #22), 그 경우가 자동으로 잡힌다.
+
+`vercel.json`의 `ignoreCommand`로 직접 `git diff`를 돌리는 방법은 **쓸 수 없다.**
+Vercel 빌드 환경의 클론에는 원격이 없고(`git remote -v`가 비어 있다) depth 10짜리
+얕은 클론이라, `main`을 가져올 수도 `merge-base`를 구할 수도 없다. `HEAD^`로 폴백하면
+커밋 여러 개를 한 번에 push했을 때 마지막 커밋만 검사해, 앞 커밋이 백엔드를 고쳤어도
+건너뛴다. 실제로 그렇게 잘못 건너뛴 것을 확인했다(PR #27).
+
 ### 아직 안 한 설정
 
-- **GitHub 연동** — 대시보드에서 저장소를 연결하고 Root Directory를 `apps/backend`로 지정하면
-  push마다 자동 배포되고, Vercel이 레포 전체를 클론해 워크스페이스 루트에서 pnpm으로 설치한다.
-  지금은 `--cwd apps/backend`로 그 디렉터리만 올라가서 **npm으로 설치**되며 `apps/backend`에
-  자체 lockfile이 없어 매 배포마다 새로 해석한다(재현 가능한 빌드가 아니다).
 - **Deployment Protection** — `planit-backend-jinpark-k.vercel.app`은 Vercel 인증에 막혀 있다.
   공개 도메인은 위의 `planit-backend-omega.vercel.app` 하나다.
 
