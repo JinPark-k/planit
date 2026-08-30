@@ -59,6 +59,35 @@ function render(props: Partial<React.ComponentProps<typeof PlaceDetailScreen>>) 
   return tree;
 }
 
+describe('PlaceDetailScreen 지도 열기', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('좌표를 카카오맵 look 스킴으로 넘긴다', () => {
+    // 위도/경도를 뒤바꾸면 엉뚱한 곳이 열린다. 화면에서는 눈으로 못 잡는다.
+    const openURL = jest.spyOn(Linking, 'openURL');
+    openURL.mockReset();
+    openURL.mockResolvedValue(undefined as never);
+
+    const tree = render({
+      place: place({ location: { lat: 33.5407, lng: 126.6706 } }),
+    });
+    const button = tree.root.find(
+      node =>
+        node.props.accessibilityLabel === '새별오름 카카오맵으로 열기' &&
+        typeof node.props.onPress === 'function',
+    );
+    ReactTestRenderer.act(() => button.props.onPress());
+
+    expect(openURL).toHaveBeenCalledWith('kakaomap://look?p=33.5407,126.6706');
+  });
+
+  it('주소가 없어도 지도 버튼은 그린다', () => {
+    // 주소는 비어 있을 수 있지만 좌표는 항상 있다.
+    const tree = render({ place: place({ address: undefined }) });
+    expect(texts(tree)).toContain('카카오맵으로 열기');
+  });
+});
+
 describe('PlaceDetailScreen', () => {
   it('이름·카테고리 표시명·태그·주소를 보여준다', () => {
     const shown = texts(render({}));
