@@ -23,7 +23,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Vercel이 백엔드를 24.x로 돌린다(프로젝트 설정 nodeVersion).
+          # CI는 운영과 같은 버전에서 테스트해야 한다.
+          # 20에서는 @supabase/supabase-js가 지원 중단 경고를 냈다(>= 22 요구).
+          node-version: 24
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -52,7 +55,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           # apps/mobile/package.json의 engines가 >= 22.11.0을 요구한다(RN 0.86).
-          # 백엔드 잡의 20과 다른 건 의도적이다.
+          # 백엔드 잡(24)과 다른 건 의도적이다 — 앱은 배포 런타임이 없으니
+          # 선언한 지원 하한에서 돌려, 하한을 넘는 API 사용을 잡는다.
           node-version: 22
           cache: pnpm
 
