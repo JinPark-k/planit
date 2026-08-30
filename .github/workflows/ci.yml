@@ -38,3 +38,30 @@ jobs:
 
       - name: Test
         run: pnpm --filter @planit/backend test
+
+  mobile:
+    name: Mobile (lint / test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          # apps/mobile/package.json의 engines가 >= 22.11.0을 요구한다(RN 0.86).
+          # 백엔드 잡의 20과 다른 건 의도적이다.
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # 백엔드와 달리 스크립트를 그대로 부른다. 모바일 lint는 `eslint .`라
+      # --fix가 없어서, 로컬과 CI가 같은 명령으로 같은 결과를 낸다.
+      - name: Lint
+        run: pnpm --filter @planit/mobile lint
+
+      - name: Test
+        run: pnpm --filter @planit/mobile test
