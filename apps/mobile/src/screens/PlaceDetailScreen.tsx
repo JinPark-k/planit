@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Place } from '../api/types';
 import { Chip } from '../components/Chip';
+import { openKakaoMapPlace } from '../deeplink';
 import { CATEGORY_LABELS } from '../constants/categories';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
 import { formatVisit, telHref, VisitContext } from './placeDetail.format';
@@ -47,6 +48,17 @@ export function PlaceDetailScreen({ place, visit, onBack }: Props) {
   }, [onBack]);
 
   const dialUrl = place.tel ? telHref(place.tel) : undefined;
+
+  const handleOpenMap = () => {
+    openKakaoMapPlace({
+      id: place.id,
+      name: place.name,
+      lat: place.location.lat,
+      lng: place.location.lng,
+    }).catch(() => {
+      // 앱도 웹도 열지 못한 경우. 사용자가 취할 조치가 없어 화면을 방해하지 않는다.
+    });
+  };
 
   const handleCall = () => {
     if (dialUrl === undefined) return;
@@ -110,11 +122,22 @@ export function PlaceDetailScreen({ place, visit, onBack }: Props) {
             </View>
           )}
 
-          {place.address !== undefined && (
-            <Section label="위치">
+          <Section label="위치">
+            {place.address !== undefined && (
               <Text style={styles.sectionValue}>{place.address}</Text>
-            </Section>
-          )}
+            )}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${place.name} 카카오맵으로 열기`}
+              onPress={handleOpenMap}
+              style={({ pressed }) => [
+                styles.mapButton,
+                pressed && styles.mapButtonPressed,
+              ]}>
+              <Text style={styles.mapButtonText}>카카오맵으로 열기</Text>
+              <Text style={styles.mapButtonChevron}>›</Text>
+            </Pressable>
+          </Section>
 
           {place.tel !== undefined && (
             <Section label="문의">
@@ -252,5 +275,26 @@ const styles = StyleSheet.create({
   link: {
     color: colors.primary,
     textDecorationLine: 'underline',
+  },
+  mapButton: {
+    marginTop: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.primaryLight,
+  },
+  mapButtonPressed: {
+    opacity: 0.7,
+  },
+  mapButtonText: {
+    ...typography.smallStrong,
+    color: colors.primary,
+  },
+  mapButtonChevron: {
+    ...typography.button,
+    color: colors.primary,
   },
 });
