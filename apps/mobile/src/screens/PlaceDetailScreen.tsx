@@ -10,8 +10,9 @@ import {
   View,
 } from 'react-native';
 import { Place } from '../api/types';
+import { Chip } from '../components/Chip';
 import { CATEGORY_LABELS } from '../constants/categories';
-import { colors } from '../theme/colors';
+import { colors, iconSize, radius, spacing, typography } from '../theme';
 import { formatVisit, telHref, VisitContext } from './placeDetail.format';
 
 interface Props {
@@ -86,18 +87,18 @@ export function PlaceDetailScreen({ place, visit, onBack }: Props) {
           <View style={styles.titleRow}>
             <Text style={styles.name}>{place.name}</Text>
             <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>
-                {CATEGORY_LABELS[place.category]}
-              </Text>
+              <Chip
+                label={CATEGORY_LABELS[place.category]}
+                variant="soft"
+                size="sm"
+              />
             </View>
           </View>
 
           {place.tags.length > 0 && (
             <View style={styles.tagRow}>
               {place.tags.map(tag => (
-                <View key={tag} style={styles.tag}>
-                  <Text style={styles.tagText}>#{tag}</Text>
-                </View>
+                <Chip key={tag} label={`#${tag}`} size="sm" />
               ))}
             </View>
           )}
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scroll: {
-    paddingBottom: 32,
+    paddingBottom: spacing.xxxl,
   },
   hero: {
     backgroundColor: colors.placeholder,
@@ -178,96 +179,73 @@ const styles = StyleSheet.create({
     backgroundColor: colors.placeholder,
   },
   heroEmptyText: {
-    fontSize: 13,
+    ...typography.caption,
     color: colors.textMuted,
   },
   backButton: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: spacing.md,
+    left: spacing.md,
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     // 사진 위에 얹히므로 밝은 사진에서도 보이도록 배경을 깐다.
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   backIcon: {
-    fontSize: 20,
+    fontSize: iconSize.md,
     color: colors.text,
   },
   body: {
-    padding: 20,
+    padding: spacing.xl,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
+    gap: spacing.sm,
   },
   name: {
     flex: 1,
-    fontSize: 22,
-    fontWeight: '700',
+    ...typography.title,
     color: colors.text,
   },
   categoryBadge: {
-    marginTop: 3,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: colors.primaryLight,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.primary,
+    // 이름 첫 줄에 시각적으로 맞추는 오프셋. 모양 자체는 Chip이 갖는다.
+    marginTop: spacing.xs,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 10,
-  },
-  tag: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  tagText: {
-    fontSize: 12,
-    color: colors.textMuted,
+    gap: spacing.xs,
+    marginTop: spacing.sm,
   },
   visitCard: {
-    marginTop: 18,
-    padding: 14,
-    borderRadius: 12,
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    borderRadius: radius.md,
     backgroundColor: colors.primaryLight,
   },
   visitText: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...typography.smallStrong,
     color: colors.primary,
   },
   visitNote: {
-    marginTop: 2,
-    fontSize: 12,
+    marginTop: spacing.xxs,
+    ...typography.micro,
     color: colors.textMuted,
   },
   section: {
-    marginTop: 20,
+    marginTop: spacing.xl,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...typography.label,
     color: colors.textMuted,
   },
   sectionValue: {
-    marginTop: 6,
-    fontSize: 15,
+    marginTop: spacing.sm,
+    ...typography.body,
     lineHeight: 22,
     color: colors.text,
   },
