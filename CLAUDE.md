@@ -41,10 +41,22 @@ LLM 미사용, 규칙 기반으로 구현 (비용 예측 가능성 때문에 확
 # 지도 / 길찾기
 
 - 지도 표시: 카카오맵 JS SDK (마커 + 직선 연결, 무료)
-- 실제 길찾기: 카카오맵/구글맵 딥링크로 위임
-  - 카카오맵: `kakaomap://route?sp=...&ep=...&vp1=...&by=CAR` (경유지 최대 5개)
+- 실제 길찾기/위치 보기: 카카오맵/구글맵 딥링크로 위임 (`apps/mobile/src/deeplink/`)
+  - 카카오맵 길찾기: `kakaomap://route?sp=...&ep=...&vp1=...&by=car` (경유지 최대 5개)
+  - 카카오맵 위치: `kakaomap://look?p=위도,경도`
   - 구글맵: `https://www.google.com/maps/dir/?api=1&origin=...&destination=...&waypoints=...`
-  - 앱 미설치 시 스토어로 유도하는 예외처리 필요
+  - **`by` 값은 카카오 철자를 쓴다**: `car` / `publictransit` / `foot` / `bicycle`.
+    우리 도메인 어휘(`TravelMode` = `CAR`/`TRANSIT`/`WALK`)와 다르므로 딥링크
+    경계에서만 변환한다. 특히 걷기는 `walk`가 아니라 `foot`이라, 그대로 넘기면
+    조용히 무시된다.
+  - **앱 미설치 시 스토어가 아니라 모바일 웹 지도로 보낸다**
+    (`https://m.map.kakao.com/scheme/{route,look}?...`). 설치를 요구하지 않고
+    바로 보여주는 편이 낫다.
+  - **`Linking.canOpenURL`로 분기하지 않는다.** Android 11+는 패키지 가시성
+    제한이 있어 `AndroidManifest`에 `<queries>`가 없으면 앱이 설치돼 있어도
+    `false`를 반환한다(iOS는 `LSApplicationQueriesSchemes`가 필요). 둘 다 없어서
+    설치한 사용자까지 폴백으로 보내게 된다. 열어 보고 실패하면 웹으로 가는
+    방식이 네이티브 설정 없이 양쪽에서 옳게 동작한다.
 
 # 앱 전용 요구사항 (네이티브 모듈 필요)
 

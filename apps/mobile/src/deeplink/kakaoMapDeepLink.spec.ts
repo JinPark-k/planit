@@ -1,8 +1,11 @@
 import { Linking } from 'react-native';
 import {
   buildKakaoMapPlaceUrl,
+  buildKakaoMapRouteUrl,
   buildKakaoMapWebPlaceUrl,
+  buildKakaoMapWebRouteUrl,
   openKakaoMapPlace,
+  openKakaoMapRoute,
 } from './kakaoMapDeepLink';
 import { MapMarker } from '../map/types';
 
@@ -81,5 +84,69 @@ describe('openKakaoMapPlace', () => {
       2,
       'https://m.map.kakao.com/scheme/look?p=33.5407,126.6706',
     );
+  });
+});
+
+const 성산일출봉: MapMarker = {
+  id: '2',
+  name: '성산일출봉',
+  lat: 33.4581,
+  lng: 126.9425,
+};
+
+describe('buildKakaoMapRouteUrl', () => {
+  it('이동수단을 카카오 철자로 변환한다', () => {
+    // 우리 어휘는 CAR/TRANSIT/WALK인데 카카오는 car/publictransit/foot이다.
+    // 특히 걷기는 'walk'가 아니라 'foot'이라, 그대로 넘기면 무시된다.
+    const by = (mode: 'CAR' | 'TRANSIT' | 'WALK') =>
+      buildKakaoMapRouteUrl(카페동백, 성산일출봉, [], mode).split('by=')[1];
+
+    expect(by('CAR')).toBe('car');
+    expect(by('TRANSIT')).toBe('publictransit');
+    expect(by('WALK')).toBe('foot');
+  });
+
+  it('출발지·도착지를 위도,경도 순으로 싣는다', () => {
+    const url = buildKakaoMapRouteUrl(카페동백, 성산일출봉);
+    expect(url).toBe(
+      'kakaomap://route?sp=33.5407,126.6706&ep=33.4581,126.9425&by=car',
+    );
+  });
+
+  it('경유지는 vp1부터 번호를 붙인다', () => {
+    const url = buildKakaoMapRouteUrl(카페동백, 성산일출봉, [성산일출봉]);
+    expect(url).toContain('vp1=33.4581,126.9425');
+  });
+
+  it('경유지가 5개를 넘으면 버린다', () => {
+    // 카카오 스킴이 vp5까지만 받는다.
+    const many = Array.from({ length: 8 }, () => 성산일출봉);
+    const url = buildKakaoMapRouteUrl(카페동백, 성산일출봉, many);
+    expect(url).toContain('vp5=');
+    expect(url).not.toContain('vp6=');
+  });
+});
+
+describe('openKakaoMapRoute', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('앱이 없으면 스토어가 아니라 웹 길찾기로 넘어간다', () => {
+    // 이전에는 canOpenURL로 분기해 스토어로 보냈다. Android 11+에서는
+    // <queries> 선언이 없으면 설치돼 있어도 false라, 설치한 사용자까지
+    // 스토어로 보내고 있었다.
+    expect(buildKakaoMapWebRouteUrl(카페동백, 성산일출봉)).toBe(
+      'https://m.map.kakao.com/scheme/route?sp=33.5407,126.6706&ep=33.4581,126.9425&by=car',
+    );
+  });
+
+  it('앱 스킴을 먼저 시도하고 실패하면 웹으로 간다', async () => {
+    const openURL = spyOpenURL()
+      .mockRejectedValueOnce(new Error('no handler'))
+      .mockResolvedValue(undefined as never);
+
+    await openKakaoMapRoute(카페동백, 성산일출봉);
+
+    expect(openURL.mock.calls[0][0]).toContain('kakaomap://route?');
+    expect(openURL.mock.calls[1][0]).toContain('m.map.kakao.com/scheme/route?');
   });
 });
