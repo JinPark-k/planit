@@ -16,6 +16,9 @@ export type RegionCode = 'SEOUL' | 'BUSAN' | 'JEJU';
 
 export type PlaceCategory = 'SIGHTSEEING' | 'FOOD' | 'ACTIVITY';
 
+/** 이동수단. 백엔드 core/travel-time의 TRAVEL_MODES와 같아야 한다. */
+export type TravelMode = 'CAR' | 'TRANSIT' | 'WALK';
+
 export interface GeoPoint {
   lat: number;
   lng: number;
