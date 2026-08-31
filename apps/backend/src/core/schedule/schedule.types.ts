@@ -46,4 +46,13 @@ export interface GenerateScheduleInput {
   /** 일차별 시작 지점/시각 오버라이드. key: day 번호(1부터). 지정 안 한 일차는 기본값
    *  (점수 1위 장소부터 시작, 09:00) 사용. 예: {1: {location: 기차역좌표, time: '10:30'}} */
   dayStartOverrides?: Record<number, DayStartOverride>;
+  /**
+   * 반드시 일정에 넣어야 하는 장소의 id("담기"로 고른 것).
+   * candidatePlaces의 부분집합이어야 한다 — 후보 풀에 없는 id는 무시된다.
+   *
+   * 이 장소들은 일차의 지리적 중심이 되고, 매 슬롯에서 나머지 후보보다 먼저 선택된다.
+   * 다만 하루 마감(DAY_END_TIME)까지 자리가 없으면 여전히 빠질 수 있다.
+   * 무엇이 빠졌는지는 호출측이 결과와 대조해 판단한다(core는 이유를 알리지 않는다).
+   */
+  mustIncludePlaceIds?: ReadonlySet<string>;
 }

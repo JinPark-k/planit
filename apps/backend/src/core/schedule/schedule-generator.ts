@@ -83,6 +83,7 @@ export function generateSchedule(input: GenerateScheduleInput): ScheduleDay[] {
   const dayClusters = clusterPlacesByDay(
     scored.map(({ place }) => place),
     input.dayCount,
+    { mustIncludeIds: input.mustIncludePlaceIds },
   );
 
   return dayClusters.map((cluster) => ({
@@ -92,6 +93,7 @@ export function generateSchedule(input: GenerateScheduleInput): ScheduleDay[] {
       input.travelMode,
       scoreById,
       input.dayStartOverrides?.[cluster.day],
+      input.mustIncludePlaceIds,
     ),
   }));
 }
@@ -145,6 +147,7 @@ function orderWithinDay(
   travelMode: TravelMode,
   scoreById: ReadonlyMap<string, number>,
   startOverride?: DayStartOverride,
+  mustIncludePlaceIds?: ReadonlySet<string>,
 ): ScheduleItem[] {
   if (places.length === 0) {
     return [];
@@ -191,7 +194,7 @@ function orderWithinDay(
     return 1 - minutes / MAX_REASONABLE_TRAVEL_MINUTES;
   };
 
-  const pickNext = (
+  const bestByUtility = (
     pool: Place[],
     relevance: (place: Place) => number,
   ): Place | undefined => {
@@ -207,6 +210,32 @@ function orderWithinDay(
       }
     }
     return best;
+  };
+
+  /**
+   * 다음 장소를 고른다.
+   *
+   * 담은 장소("담기"로 고른 것)가 풀에 남아 있으면 그 안에서만 고른다. 관련도·근접성
+   * 비교는 그대로 쓰되, 채움 후보와는 애초에 겨루지 않게 한다 — 겨루게 하면 근접성이
+   * 높은 주변 장소가 이겨서 사용자가 고른 곳이 마감 시각에 밀려 빠질 수 있다.
+   *
+   * 끼니 앵커도 이 함수를 쓰므로 "담은 식당이 있으면 그것, 없으면 자동"이 따로 구현할
+   * 것 없이 성립한다.
+   */
+  const pickNext = (
+    pool: Place[],
+    relevance: (place: Place) => number,
+  ): Place | undefined => {
+    if (mustIncludePlaceIds !== undefined) {
+      const pinned = pool.filter((p) => mustIncludePlaceIds.has(p.id));
+      if (pinned.length > 0) {
+        const best = bestByUtility(pinned, relevance);
+        // 담은 장소가 마감에 걸리면 채움 후보로 내려가지 않는다. 남은 시간을
+        // 주변 장소로 채우면 담은 곳이 더 확실히 빠진다.
+        if (best) return best;
+      }
+    }
+    return bestByUtility(pool, relevance);
   };
 
   const placeNext = (place: Place): void => {

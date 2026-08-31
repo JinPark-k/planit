@@ -731,3 +731,130 @@ describe('카페 슬롯 (끼니와 분리)', () => {
     );
   });
 });
+
+describe('generateSchedule - mustIncludePlaceIds ("담기")', () => {
+  /** 서로 가까운 좌표들. 이동시간 때문에 마감에 걸리는 일을 피한다. */
+  function near(
+    id: string,
+    category: Place['category'],
+    offset: number,
+  ): Place {
+    return place(id, category, 33.45 + offset * 0.002, 126.57, 0.5, 0.5);
+  }
+
+  function scheduledIds(days: ReturnType<typeof generateSchedule>): string[] {
+    return days.flatMap((day) => day.items.map((item) => item.place.id));
+  }
+
+  it('담은 장소가 후보에 밀리지 않고 일정에 들어간다', () => {
+    // 담지 않은 장소가 훨씬 많고 인기도도 높다. 우선권이 없으면 밀려난다.
+    const picked = near('picked', 'SIGHTSEEING', 30);
+    const fillers = Array.from({ length: 20 }, (_, i) =>
+      place(`filler-${i}`, 'SIGHTSEEING', 33.45 + i * 0.001, 126.57, 1, 1),
+    );
+
+    const days = generateSchedule({
+      keywords: [],
+      candidatePlaces: [...fillers, picked],
+      dayCount: 1,
+      travelMode: 'CAR',
+      mustIncludePlaceIds: new Set(['picked']),
+    });
+
+    expect(scheduledIds(days)).toContain('picked');
+  });
+
+  it('관광지만 담아도 끼니가 채움 후보에서 들어온다', () => {
+    // 결정 1: 담은 것에 식당이 없으면 자동으로 채운다.
+    const picked = near('sight', 'SIGHTSEEING', 0);
+    const restaurant = near('restaurant', 'FOOD', 1);
+
+    const days = generateSchedule({
+      keywords: [],
+      candidatePlaces: [picked, restaurant],
+      dayCount: 1,
+      travelMode: 'CAR',
+      mustIncludePlaceIds: new Set(['sight']),
+    });
+
+    expect(scheduledIds(days)).toContain('sight');
+    expect(scheduledIds(days)).toContain('restaurant');
+  });
+
+  it('담은 식당이 있으면 자동 식당 대신 그것이 끼니로 쓰인다', () => {
+    const pickedFood = near('picked-food', 'FOOD', 5);
+    const otherFood = near('other-food', 'FOOD', 1);
+    const sight = near('sight', 'SIGHTSEEING', 0);
+
+    const days = generateSchedule({
+      keywords: [],
+      candidatePlaces: [sight, otherFood, pickedFood],
+      dayCount: 1,
+      travelMode: 'CAR',
+      mustIncludePlaceIds: new Set(['picked-food']),
+    });
+
+    const ids = scheduledIds(days);
+    expect(ids).toContain('picked-food');
+    // 점심 슬롯을 담은 식당이 먼저 가져가므로, 담지 않은 식당보다 앞선다.
+    if (ids.includes('other-food')) {
+      expect(ids.indexOf('picked-food')).toBeLessThan(
+        ids.indexOf('other-food'),
+      );
+    }
+  });
+
+  it('담은 곳이 일수보다 적어도 빈 일차 없이 채워진다', () => {
+    // 결정 3: 3곳 담고 3일이어도 각 일차가 비지 않는다.
+    const picked = ['p1', 'p2', 'p3'].map((id, i) =>
+      place(id, 'SIGHTSEEING', 33.4 + i * 0.5, 126.5 + i * 0.3, 0.5, 0.5),
+    );
+    const fillers = Array.from({ length: 30 }, (_, i) =>
+      place(
+        `f-${i}`,
+        'SIGHTSEEING',
+        33.4 + (i % 3) * 0.5,
+        126.5 + (i % 3) * 0.3 + 0.01,
+        0.5,
+        0.5,
+      ),
+    );
+
+    const days = generateSchedule({
+      keywords: [],
+      candidatePlaces: [...picked, ...fillers],
+      dayCount: 3,
+      travelMode: 'CAR',
+      mustIncludePlaceIds: new Set(['p1', 'p2', 'p3']),
+    });
+
+    expect(days).toHaveLength(3);
+    for (const day of days) {
+      expect(day.items.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('mustIncludePlaceIds가 없으면 기존 결과와 완전히 같다', () => {
+    // 회귀 방지: 오마카세 경로가 바뀌면 안 된다.
+    const places = Array.from({ length: 12 }, (_, i) =>
+      place(
+        `p-${i}`,
+        i % 3 === 0 ? 'FOOD' : 'SIGHTSEEING',
+        33.4 + i * 0.01,
+        126.5 + i * 0.01,
+        i / 12,
+        0.5,
+      ),
+    );
+    const input = {
+      keywords: ['바다'],
+      candidatePlaces: places,
+      dayCount: 2,
+      travelMode: 'CAR' as const,
+    };
+
+    expect(
+      generateSchedule({ ...input, mustIncludePlaceIds: new Set() }),
+    ).toEqual(generateSchedule(input));
+  });
+});

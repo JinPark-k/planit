@@ -89,3 +89,70 @@ describe('clusterPlacesByDay', () => {
     expect(result1).toEqual(result2);
   });
 });
+
+describe('clusterPlacesByDay - mustIncludeIds ("담기")', () => {
+  /** 세 지역이 서로 멀리 떨어져 있어 클러스터 경계가 명확하다. */
+  const JEJU_GROUP: ClusterablePlace[] = [
+    place('jeju-1', 33.4996, 126.5312),
+    place('jeju-2', 33.4507, 126.5706),
+  ];
+  const ALL = [...SEOUL_GROUP, ...BUSAN_GROUP, ...JEJU_GROUP];
+
+  function dayOf(
+    clusters: ReturnType<typeof clusterPlacesByDay>,
+    id: string,
+  ): number | undefined {
+    return clusters.find((c) => c.places.some((p) => p.id === id))?.day;
+  }
+
+  it('담은 장소가 서로 다른 일차의 중심이 된다', () => {
+    // 서울/부산에서 하나씩 담으면 두 일차가 각각 그 지역을 맡아야 한다.
+    // 시드를 담은 장소에서 뽑지 않으면 일차 경계가 사용자의 선택과 무관하게 정해진다.
+    const clusters = clusterPlacesByDay(ALL, 2, {
+      mustIncludeIds: new Set(['seoul-1', 'busan-1']),
+    });
+
+    expect(dayOf(clusters, 'seoul-1')).not.toBe(dayOf(clusters, 'busan-1'));
+  });
+
+  it('담은 장소가 있는 일차에 같은 지역 장소가 모인다', () => {
+    const clusters = clusterPlacesByDay(ALL, 2, {
+      mustIncludeIds: new Set(['seoul-1', 'busan-1']),
+    });
+
+    const seoulDay = dayOf(clusters, 'seoul-1');
+    expect(dayOf(clusters, 'seoul-2')).toBe(seoulDay);
+    expect(dayOf(clusters, 'seoul-3')).toBe(seoulDay);
+  });
+
+  it('담은 장소가 일수보다 적으면 나머지 시드는 전체 풀에서 뽑는다', () => {
+    // 담은 곳 1개 + 3일. 나머지 두 일차도 시드를 받아야 빈 일차가 안 생긴다.
+    const clusters = clusterPlacesByDay(ALL, 3, {
+      mustIncludeIds: new Set(['jeju-1']),
+    });
+
+    expect(clusters).toHaveLength(3);
+    for (const cluster of clusters) {
+      expect(cluster.places.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('담은 장소는 모두 어딘가에 배정된다', () => {
+    const mustInclude = ['seoul-1', 'busan-2', 'jeju-1'];
+    const clusters = clusterPlacesByDay(ALL, 2, {
+      mustIncludeIds: new Set(mustInclude),
+    });
+
+    for (const id of mustInclude) {
+      expect(dayOf(clusters, id)).toBeDefined();
+    }
+  });
+
+  it('mustIncludeIds가 없으면 기존 결과와 완전히 같다', () => {
+    // 회귀 방지: 오마카세 경로의 동작이 바뀌면 안 된다.
+    expect(clusterPlacesByDay(ALL, 3, {})).toEqual(clusterPlacesByDay(ALL, 3));
+    expect(clusterPlacesByDay(ALL, 3, { mustIncludeIds: new Set() })).toEqual(
+      clusterPlacesByDay(ALL, 3),
+    );
+  });
+});
