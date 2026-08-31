@@ -37,8 +37,8 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     # 러너가 멈춰도 기본 6시간을 붙들고 있지 않도록 상한을 둔다.
-    # 아래 재시도 창(최대 ~25분) + 설치/수집 시간을 감안한 값이다.
-    timeout-minutes: 45
+    # 정상 실행은 40초, 전부 실패해도 아래 재시도 정책상 3분을 넘지 않는다.
+    timeout-minutes: 10
     strategy:
       # 지역을 순차 실행한다. 병렬로 돌리면 3개 job이 apis.data.go.kr를 동시에 호출해
       # connect timeout으로 실패한 적이 있다(2026-08-27 run 33067133732: SEOUL 실패).
@@ -62,20 +62,27 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # apis.data.go.kr 접속이 해외 러너에서 분 단위로 끊기는 일이 반복된다.
-      #   2026-08-28 run 33134494767: BUSAN 약 7분 장애
-      #   2026-08-29 run 33223796235: BUSAN/JEJU 00:33~00:51 약 18분 장애
-      # 클라이언트 자체 백오프(4회, ~53초)로는 이 길이를 못 넘기므로 잡 레벨에서 한 번 더 감싼다.
-      # 배치는 upsert 기반이라 중복 실행해도 안전하다.
+      # apis.data.go.kr 접속이 해외 러너에서 끊기는 일이 반복된다. 클라이언트 자체
+      # 백오프(4회, ~45초)를 잡 레벨에서 한 번 더 감싼다. 배치는 upsert 기반이라
+      # 중복 실행해도 안전하다.
       #
-      # 재시도 창은 5회 x 300초 = 최대 약 25분. 관측된 18분 장애를 덮는 값이다.
-      # 넉넉히 잡는 쪽이 낫다 - 실패하면 다음 크론까지 하루를 기다리거나 수동 재실행해야 하는데,
-      # 헛돌아도 러너 시간 25분이 전부다.
+      # 재시도 창을 5회 x 300초(=25분)에서 2회 x 60초로 줄인 이유:
+      #
+      #   2026-08-30 run 33333424521의 BUSAN 잡을 보면, 25분에 걸친 20번의 HTTP
+      #   시도가 전부 첫 호출에서 connect timeout으로 실패했다. 그런데 바로 다음
+      #   순서인 JEJU/SEOUL 잡은 다른 러너에서 36초 만에 성공했다.
+      #   즉 장애는 apis.data.go.kr 쪽이 아니라 그 러너에서 못 닿는 것이고,
+      #   같은 러너에서 기다리는 것으로는 회복되지 않는다.
+      #   25분 중 21분이 순수 sleep이었고, 그 시간이 그대로 과금됐다.
+      #
+      #   실패한 지역은 다음 크론(하루 뒤)이 upsert로 따라잡는다. 관광 데이터는
+      #   하루 지연이 문제되지 않는다 - 실측상 8개월에 38%만 수정된다.
+      #   러너 시간을 25분씩 태우는 쪽이 훨씬 비싸다(비공개 저장소 Free = 월 2,000분).
       - name: Run batch pipeline
         env:
           REGION: ${{ matrix.region }}
-          MAX_ATTEMPTS: "5"
-          RETRY_DELAY_SECONDS: "300"
+          MAX_ATTEMPTS: "2"
+          RETRY_DELAY_SECONDS: "60"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}
