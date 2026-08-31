@@ -49,15 +49,17 @@ jobs:
       matrix:
         region: ${{ fromJSON(needs.prepare.outputs.regions) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9.15.9
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          # CI의 백엔드 잡과 같은 24를 쓴다. 배치는 백엔드 코드를 그대로 실행하고
+          # Vercel 운영도 24.x다. 20에서는 @supabase/supabase-js가 지원 중단 경고를 냈다.
+          node-version: 24
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
