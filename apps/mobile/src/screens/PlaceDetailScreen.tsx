@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
-  BackHandler,
   Image,
   Linking,
   Pressable,
@@ -34,18 +33,6 @@ interface Props {
  * 섹션을 추가한다.
  */
 export function PlaceDetailScreen({ place, visit, onBack }: Props) {
-  // 안드로이드 하드웨어 뒤로가기로도 닫힌다. 이 화면은 일정 화면 위에 겹쳐 뜨므로
-  // 처리하지 않으면 상세가 열린 채로 앱이 종료된다.
-  useEffect(() => {
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        onBack();
-        return true; // 기본 동작(앱 종료)을 막는다
-      },
-    );
-    return () => subscription.remove();
-  }, [onBack]);
 
   const dialUrl = place.tel ? telHref(place.tel) : undefined;
 
