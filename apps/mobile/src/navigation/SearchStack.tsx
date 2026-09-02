@@ -28,11 +28,11 @@ function PickListRoute({ navigation }: Props<'PickList'>) {
     setSubmitting(true);
     setSubmitError(undefined);
     generateScheduleFromPlaces(request)
-      .then(({ days }) => {
+      .then(({ days, excludedPlaces }) => {
         const regionLabel =
           REGION_OPTIONS.find(option => option.code === request.region)?.label ??
           request.region;
-        navigation.navigate('Schedule', { days, regionLabel });
+        navigation.navigate('Schedule', { days, regionLabel, excludedPlaces });
       })
       .catch((error: unknown) => {
         setSubmitError(
@@ -54,11 +54,12 @@ function PickListRoute({ navigation }: Props<'PickList'>) {
 }
 
 function ScheduleRoute({ route, navigation }: Props<'Schedule'>) {
-  const { days, regionLabel } = route.params;
+  const { days, regionLabel, excludedPlaces } = route.params;
   return (
     <ScheduleScreen
       days={days}
       regionLabel={regionLabel}
+      excludedPlaces={excludedPlaces}
       onBack={() => navigation.popToTop()}
       onRestart={() => navigation.popToTop()}
       onSelectPlace={(item, day) =>

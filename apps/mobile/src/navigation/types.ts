@@ -1,4 +1,4 @@
-import { Place, ScheduleDay } from '../api/types';
+import { ExcludedPlace, Place, ScheduleDay } from '../api/types';
 import { VisitContext } from '../screens/placeDetail.format';
 
 /**
@@ -22,7 +22,12 @@ export type TripStackParamList = {
  */
 export type SearchStackParamList = {
   PickList: undefined;
-  Schedule: { days: ScheduleDay[]; regionLabel: string };
+  Schedule: {
+    days: ScheduleDay[];
+    regionLabel: string;
+    /** 담았지만 일정에 넣지 못한 장소. 골라 담기에서만 생긴다. */
+    excludedPlaces?: ExcludedPlace[];
+  };
   PlaceDetail: { place: Place; visit?: VisitContext };
 };
 
