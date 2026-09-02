@@ -2,7 +2,7 @@ name: Android APK
 
 on:
   push:
-    branches: [main, feature/android-release-apk] # TEMP: 머지 전 검증용, 되돌릴 것
+    branches: [main]
     # 모바일과 무관한 변경(백엔드만 고친 머지 등)에서는 돌리지 않는다.
     # APK 빌드는 10분 안팎이라 매 머지마다 돌리면 Actions 분이 아깝다.
     paths:
@@ -89,8 +89,14 @@ jobs:
       - name: Rename APK
         id: apk
         run: |
+          # 파일명에 커밋 sha를 넣지 않는다.
+          #
+          # sha를 넣으면 빌드마다 새 파일이 되어 릴리스에 계속 쌓이고(--clobber는
+          # 같은 이름만 덮어쓴다), 받는 사람은 어느 게 최신인지 알 수 없다.
+          # 이름을 고정하면 덮어써지고 다운로드 링크도 변하지 않아 공유하기 좋다.
+          # 어느 커밋인지는 릴리스 본문에 적는다.
           SRC=apps/mobile/android/app/build/outputs/apk/release/app-release.apk
-          DEST="planit-${GITHUB_SHA::7}.apk"
+          DEST="planit-android.apk"
           mv "$SRC" "$DEST"
           echo "path=$DEST" >> "$GITHUB_OUTPUT"
           echo "size=$(du -h "$DEST" | cut -f1)" >> "$GITHUB_OUTPUT"
