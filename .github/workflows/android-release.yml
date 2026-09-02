@@ -2,7 +2,7 @@ name: Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/android-release-apk] # TEMP: 머지 전 검증용, 되돌릴 것
     # 모바일과 무관한 변경(백엔드만 고친 머지 등)에서는 돌리지 않는다.
     # APK 빌드는 10분 안팎이라 매 머지마다 돌리면 Actions 분이 아깝다.
     paths:
