@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Luggage, Search } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -25,12 +26,17 @@ function SearchStack() {
 }
 
 /**
- * 탭 아이콘. 아이콘 라이브러리를 더 붙이지 않으려고 글리프를 쓴다.
- * 앱에서 이미 ←, › 같은 글리프를 쓰고 있어 결이 어긋나지 않는다.
+ * 탭 아이콘.
+ *
+ * 처음엔 의존성을 아끼려고 이모지(🔍, 🗓)를 썼는데, 컬러 이모지가 탭바에 박히면
+ * 10년 전 앱처럼 보인다. 요즘 앱은 얇은 단색 라인 아이콘을 쓴다.
+ * lucide는 그 계열의 사실상 표준이고, 순수 JS라 react-native-svg 하나만 네이티브다.
  */
-function tabIcon(glyph: string) {
+type LucideIcon = typeof Search;
+
+function tabIcon(Icon: LucideIcon) {
   return function TabIcon({ color }: { color: string }) {
-    return <Text style={[styles.icon, { color }]}>{glyph}</Text>;
+    return <Icon color={color} size={ICON_SIZE} strokeWidth={ICON_STROKE} />;
   };
 }
 
@@ -54,16 +60,20 @@ export function RootTabs() {
       <Tab.Screen
         name="Search"
         component={SearchStack}
-        options={{ title: '검색', tabBarIcon: tabIcon('🔍') }}
+        options={{ title: '검색', tabBarIcon: tabIcon(Search) }}
       />
       <Tab.Screen
         name="Trip"
         component={TripStack}
-        options={{ title: '여행', tabBarIcon: tabIcon('🗓') }}
+        options={{ title: '여행', tabBarIcon: tabIcon(Luggage) }}
       />
     </Tab.Navigator>
   );
 }
+
+const ICON_SIZE = 24;
+/** 2는 굵어 보이고 1.5가 요즘 라인 아이콘의 기본값이다. */
+const ICON_STROKE = 1.75;
 
 const styles = StyleSheet.create({
   stackContainer: {
@@ -76,8 +86,5 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     ...typography.micro,
-  },
-  icon: {
-    fontSize: 20,
   },
 });
