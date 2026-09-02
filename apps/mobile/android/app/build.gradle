@@ -24,6 +24,21 @@ react {
     codegenDir = new File(monorepoRoot, "node_modules/@react-native/codegen")
     cliFile = new File(monorepoRoot, "node_modules/react-native/cli.js")
 
+    // Hermes 컴파일러 경로.
+    //
+    // RN 0.86은 hermesc를 react-native 패키지에서 빼내 별도 npm 패키지
+    // (hermes-compiler)로 옮겼는데, Gradle 플러그인은 여전히
+    // react-native/sdks/hermesc/%OS-BIN%/hermesc 를 찾는다. 그 경로가 없어서
+    // release 빌드가 "Couldn't determine Hermesc location"으로 실패했다.
+    // (debug는 번들을 만들지 않아 드러나지 않았다.)
+    //
+    // %OS-BIN%은 플러그인이 osx-bin/linux64-bin/win64-bin으로 치환하는 자리표시자라
+    // 그대로 넘긴다. macOS 로컬과 ubuntu CI가 같은 설정으로 동작한다.
+    hermesCommand = new File(
+        monorepoRoot,
+        "node_modules/hermes-compiler/hermesc/%OS-BIN%/hermesc",
+    ).absolutePath
+
     //   The root of your project, i.e. where "package.json" lives. Default is '../..'
     // root = file("../../")
     //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
@@ -98,8 +113,14 @@ android {
         applicationId "com.planit.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // CI가 빌드마다 올려 준다(-PplanitVersionCode=). 로컬 빌드는 1로 둔다.
+        // 같은 versionCode로는 기기가 업데이트로 인식하지 않아 테스트 배포가 막힌다.
+        versionCode project.hasProperty('planitVersionCode')
+            ? project.property('planitVersionCode').toInteger()
+            : 1
+        versionName project.hasProperty('planitVersionName')
+            ? project.property('planitVersionName')
+            : "1.0"
     }
     signingConfigs {
         debug {
@@ -108,15 +129,31 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        // 배포용 서명. CI가 GitHub Secrets에서 keystore를 복원해 아래 속성으로 넘긴다.
+        // 속성이 없으면 이 설정을 만들지 않고 debug 키로 떨어진다(아래 buildTypes 참고).
+        if (project.hasProperty('PLANIT_KEYSTORE_FILE')) {
+            release {
+                storeFile file(project.property('PLANIT_KEYSTORE_FILE'))
+                storePassword project.property('PLANIT_KEYSTORE_PASSWORD')
+                keyAlias project.property('PLANIT_KEY_ALIAS')
+                keyPassword project.property('PLANIT_KEY_PASSWORD')
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // 배포 키가 있으면 그것으로, 없으면 debug 키로 서명한다.
+            //
+            // debug 키로 서명해도 설치는 된다. debug.keystore가 레포에 커밋돼 있어
+            // 누가 빌드하든 같은 키라서 업데이트 설치도 된다 - 내부 테스트에는 충분하다.
+            // 다만 Play 스토어에는 올릴 수 없고 키가 공개돼 있으므로,
+            // 실제 배포 전에는 반드시 PLANIT_KEYSTORE_* 를 설정해야 한다.
+            signingConfig project.hasProperty('PLANIT_KEYSTORE_FILE')
+                ? signingConfigs.release
+                : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
