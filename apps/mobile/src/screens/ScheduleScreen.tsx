@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ScheduleDay, ScheduleItem } from '../api/types';
+import { ExcludedPlace, ScheduleDay, ScheduleItem } from '../api/types';
 import { Chip } from '../components/Chip';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
 import {
@@ -26,6 +26,13 @@ interface Props {
   onRestart: () => void;
   /** 장소를 누르면 상세로. day는 상세 화면의 "n일차 · HH:MM 도착"에 쓴다. */
   onSelectPlace: (item: ScheduleItem, day: number) => void;
+  /**
+   * 담았지만 일정에 넣지 못한 장소. 골라 담기 흐름에서만 넘어온다.
+   *
+   * 서버가 하루 마감(21:00)을 넘는 장소를 빼는데, 사용자가 고른 것을 조용히
+   * 버리면 안 된다. 자동 생성 흐름에서는 사용자가 고른 게 아니라 알리지 않는다.
+   */
+  excludedPlaces?: ExcludedPlace[];
 }
 
 export function ScheduleScreen({
@@ -34,6 +41,7 @@ export function ScheduleScreen({
   onBack,
   onRestart,
   onSelectPlace,
+  excludedPlaces,
 }: Props) {
   const [tab, setTab] = useState<DayTab>('ALL');
 
@@ -81,6 +89,23 @@ export function ScheduleScreen({
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.list}>
+        {excludedPlaces !== undefined && excludedPlaces.length > 0 && (
+          <View style={styles.excludedCard}>
+            <Text style={styles.excludedTitle}>
+              담은 곳 중 {excludedPlaces.length}곳은 일정에 넣지 못했어요
+            </Text>
+            <Text style={styles.excludedBody}>
+              {excludedPlaces
+                .map(excluded => excluded.place?.name ?? excluded.placeId)
+                .join(', ')}
+            </Text>
+            <Text style={styles.excludedNote}>
+              하루에 들를 수 있는 양을 넘었습니다. 일수를 늘리거나 담은 곳을
+              줄여 보세요.
+            </Text>
+          </View>
+        )}
+
         {!hasAnyItem ? (
           <Text style={styles.emptyText}>
             조건에 맞는 장소를 찾지 못했습니다. 키워드를 줄이거나 다른 지역으로
@@ -225,6 +250,27 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  excludedCard: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.warnLight,
+  },
+  excludedTitle: {
+    ...typography.smallStrong,
+    color: colors.warn,
+  },
+  excludedBody: {
+    marginTop: spacing.xs,
+    ...typography.micro,
+    lineHeight: 18,
+    color: colors.text,
+  },
+  excludedNote: {
+    marginTop: spacing.xs,
+    ...typography.micro,
+    color: colors.textMuted,
   },
   dayHeader: {
     marginTop: spacing.lg,

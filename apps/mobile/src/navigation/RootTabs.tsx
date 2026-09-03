@@ -1,30 +1,13 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { MapPinPlus, Sparkles } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SearchHomeScreen } from '../screens/SearchHomeScreen';
 import { colors, spacing, typography } from '../theme';
+import { SearchStack } from './SearchStack';
 import { TripStack } from './TripStack';
-import { RootTabParamList, SearchStackParamList } from './types';
+import { RootTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
-const SearchStackNavigator = createNativeStackNavigator<SearchStackParamList>();
-
-function SearchStack() {
-  return (
-    <SafeAreaView style={styles.stackContainer} edges={['top']}>
-      <SearchStackNavigator.Navigator screenOptions={{ headerShown: false }}>
-        <SearchStackNavigator.Screen
-          name="SearchHome"
-          component={SearchHomeScreen}
-        />
-      </SearchStackNavigator.Navigator>
-    </SafeAreaView>
-  );
-}
-
 /**
  * 탭 아이콘.
  *
@@ -90,10 +73,6 @@ const ICON_STROKE = 1.75;
 const TAB_BAR_HEIGHT = 64;
 
 const styles = StyleSheet.create({
-  stackContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   tabBar: {
     height: TAB_BAR_HEIGHT,
     paddingTop: spacing.sm,

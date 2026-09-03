@@ -1,4 +1,4 @@
-import { Place, ScheduleDay } from '../api/types';
+import { ExcludedPlace, Place, ScheduleDay } from '../api/types';
 import { VisitContext } from '../screens/placeDetail.format';
 
 /**
@@ -14,9 +14,21 @@ export type TripStackParamList = {
   PlaceDetail: { place: Place; visit?: VisitContext };
 };
 
-/** "검색" 탭의 스택. 아직 목록 화면 하나뿐이다. */
+/**
+ * "골라 담기" 탭의 스택.
+ *
+ * 일정 화면을 자동 생성 탭으로 넘기지 않고 이 스택에도 둔다. 사용자가 시작한
+ * 흐름 안에서 결과를 보는 편이 자연스럽고, 탭을 오갈 때 각자의 상태가 유지된다.
+ */
 export type SearchStackParamList = {
-  SearchHome: undefined;
+  PickList: undefined;
+  Schedule: {
+    days: ScheduleDay[];
+    regionLabel: string;
+    /** 담았지만 일정에 넣지 못한 장소. 골라 담기에서만 생긴다. */
+    excludedPlaces?: ExcludedPlace[];
+  };
+  PlaceDetail: { place: Place; visit?: VisitContext };
 };
 
 export type RootTabParamList = {
