@@ -33,6 +33,14 @@ interface Props {
    * 버리면 안 된다. 자동 생성 흐름에서는 사용자가 고른 게 아니라 알리지 않는다.
    */
   excludedPlaces?: ExcludedPlace[];
+  /**
+   * 이 일정의 앵커. 축제에서 시작한 흐름에서만 넘어온다.
+   *
+   * 일정은 절대 날짜를 잡지 않고 "1일차/2일차"로만 말한다. 축제는 실제 날짜가
+   * 정해져 있으므로, 어느 일차에 배치됐는지와 함께 그 날짜를 보여줘야
+   * 사용자가 자기 달력을 맞출 수 있다.
+   */
+  anchor?: { placeId: string; label: string };
 }
 
 export function ScheduleScreen({
@@ -42,6 +50,7 @@ export function ScheduleScreen({
   onRestart,
   onSelectPlace,
   excludedPlaces,
+  anchor,
 }: Props) {
   const [tab, setTab] = useState<DayTab>('ALL');
 
@@ -122,6 +131,11 @@ export function ScheduleScreen({
                 key={row.key}
                 item={row.item}
                 isLast={row.isLastOfDay}
+                anchorLabel={
+                  anchor?.placeId === row.item.place.id
+                    ? anchor.label
+                    : undefined
+                }
                 onPress={() => onSelectPlace(row.item, row.day)}
               />
             ),
@@ -156,10 +170,13 @@ export function ScheduleScreen({
 function TimelineRow({
   item,
   isLast,
+  anchorLabel,
   onPress,
 }: {
   item: ScheduleItem;
   isLast: boolean;
+  /** 있으면 이 항목이 일정의 앵커다(축제). 개최 날짜를 함께 보여준다. */
+  anchorLabel?: string;
   onPress: () => void;
 }) {
   const travel = item.travelFromPreviousMinutes;
@@ -175,7 +192,11 @@ function TimelineRow({
         accessibilityRole="button"
         accessibilityLabel={`${item.place.name} 상세 보기`}
         onPress={onPress}
-        style={({ pressed }) => [styles.rowBody, pressed && styles.rowPressed]}>
+        style={({ pressed }) => [
+          styles.rowBody,
+          anchorLabel !== undefined && styles.rowAnchor,
+          pressed && styles.rowPressed,
+        ]}>
         <View style={styles.rowText}>
           <Text style={styles.time}>{item.startTime}</Text>
           <Text style={styles.placeName} numberOfLines={2}>
@@ -185,6 +206,9 @@ function TimelineRow({
             {travel !== undefined && `이동 약 ${formatMinutes(travel)} · `}
             체류 {formatMinutes(item.stayMinutes)}
           </Text>
+          {anchorLabel !== undefined && (
+            <Text style={styles.anchorLabel}>{anchorLabel}</Text>
+          )}
         </View>
 
         {item.place.imageUrl !== undefined ? (
@@ -317,6 +341,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  rowAnchor: {
+    borderColor: colors.primaryDeep,
+    borderWidth: 1.5,
+  },
+  anchorLabel: {
+    marginTop: spacing.xs,
+    ...typography.smallStrong,
+    color: colors.primaryDeep,
   },
   rowPressed: {
     // 카드가 흰색이라 opacity로는 눌림이 거의 안 보인다. 배경을 바꿔 준다.
