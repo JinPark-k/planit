@@ -16,6 +16,15 @@ export const REGION_CODES = {
   // (실측 2026-09-04: areaCode=38도 areaCode=5도 축제 0건).
   // 실제 데이터는 통합 시도로만 존재하므로 여기서는 lDong 코드를 저장 키로 쓴다.
   JEONNAM_GWANGJU: '12',
+  GYEONGGI: '31',
+  INCHEON: '2',
+  DAEJEON: '3',
+  DAEGU: '4',
+  ULSAN: '7',
+  CHUNGBUK: '33',
+  CHUNGNAM: '34',
+  JEONBUK: '37',
+  GYEONGNAM: '36',
 } as const;
 
 /**
@@ -34,6 +43,15 @@ export const REGION_LDONG_CODES = {
   // 전남과 광주가 통합되며 생긴 새 코드다. 기존 전남(46)/광주(29)로 조회하면
   // 한 건도 잡히지 않는다 - 조용히 통째로 누락되므로 주의.
   JEONNAM_GWANGJU: '12',
+  GYEONGGI: '41',
+  INCHEON: '28',
+  DAEJEON: '30',
+  DAEGU: '27',
+  ULSAN: '31',
+  CHUNGBUK: '43',
+  CHUNGNAM: '44',
+  JEONBUK: '52',
+  GYEONGNAM: '48',
 } as const;
 
 export type RegionCode = keyof typeof REGION_CODES;
