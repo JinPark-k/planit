@@ -132,7 +132,12 @@ export function PickListScreen({
             </View>
 
             {loading && (
-              <ActivityIndicator color={colors.primary} style={styles.spinner} />
+              // 흰 배경 위 전경색이라 밝은 primary가 아니라 대비를 통과하는
+              // primaryDeep을 쓴다.
+              <ActivityIndicator
+                color={colors.primaryDeep}
+                style={styles.spinner}
+              />
             )}
             {listError !== null && (
               <Text style={styles.errorText}>{listError}</Text>
@@ -174,8 +179,9 @@ export function PickListScreen({
               keywords,
             });
           }}
-          style={[
+          style={({ pressed }) => [
             styles.submitButton,
+            pressed && canSubmit && styles.submitButtonPressed,
             !canSubmit && styles.submitButtonDisabled,
           ]}>
           {submitting ? (
@@ -310,7 +316,9 @@ const styles = StyleSheet.create({
   },
   guideCount: {
     ...typography.smallStrong,
-    color: colors.primary,
+    // primaryLight 위에 얹으므로 밝은 primary가 아니라 대비를 통과하는
+    // primaryDeep을 쓴다.
+    color: colors.primaryDeep,
   },
   guideMessage: {
     marginTop: spacing.xxs,
@@ -383,7 +391,9 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   checkMarkPicked: {
-    color: colors.surface,
+    // primary(Fresh Lime)는 밝아서 흰 텍스트가 대비를 통과하지 못한다.
+    // 채우기 위에는 항상 어두운 텍스트를 얹는다.
+    color: colors.text,
   },
   emptyText: {
     marginTop: spacing.xxxl,
@@ -409,11 +419,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.primary,
   },
+  submitButtonPressed: {
+    backgroundColor: colors.primaryPressed,
+  },
   submitButtonDisabled: {
     backgroundColor: colors.disabled,
   },
   submitText: {
     ...typography.button,
-    color: colors.surface,
+    // primary가 밝은 라임이라 흰 텍스트는 대비를 통과하지 못한다.
+    color: colors.text,
   },
 });

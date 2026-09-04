@@ -51,7 +51,11 @@ export function KeywordPicker({
   };
 
   if (loading) {
-    return <ActivityIndicator color={colors.primary} style={styles.spinner} />;
+    // 흰 배경 위 전경색이라 밝은 primary가 아니라 대비를 통과하는
+    // primaryDeep을 쓴다.
+    return (
+      <ActivityIndicator color={colors.primaryDeep} style={styles.spinner} />
+    );
   }
 
   if (error !== null) {
@@ -108,6 +112,8 @@ const styles = StyleSheet.create({
   },
   retryText: {
     ...typography.smallStrong,
-    color: colors.primary,
+    // 다시 시도는 화면의 주 동작이 아니라 보조 동작이라
+    // primary(라임)가 아니라 accent(퍼플)를 쓴다.
+    color: colors.accent,
   },
 });

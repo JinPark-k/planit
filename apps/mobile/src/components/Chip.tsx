@@ -107,9 +107,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   textSoft: {
-    color: colors.primary,
+    // primaryLight 위에 얹으므로 밝은 primary가 아니라 대비를 통과하는
+    // primaryDeep을 쓴다.
+    color: colors.primaryDeep,
   },
   textSelected: {
-    color: colors.surface,
+    // primary(Fresh Lime)는 밝아서 흰 텍스트가 대비를 통과하지 못한다.
+    // 채우기 위에는 항상 어두운 텍스트를 얹는다.
+    color: colors.text,
   },
 });

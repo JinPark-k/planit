@@ -41,7 +41,9 @@ export function RootTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
+        // 흰 탭 바 위 전경색(아이콘+라벨)이라 밝은 primary가 아니라
+        // 대비를 통과하는 primaryDeep을 쓴다.
+        tabBarActiveTintColor: colors.primaryDeep,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabLabel,
