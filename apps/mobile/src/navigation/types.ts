@@ -21,6 +21,7 @@ export type TripStackParamList = {
  * 흐름 안에서 결과를 보는 편이 자연스럽고, 탭을 오갈 때 각자의 상태가 유지된다.
  */
 export type SearchStackParamList = {
+  PickCondition: undefined;
   PickList: undefined;
   Schedule: {
     days: ScheduleDay[];
