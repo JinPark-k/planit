@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import { Paged, Place, RegionCode } from './types';
+import { Paged, Place, PlaceCategory, RegionCode } from './types';
 
 /**
  * 한 번에 받아올 개수.
@@ -13,13 +13,22 @@ const RECOMMEND_LIMIT = 50;
 /**
  * 키워드 스코어링 순 추천 장소.
  * 조회지만 keywords가 배열이라 백엔드가 POST를 쓴다.
+ *
+ * category가 null이면 전체다. JSON.stringify가 undefined인 키를 빼므로
+ * 그때는 필드 자체가 요청에 실리지 않는다.
  */
 export function fetchRecommendations(
   region: RegionCode,
   keywords: string[],
+  category: PlaceCategory | null = null,
 ): Promise<Paged<Place>> {
   return apiFetch<Paged<Place>>('/recommend', {
     method: 'POST',
-    body: JSON.stringify({ region, keywords, limit: RECOMMEND_LIMIT }),
+    body: JSON.stringify({
+      region,
+      keywords,
+      limit: RECOMMEND_LIMIT,
+      category: category ?? undefined,
+    }),
   });
 }

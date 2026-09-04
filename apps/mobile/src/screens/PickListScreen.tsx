@@ -9,17 +9,15 @@ import {
   View,
 } from 'react-native';
 import { fetchRecommendations } from '../api/recommend';
-import { Place, RegionCode } from '../api/types';
+import { Place, PlaceCategory } from '../api/types';
+import { CategoryPicker } from '../components/CategoryPicker';
 import { Chip } from '../components/Chip';
-import { DayCountPicker } from '../components/DayCountPicker';
-import { KeywordPicker, MAX_KEYWORDS } from '../components/KeywordPicker';
-import { RegionPicker } from '../components/RegionPicker';
-import { Section } from '../components/Section';
 import { CATEGORY_LABELS } from '../constants/categories';
-import { colors, radius, spacing, typography } from '../theme';
+import { REGION_OPTIONS } from '../constants/regions';
+import { usePickSession } from '../navigation/pickSession';
+import { colors, iconSize, radius, spacing, typography } from '../theme';
+import { RegionCode } from '../api/types';
 import { pickCountLabel, pickGuide } from './pickList.format';
-
-const DEFAULT_DAY_COUNT = 2;
 
 export interface PickListSubmit {
   region: RegionCode;
@@ -29,32 +27,38 @@ export interface PickListSubmit {
 }
 
 interface Props {
+  onBack: () => void;
   onSubmit: (request: PickListSubmit) => void;
   submitting?: boolean;
   submitError?: string;
 }
 
 /**
- * 골라 담기(목업 03).
+ * 골라 담기 2단계 — 목록에서 담는다(목업 03).
  *
- * 지역과 키워드로 장소를 조회해 목록에서 담고, 담은 목록으로 일정을 만든다.
- * 자동 생성 탭과 달리 장소를 사용자가 직접 고른다.
+ * 조건(일수·지역·키워드)은 앞 화면에서 정하고 여기서는 바꾸지 않는다.
+ * 종류만 남긴 이유는 목록을 훑는 중에 오가는 필터이기 때문이다 —
+ * 맛집을 담다가 관광으로 옮겨 담는 것이 이 화면의 주된 사용법이다.
  */
-export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
-  const [dayCount, setDayCount] = useState(DEFAULT_DAY_COUNT);
-  const [region, setRegion] = useState<RegionCode | null>(null);
-  const [keywords, setKeywords] = useState<string[]>([]);
+export function PickListScreen({
+  onBack,
+  onSubmit,
+  submitting,
+  submitError,
+}: Props) {
+  const { dayCount, region, keywords, picked, togglePick } = usePickSession();
+  const [category, setCategory] = useState<PlaceCategory | null>(null);
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
-  const [pickedIds, setPickedIds] = useState<string[]>([]);
+
 
   const load = useCallback(() => {
     if (region === null) return;
     setLoading(true);
     setListError(null);
-    fetchRecommendations(region, keywords)
+    fetchRecommendations(region, keywords, category)
       .then(paged => setPlaces(paged.items))
       .catch((cause: unknown) => {
         setListError(
@@ -62,36 +66,43 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
         );
       })
       .finally(() => setLoading(false));
-  }, [region, keywords]);
+  }, [region, keywords, category]);
 
-  // 지역이나 키워드가 바뀌면 다시 조회한다. 조회 버튼을 따로 두지 않는 이유는
-  // 고르는 화면이라 결과가 바로 보이는 편이 낫기 때문이다.
+  // 지역·키워드·카테고리가 바뀌면 다시 조회한다. 조회 버튼을 따로 두지 않는
+  // 이유는 고르는 화면이라 결과가 바로 보이는 편이 낫기 때문이다.
   useEffect(load, [load]);
 
-  // 목록이 바뀌면 이제 목록에 없는 장소를 담은 채로 두지 않는다.
-  useEffect(() => {
-    setPickedIds(previous =>
-      previous.filter(id => places.some(place => place.id === id)),
-    );
-  }, [places]);
-
-  const toggle = (placeId: string) => {
-    setPickedIds(previous =>
-      previous.includes(placeId)
-        ? previous.filter(id => id !== placeId)
-        : [...previous, placeId],
-    );
-  };
-
   const guide = useMemo(
-    () => pickGuide(dayCount, pickedIds.length),
-    [dayCount, pickedIds.length],
+    () => pickGuide(dayCount, picked.length),
+    [dayCount, picked.length],
   );
 
-  const canSubmit = region !== null && pickedIds.length > 0 && !submitting;
+  const canSubmit = region !== null && picked.length > 0 && !submitting;
+
+  const regionLabel =
+    REGION_OPTIONS.find(option => option.code === region)?.label ?? '';
+  const summary =
+    keywords.length > 0 ? `${regionLabel} · ${keywords.join(', ')}` : regionLabel;
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="조건 바꾸기"
+          onPress={onBack}
+          style={styles.backButton}>
+          <Text style={styles.backIcon}>←</Text>
+        </Pressable>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {summary}
+        </Text>
+      </View>
+
+      <View style={styles.categoryRow}>
+        <CategoryPicker value={category} onChange={setCategory} />
+      </View>
+
       <FlatList
         data={places}
         keyExtractor={place => place.id}
@@ -99,23 +110,6 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <View>
-            <Text style={styles.title}>골라 담기</Text>
-            <Text style={styles.subtitle}>
-              가고 싶은 곳을 담으면 그 장소들로 일정을 만들어 드려요.
-            </Text>
-
-            <Section label="일수">
-              <DayCountPicker value={dayCount} onChange={setDayCount} />
-            </Section>
-
-            <Section label="지역">
-              <RegionPicker value={region} onChange={setRegion} />
-            </Section>
-
-            <Section label={`키워드 (${keywords.length}/${MAX_KEYWORDS})`}>
-              <KeywordPicker selected={keywords} onChange={setKeywords} />
-            </Section>
-
             <View
               style={[
                 styles.guideCard,
@@ -126,7 +120,7 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
                   styles.guideCount,
                   guide.overRecommended && styles.guideTextWarn,
                 ]}>
-                {pickCountLabel(dayCount, pickedIds.length)}
+                {pickCountLabel(dayCount, picked.length)}
               </Text>
               <Text
                 style={[
@@ -150,15 +144,15 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
             <Text style={styles.emptyText}>
               {region === null
                 ? '지역을 먼저 골라 주세요.'
-                : '조건에 맞는 장소를 찾지 못했습니다. 키워드를 줄여 보세요.'}
+                : '조건에 맞는 장소를 찾지 못했습니다. 종류를 바꾸거나 앞 화면에서 키워드를 줄여 보세요.'}
             </Text>
           )
         }
         renderItem={({ item }) => (
           <PlaceRow
             place={item}
-            picked={pickedIds.includes(item.id)}
-            onPress={() => toggle(item.id)}
+            picked={picked.some(pickedPlace => pickedPlace.id === item.id)}
+            onPress={() => togglePick(item)}
           />
         )}
       />
@@ -173,7 +167,12 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
           disabled={!canSubmit}
           onPress={() => {
             if (region === null) return;
-            onSubmit({ region, placeIds: pickedIds, dayCount, keywords });
+            onSubmit({
+              region,
+              placeIds: picked.map(place => place.id),
+              dayCount,
+              keywords,
+            });
           }}
           style={[
             styles.submitButton,
@@ -183,8 +182,8 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
             <ActivityIndicator color={colors.surface} />
           ) : (
             <Text style={styles.submitText}>
-              {pickedIds.length > 0
-                ? `일정 만들기 (${pickedIds.length}곳)`
+              {picked.length > 0
+                ? `일정 만들기 (${picked.length}곳)`
                 : '일정 만들기'}
             </Text>
           )}
@@ -266,18 +265,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xxl,
   },
-  title: {
-    marginTop: spacing.lg,
-    ...typography.display,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    fontSize: iconSize.md,
     color: colors.text,
   },
-  subtitle: {
-    marginTop: spacing.sm,
-    ...typography.small,
-    color: colors.textMuted,
+  headerTitle: {
+    flex: 1,
+    ...typography.heading,
+    color: colors.text,
+  },
+  // 종류는 목록과 함께 스크롤되지 않고 위에 고정된다. 훑는 중에 오가는
+  // 필터라 손이 닿는 자리에 있어야 한다.
+  categoryRow: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: spacing.md,
   },
   guideCard: {
-    marginTop: spacing.xxl,
+    marginTop: spacing.md,
     padding: spacing.md,
     borderRadius: radius.md,
     backgroundColor: colors.primaryLight,
