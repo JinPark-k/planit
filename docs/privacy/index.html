@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>planit 개인정보처리방침</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f6f7fb;
+        --surface: #ffffff;
+        --text: #1b1f27;
+        --muted: #6b7280;
+        --border: #e3e6ec;
+        --accent: #4b2fa8;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #14161b;
+          --surface: #1c1f26;
+          --text: #eef0f4;
+          --muted: #9aa3b2;
+          --border: #2b303a;
+          --accent: #b9a6ff;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 32px 20px 64px;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+          "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 32px 28px;
+      }
+      h1 { font-size: 1.75rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+      h2 {
+        font-size: 1.1rem;
+        margin: 32px 0 8px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+      }
+      h2:first-of-type { border-top: 0; padding-top: 0; }
+      .updated { color: var(--muted); font-size: 0.875rem; margin: 0 0 24px; }
+      .lead {
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin: 0 0 8px;
+      }
+      .lead strong { color: var(--accent); }
+      p { margin: 0 0 12px; }
+      ul { margin: 0 0 12px; padding-left: 20px; }
+      li { margin-bottom: 4px; }
+      a { color: var(--accent); }
+      footer {
+        max-width: 720px;
+        margin: 20px auto 0;
+        color: var(--muted);
+        font-size: 0.8125rem;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>planit 개인정보처리방침</h1>
+      <p class="updated">최종 수정일: 2026년 9월 4일</p>
+
+      <p class="lead">
+        <strong>planit은 이용자의 개인정보를 수집하지 않습니다.</strong>
+        회원가입이 없고, 로그인이 없으며, 이름·이메일·전화번호·위치 등 개인을
+        식별할 수 있는 정보를 요구하거나 저장하지 않습니다.
+      </p>
+
+      <h2>1. 수집하는 개인정보</h2>
+      <p>없습니다.</p>
+      <p>
+        planit에는 회원가입 절차가 없습니다. 앱을 실행하는 데 어떤 계정도 필요하지
+        않으며, 이용자가 입력하는 정보(여행 일수, 지역, 관심 키워드, 고른 장소)는
+        일정을 만드는 동안에만 쓰이고 이용자와 연결해 저장하지 않습니다.
+      </p>
+      <p>
+        앱이 요구하는 기기 권한도 없습니다. 위치·연락처·사진·알림 등 어떤 권한도
+        요청하지 않습니다.
+      </p>
+
+      <h2>2. 앱이 주고받는 정보</h2>
+      <p>일정을 만들 때 planit 서버에 다음을 보냅니다.</p>
+      <ul>
+        <li>고른 지역과 여행 일수</li>
+        <li>고른 관심 키워드</li>
+        <li>고른 장소 또는 축제의 식별자</li>
+      </ul>
+      <p>
+        이 값들은 여행 일정을 계산하는 데만 쓰이며 개인을 식별할 수 있는 정보를
+        포함하지 않습니다. 응답을 돌려준 뒤 따로 보관하지 않습니다.
+      </p>
+      <p>
+        서버 운영사(Vercel)와 데이터베이스 제공자(Supabase)는 서비스 운영에 필요한
+        범위에서 접속 기록(IP 주소, 요청 시각 등)을 자동으로 남길 수 있습니다.
+        이는 일반적인 서버 운영 기록이며, planit이 이용자를 식별하거나 추적하는
+        목적으로 조회하지 않습니다.
+      </p>
+
+      <h2>3. 제3자 제공</h2>
+      <p>planit은 이용자 정보를 제3자에게 제공하지 않습니다.</p>
+
+      <h2>4. 이용하는 외부 데이터</h2>
+      <p>
+        여행지·축제 정보는 한국관광공사가 공공데이터포털을 통해 제공하는
+        TourAPI에서 받아 옵니다. 공개된 관광 정보이며 이용자의 개인정보와
+        무관합니다.
+      </p>
+      <p>
+        지도 보기와 길찾기는 카카오맵 또는 구글 지도 앱으로 연결됩니다. 연결된
+        뒤의 개인정보 처리는 각 서비스의 개인정보처리방침을 따릅니다.
+      </p>
+
+      <h2>5. 아동의 개인정보</h2>
+      <p>
+        planit은 개인정보를 수집하지 않으므로 연령과 무관하게 이용할 수 있습니다.
+      </p>
+
+      <h2>6. 광고와 분석</h2>
+      <p>
+        planit에는 광고가 없으며, 이용 행태를 추적하는 분석 도구를 넣지
+        않았습니다.
+      </p>
+
+      <h2>7. 방침 변경</h2>
+      <p>
+        이 방침이 바뀌면 이 페이지에 수정일과 함께 공지합니다. 향후 저장·찜 같은
+        기능을 위해 계정이 도입되면, 시행 전에 수집 항목과 이용 목적을 이 문서에
+        명시하고 이용자의 동의를 받겠습니다.
+      </p>
+
+      <h2>8. 문의</h2>
+      <ul>
+        <li>이메일: <a href="mailto:yellowj83@gmail.com">yellowj83@gmail.com</a></li>
+        <li>
+          저장소:
+          <a href="https://github.com/JinPark-k/planit">github.com/JinPark-k/planit</a>
+        </li>
+      </ul>
+    </main>
+    <footer>planit — 국내 여행 일정 추천 서비스</footer>
+  </body>
+</html>
