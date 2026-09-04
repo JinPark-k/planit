@@ -31,6 +31,22 @@ export type RegionCode =
 
 export type PlaceCategory = 'SIGHTSEEING' | 'FOOD' | 'ACTIVITY';
 
+/**
+ * 홈 화면에 띄우는 축제. 장소에 개최 기간과 지역이 붙은 것이다.
+ * 백엔드 FestivalResponseDto와 같아야 한다.
+ */
+export interface Festival extends Place {
+  /** 'YYYY-MM-DD' */
+  startDate: string;
+  endDate: string;
+  /** 이 축제로 일정을 만들 때 쓰는 지역. 사용자가 따로 고르지 않는다. */
+  region: RegionCode;
+  /** 오늘 이미 진행 중인지. 아니면 앞으로 열린다. */
+  ongoing: boolean;
+  /** 개최 기간(일). 시작일과 종료일을 포함한다. */
+  durationDays: number;
+}
+
 /** 이동수단. 백엔드 core/travel-time의 TRAVEL_MODES와 같아야 한다. */
 export type TravelMode = 'CAR' | 'TRANSIT' | 'WALK';
 

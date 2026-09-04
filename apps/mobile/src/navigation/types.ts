@@ -32,7 +32,20 @@ export type SearchStackParamList = {
   PlaceDetail: { place: Place; visit?: VisitContext };
 };
 
+/**
+ * "홈" 탭의 스택. 지금 열리는 축제를 보고 거기서 여행을 시작한다.
+ */
+export type HomeStackParamList = {
+  /**
+   * 탭 이름도 Home이라 스택 화면까지 Home으로 두면 react-navigation이
+   * "Home > Home"으로 중첩됐다고 경고한다. 화면 쪽 이름을 구체적으로 둔다.
+   */
+  FestivalHome: undefined;
+  PlaceDetail: { place: Place; visit?: VisitContext };
+};
+
 export type RootTabParamList = {
+  Home: undefined;
   Search: undefined;
   Trip: undefined;
 };
