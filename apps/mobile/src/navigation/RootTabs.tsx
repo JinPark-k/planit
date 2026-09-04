@@ -1,8 +1,9 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { MapPinPlus, Sparkles } from 'lucide-react-native';
+import { MapPinPlus, PartyPopper, Sparkles } from 'lucide-react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { colors, spacing, typography } from '../theme';
+import { HomeStack } from './HomeStack';
 import { SearchStack } from './SearchStack';
 import { TripStack } from './TripStack';
 import { RootTabParamList } from './types';
@@ -32,9 +33,11 @@ function tabIcon(Icon: LucideIcon) {
  * 그래서 "검색 / 여행"이 아니라 방식으로 이름을 붙인다. 앞 이름은 둘 다
  * 여행이고 둘 다 검색을 포함해서 구분이 되지 않았다.
  *
- * 목업은 홈·검색·여행·My 네 개지만 두 개만 둔다. 홈은 축제/날씨 API가, My는
- * 인증이 없어서 지금 만들면 눌러도 빈 화면이 나온다 — 고장처럼 보인다.
- * API가 생기면 여기에 추가한다.
+ * 홈은 그 둘과 결이 다르다. 조건을 입력하는 대신 지금 열리는 축제를 보여주고
+ * 거기서 여행을 시작한다. 제안서가 말한 "축제를 앵커로 삼는" 진입점이라
+ * 첫 탭에 둔다.
+ *
+ * 목업의 My 탭은 아직 없다. 인증이 없어 지금 만들면 눌러도 빈 화면이 나온다.
  */
 export function RootTabs() {
   return (
@@ -48,6 +51,11 @@ export function RootTabs() {
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabLabel,
       }}>
+      <Tab.Screen
+        name="Home"
+        component={HomeStack}
+        options={{ title: '홈', tabBarIcon: tabIcon(PartyPopper) }}
+      />
       <Tab.Screen
         name="Search"
         component={SearchStack}
