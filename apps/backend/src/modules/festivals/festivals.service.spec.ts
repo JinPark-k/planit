@@ -1,9 +1,6 @@
 import { FestivalListRow } from '../../infra/supabase/places.types';
 import { sortByImminence, todayInKst } from './festivals.service';
-import {
-  durationDays,
-  toFestivalResponse,
-} from './dto/festival-response.dto';
+import { durationDays, toFestivalResponse } from './dto/festival-response.dto';
 
 function festival(
   name: string,
