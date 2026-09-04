@@ -273,6 +273,8 @@
 					"-ObjC",
 					"-lc++",
 				);
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
 				PRODUCT_BUNDLE_IDENTIFIER = com.planit.mobile;
 				PRODUCT_NAME = Mobile;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -302,6 +304,8 @@
 					"-ObjC",
 					"-lc++",
 				);
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
 				PRODUCT_BUNDLE_IDENTIFIER = com.planit.mobile;
 				PRODUCT_NAME = Mobile;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
