@@ -1,4 +1,4 @@
-import { ExcludedPlace, Place, ScheduleDay } from '../api/types';
+import { ExcludedPlace, Festival, Place, ScheduleDay } from '../api/types';
 import { VisitContext } from '../screens/placeDetail.format';
 
 /**
@@ -41,6 +41,15 @@ export type HomeStackParamList = {
    * "Home > Home"으로 중첩됐다고 경고한다. 화면 쪽 이름을 구체적으로 둔다.
    */
   FestivalHome: undefined;
+  /** 축제를 고른 뒤 며칠 여행할지 정하는 화면. */
+  FestivalPlan: { festival: Festival };
+  Schedule: {
+    days: ScheduleDay[];
+    regionLabel: string;
+    excludedPlaces?: ExcludedPlace[];
+    /** 이 일정의 앵커가 된 축제. 일정에서 개최 날짜를 함께 보여준다. */
+    anchor?: { placeId: string; label: string };
+  };
   PlaceDetail: { place: Place; visit?: VisitContext };
 };
 
