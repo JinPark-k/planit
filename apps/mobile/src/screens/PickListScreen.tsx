@@ -48,7 +48,15 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
-  const [pickedIds, setPickedIds] = useState<string[]>([]);
+
+  /**
+   * 담은 장소를 id가 아니라 장소째로 들고 있는다.
+   *
+   * 조회 결과에서 id를 찾는 방식이면 목록이 바뀔 때마다 담은 것이 사라진다.
+   * 키워드를 하나 더 얹거나 카테고리를 좁히는 건 "지금 보는 범위"를 바꾸는
+   * 것이지 담은 것을 버리겠다는 뜻이 아니다.
+   */
+  const [picked, setPicked] = useState<Place[]>([]);
 
   const load = useCallback(() => {
     if (region === null) return;
@@ -68,27 +76,27 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
   // 고르는 화면이라 결과가 바로 보이는 편이 낫기 때문이다.
   useEffect(load, [load]);
 
-  // 목록이 바뀌면 이제 목록에 없는 장소를 담은 채로 두지 않는다.
-  useEffect(() => {
-    setPickedIds(previous =>
-      previous.filter(id => places.some(place => place.id === id)),
-    );
-  }, [places]);
+  // 지역이 바뀔 때만 담은 것을 비운다. 다른 지역의 장소는 이 일정에 넣을 수 없다.
+  const changeRegion = (next: RegionCode) => {
+    if (next === region) return;
+    setRegion(next);
+    setPicked([]);
+  };
 
-  const toggle = (placeId: string) => {
-    setPickedIds(previous =>
-      previous.includes(placeId)
-        ? previous.filter(id => id !== placeId)
-        : [...previous, placeId],
+  const toggle = (place: Place) => {
+    setPicked(previous =>
+      previous.some(item => item.id === place.id)
+        ? previous.filter(item => item.id !== place.id)
+        : [...previous, place],
     );
   };
 
   const guide = useMemo(
-    () => pickGuide(dayCount, pickedIds.length),
-    [dayCount, pickedIds.length],
+    () => pickGuide(dayCount, picked.length),
+    [dayCount, picked.length],
   );
 
-  const canSubmit = region !== null && pickedIds.length > 0 && !submitting;
+  const canSubmit = region !== null && picked.length > 0 && !submitting;
 
   return (
     <View style={styles.container}>
@@ -109,7 +117,7 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
             </Section>
 
             <Section label="지역">
-              <RegionPicker value={region} onChange={setRegion} />
+              <RegionPicker value={region} onChange={changeRegion} />
             </Section>
 
             <Section label={`키워드 (${keywords.length}/${MAX_KEYWORDS})`}>
@@ -126,7 +134,7 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
                   styles.guideCount,
                   guide.overRecommended && styles.guideTextWarn,
                 ]}>
-                {pickCountLabel(dayCount, pickedIds.length)}
+                {pickCountLabel(dayCount, picked.length)}
               </Text>
               <Text
                 style={[
@@ -157,8 +165,8 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
         renderItem={({ item }) => (
           <PlaceRow
             place={item}
-            picked={pickedIds.includes(item.id)}
-            onPress={() => toggle(item.id)}
+            picked={picked.some(pickedPlace => pickedPlace.id === item.id)}
+            onPress={() => toggle(item)}
           />
         )}
       />
@@ -173,7 +181,12 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
           disabled={!canSubmit}
           onPress={() => {
             if (region === null) return;
-            onSubmit({ region, placeIds: pickedIds, dayCount, keywords });
+            onSubmit({
+              region,
+              placeIds: picked.map(place => place.id),
+              dayCount,
+              keywords,
+            });
           }}
           style={[
             styles.submitButton,
@@ -183,8 +196,8 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
             <ActivityIndicator color={colors.surface} />
           ) : (
             <Text style={styles.submitText}>
-              {pickedIds.length > 0
-                ? `일정 만들기 (${pickedIds.length}곳)`
+              {picked.length > 0
+                ? `일정 만들기 (${picked.length}곳)`
                 : '일정 만들기'}
             </Text>
           )}
