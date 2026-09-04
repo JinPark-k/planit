@@ -58,3 +58,18 @@ export type RegionCode = keyof typeof REGION_CODES;
 
 /** 요청 검증/Swagger 문서용 런타임 목록. REGION_CODES에 지역을 추가하면 자동으로 따라간다. */
 export const REGION_CODE_LIST = Object.keys(REGION_CODES) as RegionCode[];
+
+/**
+ * places.region_code 값에서 지역 키를 되찾는다.
+ *
+ * 축제 조회는 지역을 고르지 않고 전국을 한 번에 읽으므로, row의 region_code를
+ * 앱이 쓰는 키(SEOUL 등)로 되돌려야 한다. REGION_CODES에서 파생시켜
+ * 지역을 추가할 때 이쪽을 빼먹는 일이 없게 한다.
+ */
+export const REGION_BY_DB_CODE: Readonly<Record<string, RegionCode>> =
+  Object.fromEntries(
+    Object.entries(REGION_CODES).map(([key, dbCode]) => [
+      dbCode,
+      key as RegionCode,
+    ]),
+  );

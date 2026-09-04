@@ -59,6 +59,24 @@ export const PLACE_LIST_COLUMNS = [
 export type PlaceListRow = Pick<PlaceRow, (typeof PLACE_LIST_COLUMNS)[number]>;
 
 /**
+ * 축제 조회에서 읽는 컬럼. 장소 목록 컬럼에 개최 기간과 지역을 더한다.
+ *
+ * 지역이 필요한 이유: 축제를 눌러 일정을 만들 때 어느 지역으로 만들지를
+ * 축제에서 가져온다. 사용자가 지역을 따로 고르지 않는다.
+ */
+export const FESTIVAL_LIST_COLUMNS = [
+  ...PLACE_LIST_COLUMNS,
+  'event_start_date',
+  'event_end_date',
+  'region_code',
+] as const;
+
+export type FestivalListRow = Pick<
+  PlaceRow,
+  (typeof FESTIVAL_LIST_COLUMNS)[number]
+>;
+
+/**
  * places upsert 페이로드 셰이프.
  * id/created_at은 DB가 채우고, popularity/rating은 의도적으로 제외한다.
  * (PostgREST upsert는 페이로드에 있는 컬럼만 UPDATE하므로, 제외하면 후속 배치가 계산한
