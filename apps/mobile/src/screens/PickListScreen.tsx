@@ -9,7 +9,8 @@ import {
   View,
 } from 'react-native';
 import { fetchRecommendations } from '../api/recommend';
-import { Place, RegionCode } from '../api/types';
+import { Place, PlaceCategory, RegionCode } from '../api/types';
+import { CategoryPicker } from '../components/CategoryPicker';
 import { Chip } from '../components/Chip';
 import { DayCountPicker } from '../components/DayCountPicker';
 import { KeywordPicker, MAX_KEYWORDS } from '../components/KeywordPicker';
@@ -44,6 +45,7 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
   const [dayCount, setDayCount] = useState(DEFAULT_DAY_COUNT);
   const [region, setRegion] = useState<RegionCode | null>(null);
   const [keywords, setKeywords] = useState<string[]>([]);
+  const [category, setCategory] = useState<PlaceCategory | null>(null);
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,7 +64,7 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
     if (region === null) return;
     setLoading(true);
     setListError(null);
-    fetchRecommendations(region, keywords)
+    fetchRecommendations(region, keywords, category)
       .then(paged => setPlaces(paged.items))
       .catch((cause: unknown) => {
         setListError(
@@ -70,10 +72,10 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
         );
       })
       .finally(() => setLoading(false));
-  }, [region, keywords]);
+  }, [region, keywords, category]);
 
-  // 지역이나 키워드가 바뀌면 다시 조회한다. 조회 버튼을 따로 두지 않는 이유는
-  // 고르는 화면이라 결과가 바로 보이는 편이 낫기 때문이다.
+  // 지역·키워드·카테고리가 바뀌면 다시 조회한다. 조회 버튼을 따로 두지 않는
+  // 이유는 고르는 화면이라 결과가 바로 보이는 편이 낫기 때문이다.
   useEffect(load, [load]);
 
   // 지역이 바뀔 때만 담은 것을 비운다. 다른 지역의 장소는 이 일정에 넣을 수 없다.
@@ -124,6 +126,10 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
               <KeywordPicker selected={keywords} onChange={setKeywords} />
             </Section>
 
+            <Section label="종류">
+              <CategoryPicker value={category} onChange={setCategory} />
+            </Section>
+
             <View
               style={[
                 styles.guideCard,
@@ -158,7 +164,7 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
             <Text style={styles.emptyText}>
               {region === null
                 ? '지역을 먼저 골라 주세요.'
-                : '조건에 맞는 장소를 찾지 못했습니다. 키워드를 줄여 보세요.'}
+                : '조건에 맞는 장소를 찾지 못했습니다. 키워드를 줄이거나 종류를 바꿔 보세요.'}
             </Text>
           )
         }
