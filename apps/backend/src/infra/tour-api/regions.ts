@@ -9,6 +9,13 @@ export const REGION_CODES = {
   SEOUL: '1',
   BUSAN: '6',
   JEJU: '39',
+  GANGWON: '32',
+  GYEONGBUK: '35',
+  // 전남광주통합특별시에는 쓸 수 있는 areaCode가 없다. areaCode2는 아직 구 체계라
+  // 광주(5)/전라남도(38)를 따로 주는데, 그 두 코드로 조회하면 0건이 나온다
+  // (실측 2026-09-04: areaCode=38도 areaCode=5도 축제 0건).
+  // 실제 데이터는 통합 시도로만 존재하므로 여기서는 lDong 코드를 저장 키로 쓴다.
+  JEONNAM_GWANGJU: '12',
 } as const;
 
 /**
@@ -22,6 +29,11 @@ export const REGION_LDONG_CODES = {
   SEOUL: '11',
   BUSAN: '26',
   JEJU: '50',
+  GANGWON: '51',
+  GYEONGBUK: '47',
+  // 전남과 광주가 통합되며 생긴 새 코드다. 기존 전남(46)/광주(29)로 조회하면
+  // 한 건도 잡히지 않는다 - 조용히 통째로 누락되므로 주의.
+  JEONNAM_GWANGJU: '12',
 } as const;
 
 export type RegionCode = keyof typeof REGION_CODES;
