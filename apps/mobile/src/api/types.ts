@@ -12,7 +12,13 @@ export interface ApiError {
 }
 
 /** infra/tour-api/regions.ts의 REGION_CODES 키와 같아야 한다. */
-export type RegionCode = 'SEOUL' | 'BUSAN' | 'JEJU';
+export type RegionCode =
+  | 'SEOUL'
+  | 'BUSAN'
+  | 'JEJU'
+  | 'GANGWON'
+  | 'GYEONGBUK'
+  | 'JEONNAM_GWANGJU';
 
 export type PlaceCategory = 'SIGHTSEEING' | 'FOOD' | 'ACTIVITY';
 

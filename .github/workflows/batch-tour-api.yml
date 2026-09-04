@@ -10,7 +10,8 @@ on:
         required: false
         type: choice
         default: ALL
-        options: [ALL, SEOUL, BUSAN, JEJU]
+        options:
+          [ALL, SEOUL, BUSAN, JEJU, GANGWON, GYEONGBUK, JEONNAM_GWANGJU]
 
 jobs:
   # 실행할 지역 목록을 만든다. matrix를 하드코딩하면 workflow_dispatch의
@@ -26,7 +27,7 @@ jobs:
           REGION_CODE: ${{ inputs.region_code }}
         run: |
           if [ -z "$REGION_CODE" ] || [ "$REGION_CODE" = "ALL" ]; then
-            regions='["SEOUL","BUSAN","JEJU"]'
+            regions='["SEOUL","BUSAN","JEJU","GANGWON","GYEONGBUK","JEONNAM_GWANGJU"]'
           else
             regions="[\"$REGION_CODE\"]"
           fi
