@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { fetchRecommendations } from '../api/recommend';
-import { Place, PlaceCategory, RegionCode } from '../api/types';
+import { Place, PlaceCategory } from '../api/types';
 import { CategoryPicker } from '../components/CategoryPicker';
 import { Chip } from '../components/Chip';
 import { DayCountPicker } from '../components/DayCountPicker';
@@ -17,10 +17,10 @@ import { KeywordPicker, MAX_KEYWORDS } from '../components/KeywordPicker';
 import { RegionPicker } from '../components/RegionPicker';
 import { Section } from '../components/Section';
 import { CATEGORY_LABELS } from '../constants/categories';
+import { usePickSession } from '../navigation/pickSession';
 import { colors, radius, spacing, typography } from '../theme';
+import { RegionCode } from '../api/types';
 import { pickCountLabel, pickGuide } from './pickList.format';
-
-const DEFAULT_DAY_COUNT = 2;
 
 export interface PickListSubmit {
   region: RegionCode;
@@ -42,23 +42,22 @@ interface Props {
  * 자동 생성 탭과 달리 장소를 사용자가 직접 고른다.
  */
 export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
-  const [dayCount, setDayCount] = useState(DEFAULT_DAY_COUNT);
-  const [region, setRegion] = useState<RegionCode | null>(null);
-  const [keywords, setKeywords] = useState<string[]>([]);
+  const {
+    dayCount,
+    setDayCount,
+    region,
+    setRegion,
+    keywords,
+    setKeywords,
+    picked,
+    togglePick,
+  } = usePickSession();
   const [category, setCategory] = useState<PlaceCategory | null>(null);
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
 
-  /**
-   * 담은 장소를 id가 아니라 장소째로 들고 있는다.
-   *
-   * 조회 결과에서 id를 찾는 방식이면 목록이 바뀔 때마다 담은 것이 사라진다.
-   * 키워드를 하나 더 얹거나 카테고리를 좁히는 건 "지금 보는 범위"를 바꾸는
-   * 것이지 담은 것을 버리겠다는 뜻이 아니다.
-   */
-  const [picked, setPicked] = useState<Place[]>([]);
 
   const load = useCallback(() => {
     if (region === null) return;
@@ -77,21 +76,6 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
   // 지역·키워드·카테고리가 바뀌면 다시 조회한다. 조회 버튼을 따로 두지 않는
   // 이유는 고르는 화면이라 결과가 바로 보이는 편이 낫기 때문이다.
   useEffect(load, [load]);
-
-  // 지역이 바뀔 때만 담은 것을 비운다. 다른 지역의 장소는 이 일정에 넣을 수 없다.
-  const changeRegion = (next: RegionCode) => {
-    if (next === region) return;
-    setRegion(next);
-    setPicked([]);
-  };
-
-  const toggle = (place: Place) => {
-    setPicked(previous =>
-      previous.some(item => item.id === place.id)
-        ? previous.filter(item => item.id !== place.id)
-        : [...previous, place],
-    );
-  };
 
   const guide = useMemo(
     () => pickGuide(dayCount, picked.length),
@@ -119,7 +103,7 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
             </Section>
 
             <Section label="지역">
-              <RegionPicker value={region} onChange={changeRegion} />
+              <RegionPicker value={region} onChange={setRegion} />
             </Section>
 
             <Section label={`키워드 (${keywords.length}/${MAX_KEYWORDS})`}>
@@ -172,7 +156,7 @@ export function PickListScreen({ onSubmit, submitting, submitError }: Props) {
           <PlaceRow
             place={item}
             picked={picked.some(pickedPlace => pickedPlace.id === item.id)}
-            onPress={() => toggle(item)}
+            onPress={() => togglePick(item)}
           />
         )}
       />

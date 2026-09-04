@@ -11,6 +11,7 @@ import { PickListScreen, PickListSubmit } from '../screens/PickListScreen';
 import { PlaceDetailScreen } from '../screens/PlaceDetailScreen';
 import { ScheduleScreen } from '../screens/ScheduleScreen';
 import { colors } from '../theme';
+import { PickSessionProvider } from './pickSession';
 import { SearchStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<SearchStackParamList>();
@@ -91,11 +92,13 @@ export function SearchStack() {
   return (
     // TripStack과 같은 이유로 상태바 영역만 비켜 준다(하단은 탭 바가 처리한다).
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="PickList" component={PickListRoute} />
-        <Stack.Screen name="Schedule" component={ScheduleRoute} />
-        <Stack.Screen name="PlaceDetail" component={PlaceDetailRoute} />
-      </Stack.Navigator>
+      <PickSessionProvider>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="PickList" component={PickListRoute} />
+          <Stack.Screen name="Schedule" component={ScheduleRoute} />
+          <Stack.Screen name="PlaceDetail" component={PlaceDetailRoute} />
+        </Stack.Navigator>
+      </PickSessionProvider>
     </SafeAreaView>
   );
 }
