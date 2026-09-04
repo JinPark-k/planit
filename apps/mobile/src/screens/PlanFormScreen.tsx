@@ -64,7 +64,11 @@ export function PlanFormScreen({ onSubmit, submitting, submitError }: Props) {
         onPress={() =>
           region !== null && onSubmit({ keywords, region, dayCount })
         }
-        style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}>
+        style={({ pressed }) => [
+          styles.submitButton,
+          pressed && canSubmit && styles.submitButtonPressed,
+          !canSubmit && styles.submitButtonDisabled,
+        ]}>
         {submitting ? (
           <ActivityIndicator color={colors.surface} />
         ) : (
@@ -106,11 +110,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.primary,
   },
+  submitButtonPressed: {
+    backgroundColor: colors.primaryPressed,
+  },
   submitButtonDisabled: {
     backgroundColor: colors.disabled,
   },
   submitText: {
     ...typography.button,
-    color: colors.surface,
+    // primary가 밝은 라임이라 흰 텍스트는 대비를 통과하지 못한다.
+    color: colors.text,
   },
 });

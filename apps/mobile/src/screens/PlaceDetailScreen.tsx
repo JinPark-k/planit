@@ -235,11 +235,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
+    // 일정에서 들어온 방문 맥락(n일차 · 도착 시각) — 경로 정보라 accent(퍼플).
+    backgroundColor: colors.accentLight,
   },
   visitText: {
     ...typography.smallStrong,
-    color: colors.primary,
+    color: colors.accent,
   },
   visitNote: {
     marginTop: spacing.xxs,
@@ -260,7 +261,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   link: {
-    color: colors.primary,
+    // 일반 링크(전화 문의) — primaryLight 위가 아니라 흰 배경 위 전경색이라
+    // 밝은 primary가 아니라 대비를 통과하는 primaryDeep을 쓴다.
+    color: colors.primaryDeep,
     textDecorationLine: 'underline',
   },
   mapButton: {
@@ -271,17 +274,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
+    // 카카오맵으로 열기 — 길찾기/경로 동작이라 accent(퍼플).
+    backgroundColor: colors.accentLight,
   },
   mapButtonPressed: {
     opacity: 0.7,
   },
   mapButtonText: {
     ...typography.smallStrong,
-    color: colors.primary,
+    color: colors.accent,
   },
   mapButtonChevron: {
     ...typography.button,
-    color: colors.primary,
+    color: colors.accent,
   },
 });

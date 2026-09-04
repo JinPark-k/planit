@@ -142,7 +142,10 @@ export function ScheduleScreen({
         <Pressable
           accessibilityRole="button"
           onPress={onRestart}
-          style={styles.restartButton}>
+          style={({ pressed }) => [
+            styles.restartButton,
+            pressed && styles.restartButtonPressed,
+          ]}>
           <Text style={styles.restartText}>다시 만들기</Text>
         </Pressable>
       </View>
@@ -276,7 +279,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
     ...typography.label,
-    color: colors.primary,
+    // 일차 구분은 타임라인(Trail Line)의 일부라 accent(퍼플)를 쓴다.
+    color: colors.accent,
   },
   row: {
     flexDirection: 'row',
@@ -289,13 +293,17 @@ const styles = StyleSheet.create({
     width: DOT_SIZE,
     height: DOT_SIZE,
     borderRadius: radius.pill,
-    backgroundColor: colors.primary,
+    // Trail Line 자체 — 브랜드상 이 점과 선이 "trail"이다.
+    backgroundColor: colors.accent,
     marginTop: DOT_OFFSET,
   },
   line: {
     flex: 1,
     width: 2,
-    backgroundColor: colors.border,
+    backgroundColor: colors.accent,
+    // 스크롤 목록을 따라 길게 이어지므로 원색 그대로는 화면을 압도한다.
+    // 옅게 낮춰 Trail Line이되 조용히 있게 한다.
+    opacity: 0.35,
     marginTop: spacing.xxs,
   },
   rowBody: {
@@ -312,14 +320,15 @@ const styles = StyleSheet.create({
   },
   rowPressed: {
     // 카드가 흰색이라 opacity로는 눌림이 거의 안 보인다. 배경을 바꿔 준다.
-    backgroundColor: colors.primaryLight,
+    // 이 카드도 타임라인의 일부라 라임이 아니라 accentLight를 쓴다.
+    backgroundColor: colors.accentLight,
   },
   rowText: {
     flex: 1,
   },
   time: {
     ...typography.label,
-    color: colors.primary,
+    color: colors.accent,
   },
   placeName: {
     marginTop: spacing.xxs,
@@ -344,11 +353,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
+    // 이동 포함 총 소요 시간 — 경로 정보라 accent(퍼플)를 쓴다.
+    backgroundColor: colors.accentLight,
   },
   totalText: {
     ...typography.smallStrong,
-    color: colors.primary,
+    color: colors.accent,
   },
   totalNote: {
     marginTop: spacing.xxs,
@@ -373,10 +383,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    // 이 화면의 주 버튼(다시 만들기)이라 CTA 패턴대로 primary(라임)를 쓴다.
     backgroundColor: colors.primary,
+  },
+  restartButtonPressed: {
+    backgroundColor: colors.primaryPressed,
   },
   restartText: {
     ...typography.button,
-    color: colors.surface,
+    // primary가 밝은 라임이라 흰 텍스트는 대비를 통과하지 못한다.
+    color: colors.text,
   },
 });
