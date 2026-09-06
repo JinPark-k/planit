@@ -276,7 +276,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mjj.planit;
-				PRODUCT_NAME = Mobile;
+				PRODUCT_NAME = planit;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -309,7 +309,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "planit AppStore";
 				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mjj.planit;
-				PRODUCT_NAME = Mobile;
+				PRODUCT_NAME = planit;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
