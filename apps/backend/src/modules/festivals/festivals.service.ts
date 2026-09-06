@@ -16,6 +16,13 @@ import {
   durationDays,
   toFestivalResponse,
 } from './dto/festival-response.dto';
+import { localityRank } from './locality';
+
+/**
+ * 이 이상 열리면 축제가 아니라 상설 프로그램으로 본다.
+ * 연중 전시나 주말 상시 공연이라 "그때만 열린다"는 성격이 없다.
+ */
+const LONG_RUNNING_DAYS = 31;
 
 /**
  * 캐시 수명. places와 같은 이유(하루 한 번 배치로만 바뀐다)로 10분을 쓴다.
@@ -121,12 +128,20 @@ export class FestivalsService {
 }
 
 /**
- * 임박한 순으로 정렬한다.
+ * 홈 목록 순서. 네 단계로 가른다.
  *
- * 시작일만으로 정렬하면 안 된다. 1월에 시작해 12월에 끝나는 상설 프로그램이
- * 맨 위를 차지한다(전국 274건 중 31일 이상이 55건). 진행 중인 축제는 오늘
- * 시작한 것으로 보고 같은 자리에 놓은 뒤, 기간이 짧은 것을 앞에 둔다 —
- * 짧을수록 "그때만 열리는" 축제이고, 그게 이 서비스가 내세우는 것이다.
+ *   1. 임박한 날짜 — 진행 중인 축제는 오늘 시작한 것으로 본다.
+ *      시작일 그대로 쓰면 1월에 시작한 연중 프로그램이 맨 위를 차지한다.
+ *   2. 상설 프로그램은 뒤로 — 31일 이상은 "그때만 열린다"는 성격이 없다.
+ *   3. 지방 우선 — 제안서의 "소규모 지역 특화, 숨은 축제 우선"이 여기서 구현된다.
+ *   4. 짧은 것 우선 — 같은 조건이면 기간이 짧을수록 그때만 열리는 축제다.
+ *
+ * 3을 4보다 앞에 둔 이유는 실측 때문이다(2026-09-06, 전국 283건). 지방을
+ * 기간 뒤에 두면 순서가 거의 바뀌지 않아 서울·경기 축제가 계속 목록을
+ * 차지했다. 앞에 두면 상위가 예산황새축제·왜관 홀리 페스티벌·무주반딧불축제·
+ * 평창효석문화제로 채워지고, 상위 20건 중 상설 프로그램은 0건이 된다.
+ *
+ * popularity는 쓰지 않는다. 실데이터가 전 행 0이라 신호가 없다(locality.ts 참고).
  */
 export function sortByImminence(
   rows: readonly FestivalListRow[],
@@ -145,9 +160,16 @@ export function sortByImminence(
       b.event_start_date as string,
       b.event_end_date as string,
     );
-    if (aDays !== bDays) return aDays - bDays;
 
-    return b.popularity - a.popularity;
+    const aLong = aDays >= LONG_RUNNING_DAYS ? 1 : 0;
+    const bLong = bDays >= LONG_RUNNING_DAYS ? 1 : 0;
+    if (aLong !== bLong) return aLong - bLong;
+
+    const aPlace = localityRank(a.addr1);
+    const bPlace = localityRank(b.addr1);
+    if (aPlace !== bPlace) return aPlace - bPlace;
+
+    return aDays - bDays;
   });
 }
 
