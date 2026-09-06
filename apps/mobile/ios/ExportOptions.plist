@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Store Connect(TestFlight 포함)로 올리는 빌드다. -->
+	<key>method</key>
+	<string>app-store-connect</string>
+
+	<key>teamID</key>
+	<string>Y4Q4TS7RTR</string>
+
+	<!-- 프로젝트 Release가 수동 서명이라 익스포트도 맞춘다. 자동으로 두면
+	     xcodebuild가 프로파일을 스스로 찾으려다 실패한다
+	     ("No profiles for 'com.mjj.planit' were found"). -->
+	<key>signingStyle</key>
+	<string>manual</string>
+
+	<key>signingCertificate</key>
+	<string>iPhone Distribution</string>
+
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.mjj.planit</key>
+		<string>planit AppStore</string>
+	</dict>
+
+	<!-- 심볼을 함께 올려야 App Store Connect에서 크래시 로그가 해석된다. -->
+	<key>uploadSymbols</key>
+	<true/>
+
+	<!-- 앱 씬 크기를 줄이는 최적화. App Store 배포의 기본값이다. -->
+	<key>stripSwiftSymbols</key>
+	<true/>
+</dict>
+</plist>
