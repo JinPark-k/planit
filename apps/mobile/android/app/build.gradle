@@ -110,7 +110,9 @@ android {
 
     namespace "com.planit.mobile"
     defaultConfig {
-        applicationId "com.planit.mobile"
+        // 스토어에 올라가는 식별자. namespace(위)와 달라도 되고, 여기만 바꾸면
+        // 소스 패키지를 옮기지 않아도 된다. iOS 번들 ID와 같은 값으로 맞춘다.
+        applicationId "com.mjj.planit"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // CI가 빌드마다 올려 준다(-PplanitVersionCode=). 로컬 빌드는 1로 둔다.
