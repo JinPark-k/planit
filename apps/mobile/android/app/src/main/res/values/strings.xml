@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">planit</string>
+    <!--
+      react-native-config가 BuildConfig를 찾을 패키지.
+
+      이 라이브러리는 context.getPackageName()(= applicationId) + ".BuildConfig"를
+      리플렉션으로 찾는데, BuildConfig는 namespace 아래에 생성된다. 둘이 다르면
+      클래스를 못 찾아 모든 값이 null이 되고, config/env.ts가 폴백
+      http://localhost:3000 으로 떨어져 전 기능이 네트워크 오류를 낸다.
+
+      applicationId를 com.mjj.planit으로 바꾸면서 실제로 그렇게 됐다(릴리스 APK
+      전 기능 실패). namespace를 바꾸려면 소스 디렉터리를 옮겨야 해서, 라이브러리가
+      제공하는 이 재정의를 쓴다. namespace를 바꾼다면 이 값도 함께 고쳐야 한다.
+    -->
+    <string name="build_config_package">com.planit.mobile</string>
 </resources>
