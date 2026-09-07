@@ -1,6 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { MapPinPlus, PartyPopper, Sparkles } from 'lucide-react-native';
+import { Image, ImageSourcePropType, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { colors, spacing, typography } from '../theme';
 import { HomeStack } from './HomeStack';
@@ -9,18 +8,26 @@ import { TripStack } from './TripStack';
 import { RootTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
-/**
- * 탭 아이콘.
- *
- * 처음엔 의존성을 아끼려고 이모지(🔍, 🗓)를 썼는데, 컬러 이모지가 탭바에 박히면
- * 10년 전 앱처럼 보인다. 요즘 앱은 얇은 단색 라인 아이콘을 쓴다.
- * lucide는 그 계열의 사실상 표준이고, 순수 JS라 react-native-svg 하나만 네이티브다.
- */
-type LucideIcon = typeof MapPinPlus;
 
-function tabIcon(Icon: LucideIcon) {
-  return function TabIcon({ color }: { color: string }) {
-    return <Icon color={color} size={ICON_SIZE} strokeWidth={ICON_STROKE} />;
+const TAB_ICONS = {
+  home: require('../assets/tab-home-plane.png'),
+  pick: require('../assets/tab-pick.png'),
+  auto: require('../assets/tab-auto.png'),
+} satisfies Record<string, ImageSourcePropType>;
+
+/**
+ * 스플래시의 크레용 질감을 이어받은 PLANIT 전용 탭 아이콘이다.
+ * 선택된 탭은 원래 보라·라임 색을 보여 주고, 나머지는 한 가지 회색으로 낮춘다.
+ */
+function tabIcon(source: ImageSourcePropType) {
+  return function TabIcon({ focused }: { focused: boolean }) {
+    return (
+      <Image
+        source={source}
+        resizeMode="contain"
+        style={[styles.tabIcon, !focused && styles.tabIconInactive]}
+      />
+    );
   };
 }
 
@@ -44,9 +51,7 @@ export function RootTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        // 흰 탭 바 위 전경색(아이콘+라벨)이라 밝은 primary가 아니라
-        // 대비를 통과하는 primaryDeep을 쓴다.
-        tabBarActiveTintColor: colors.primaryDeep,
+        tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabLabel,
@@ -54,25 +59,22 @@ export function RootTabs() {
       <Tab.Screen
         name="Home"
         component={HomeStack}
-        options={{ title: '홈', tabBarIcon: tabIcon(PartyPopper) }}
+        options={{ title: '홈', tabBarIcon: tabIcon(TAB_ICONS.home) }}
       />
       <Tab.Screen
         name="Search"
         component={SearchStack}
-        options={{ title: '골라 담기', tabBarIcon: tabIcon(MapPinPlus) }}
+        options={{ title: '골라 담기', tabBarIcon: tabIcon(TAB_ICONS.pick) }}
       />
       <Tab.Screen
         name="Trip"
         component={TripStack}
-        options={{ title: '자동 생성', tabBarIcon: tabIcon(Sparkles) }}
+        options={{ title: '자동 생성', tabBarIcon: tabIcon(TAB_ICONS.auto) }}
       />
     </Tab.Navigator>
   );
 }
 
-const ICON_SIZE = 24;
-/** 2는 굵어 보이고 1.5가 요즘 라인 아이콘의 기본값이다. */
-const ICON_STROKE = 1.75;
 /**
  * 탭 바 높이.
  *
@@ -83,6 +85,14 @@ const ICON_STROKE = 1.75;
 const TAB_BAR_HEIGHT = 64;
 
 const styles = StyleSheet.create({
+  tabIcon: {
+    width: 30,
+    height: 30,
+  },
+  tabIconInactive: {
+    tintColor: colors.textMuted,
+    opacity: 0.55,
+  },
   tabBar: {
     height: TAB_BAR_HEIGHT,
     paddingTop: spacing.sm,
