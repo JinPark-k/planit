@@ -955,3 +955,53 @@ describe('generateSchedule / 개장 시각', () => {
     expect([...times].sort((a, b) => a - b)).toEqual(times);
   });
 });
+
+describe('generateSchedule - weather', () => {
+  it('weather를 안 주면 기존과 동일하게 스코어 우위(야외/실내 보정 없음)로 순서가 정해진다', () => {
+    const indoor = place('indoor', 'SIGHTSEEING', 37.5, 127, 0.6, 0.6);
+    indoor.tags = ['실내'];
+    const outdoor = place('outdoor', 'SIGHTSEEING', 37.5, 127, 0.65, 0.65);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [indoor, outdoor],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    // 보정이 없으면 베이스 스코어가 더 높은 outdoor가 먼저 온다.
+    expect(day.items[0].place.id).toBe('outdoor');
+  });
+
+  it('weather: RAIN이면 실내 장소 보정으로 순서가 뒤집힐 수 있다', () => {
+    const indoor = place('indoor', 'SIGHTSEEING', 37.5, 127, 0.6, 0.6);
+    indoor.tags = ['실내'];
+    const outdoor = place('outdoor', 'SIGHTSEEING', 37.5, 127, 0.65, 0.65);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [indoor, outdoor],
+      dayCount: 1,
+      travelMode: 'CAR',
+      weather: 'RAIN',
+    });
+
+    expect(day.items[0].place.id).toBe('indoor');
+  });
+
+  it('weather: CLEAR면 야외 태그 장소 보정으로 순서가 뒤집힐 수 있다', () => {
+    const outdoor = place('outdoor', 'SIGHTSEEING', 37.5, 127, 0.6, 0.6);
+    outdoor.tags = ['자연'];
+    const indoorish = place('indoorish', 'SIGHTSEEING', 37.5, 127, 0.65, 0.65);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [outdoor, indoorish],
+      dayCount: 1,
+      travelMode: 'CAR',
+      weather: 'CLEAR',
+    });
+
+    expect(day.items[0].place.id).toBe('outdoor');
+  });
+});
