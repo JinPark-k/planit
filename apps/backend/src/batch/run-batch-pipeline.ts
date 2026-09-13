@@ -1,6 +1,7 @@
 import { PlaceInsert } from '../infra/supabase/places.types';
 import { createSupabaseClient } from '../infra/supabase/supabase.client';
 import {
+  fetchFestivalPlaytime,
   fetchFestivals,
   fetchPlacesByRegion,
 } from '../infra/tour-api/tour-api.client';
@@ -13,6 +14,7 @@ import {
   TourApiRawItem,
 } from '../infra/tour-api/tour-api.types';
 import { REGION_LDONG_CODES, RegionCode } from '../infra/tour-api/regions';
+import { formatMinutes, parsePlaytime } from './parse-playtime';
 import { transformPlaces } from './transform-place';
 
 /**
@@ -97,6 +99,26 @@ export async function runBatchPipeline(regionCode: RegionCode): Promise<void> {
     log('no rows to upsert — done.');
     return;
   }
+
+  // 축제 운영시간을 붙인다.
+  //
+  // detailIntro2는 콘텐츠 하나당 한 번이라 전체 장소(3만여 건)에는 쓸 수 없지만,
+  // 축제는 지역당 수십 건이라 부담이 없다. 실패하면 그 행만 비운다 — 운영시간은
+  // 있으면 좋은 값이지 없으면 일정을 못 만드는 값이 아니다.
+  const festivalIds = new Set(festivals.map((f) => f.contentid));
+  let withHours = 0;
+  for (const row of rows) {
+    if (!festivalIds.has(row.content_id)) continue;
+    const parsed = parsePlaytime(await fetchFestivalPlaytime(row.content_id));
+    if (!parsed) continue;
+    row.event_open_time = formatMinutes(parsed.openMinutes);
+    row.event_close_time =
+      parsed.closeMinutes !== undefined
+        ? formatMinutes(parsed.closeMinutes)
+        : null;
+    withHours += 1;
+  }
+  log(`festival hours: ${withHours}/${festivalIds.size} parsed`);
 
   // 3) 적재
   const supabase = createSupabaseClient('serviceRole');

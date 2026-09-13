@@ -858,3 +858,100 @@ describe('generateSchedule - mustIncludePlaceIds ("담기")', () => {
     ).toEqual(generateSchedule(input));
   });
 });
+
+describe('generateSchedule / 개장 시각', () => {
+  /** place()에 opensAt을 얹는다. 'HH:MM'으로 읽기 쉽게 쓴다. */
+  function opening(p: Place, hhmm: string): Place {
+    return { ...p, opensAt: minutesFromClock(hhmm) };
+  }
+
+  it('문 열기 전에 도착하면 개장까지 기다린다', () => {
+    // 이 테스트가 이 기능을 만든 이유다. 축제가 앵커라 가장 먼저 배치되는데,
+    // 시간 제약이 없을 때는 18:00에 여는 야간 행사가 09:00에 들어갔다.
+    const night = opening(
+      place('night', 'SIGHTSEEING', 37.5, 127, 1, 1),
+      '18:00',
+    );
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [night],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    expect(day.items[0].place.id).toBe('night');
+    expect(day.items[0].startTime).toBe('18:00');
+  });
+
+  it('이미 열려 있으면 기다리지 않는다', () => {
+    const morning = opening(
+      place('morning', 'SIGHTSEEING', 37.5, 127, 1, 1),
+      '08:00',
+    );
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [morning],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    // 하루 시작(09:00)에 이미 열려 있으므로 08:00로 당기지 않는다.
+    expect(day.items[0].startTime).toBe('09:00');
+  });
+
+  it('개장 시각이 없으면 제약 없이 배치한다', () => {
+    // 일반 장소는 영업시간을 수집하지 않아 opensAt이 비어 있다. 모르는 것에
+    // 제약을 걸면 멀쩡한 장소가 빠진다.
+    const plain = place('plain', 'SIGHTSEEING', 37.5, 127, 1, 1);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [plain],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    expect(day.items[0].startTime).toBe('09:00');
+  });
+
+  it('기다리면 마감을 넘기는 장소는 넣지 않는다', () => {
+    // 마감은 21:00이다. 22:00에 여는 곳은 기다려도 시작할 수 없다.
+    const tooLate = opening(
+      place('tooLate', 'SIGHTSEEING', 37.5, 127, 1, 1),
+      '22:00',
+    );
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [tooLate],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    expect(day.items.map((i) => i.place.id)).not.toContain('tooLate');
+  });
+
+  it('기다린 뒤에도 남은 장소를 이어서 채운다', () => {
+    const night = opening(
+      place('night', 'SIGHTSEEING', 37.5, 127, 9, 1),
+      '18:00',
+    );
+    const nearby = place('nearby', 'SIGHTSEEING', 37.501, 127.001, 1, 1);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [night, nearby],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const ids = day.items.map((i) => i.place.id);
+    expect(ids).toContain('night');
+    // 야간 행사가 먼저 잡히면 그 뒤 시간이 마감에 가까워 nearby가 빠질 수 있다.
+    // 어느 쪽이든 시각은 단조 증가해야 한다.
+    const times = day.items.map((i) => minutesFromClock(i.startTime));
+    expect([...times].sort((a, b) => a - b)).toEqual(times);
+  });
+});

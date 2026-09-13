@@ -245,6 +245,11 @@ function orderWithinDay(
     if (travelFromPreviousMinutes !== undefined) {
       clock += travelFromPreviousMinutes;
     }
+    // 문 열기 전에 도착하면 기다린다. 축제가 앵커라 가장 먼저 배치되는데,
+    // 18:00에 여는 야간 행사가 09:00에 들어가는 일이 있었다.
+    if (place.opensAt !== undefined && clock < place.opensAt) {
+      clock = place.opensAt;
+    }
     const stayMinutes = DEFAULT_VISIT_DURATION_MINUTES[place.category];
     items.push({
       place,
@@ -259,8 +264,21 @@ function orderWithinDay(
   const dayEnd = parseClock(DAY_END_TIME);
 
   /** 마감 시각 이후에는 새 장소를 시작하지 않는다. */
-  const canPlace = (place: Place): boolean =>
-    clock + travelMinutesTo(place) <= dayEnd;
+  const canPlace = (place: Place): boolean => arrivalAt(place) <= dayEnd;
+
+  /**
+   * 그 장소를 실제로 시작하게 되는 시각. 이동시간을 더한 뒤, 아직 문을 열지
+   * 않았으면 개장까지 기다린 시각이다.
+   *
+   * canPlace가 이 값을 봐야 하는 이유: 18:00에 여는 축제에 17:00에 도착하면
+   * 이동시간만으로는 마감(21:00) 안이지만, 기다린 뒤 체류까지 하면 넘길 수 있다.
+   */
+  const arrivalAt = (place: Place): number => {
+    const arrival = clock + travelMinutesTo(place);
+    return place.opensAt !== undefined && arrival < place.opensAt
+      ? place.opensAt
+      : arrival;
+  };
 
   const drainUntil = (clockLimit: number | null): void => {
     while (

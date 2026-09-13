@@ -13,6 +13,14 @@ export interface Place {
   tags: string[];
   popularity: number;
   rating: number;
+  /**
+   * 개장 시각(자정 기준 분). 모르면 비운다.
+   *
+   * 축제만 채워진다 — 일반 장소의 영업시간은 TourAPI 호출 비용이 커서 아직
+   * 수집하지 않는다. 모르는 것에 제약을 걸면 멀쩡한 장소가 일정에서 빠지므로,
+   * 비어 있으면 시간 제약 없이 다룬다.
+   */
+  opensAt?: number;
 }
 
 export interface ScheduleItem {

@@ -1,3 +1,4 @@
+import { FESTIVAL_CONTENT_TYPE_ID } from './tour-api-mapping';
 import {
   TourApiFestivalItem,
   TourApiRawItem,
@@ -27,7 +28,7 @@ const MAX_ATTEMPTS = 4;
 const RETRY_BASE_DELAY_MS = 1000;
 const RETRY_BACKOFF_FACTOR = 3;
 
-type TourApiPath = 'areaBasedList2' | 'searchFestival2';
+type TourApiPath = 'areaBasedList2' | 'searchFestival2' | 'detailIntro2';
 
 interface FatalError extends Error {
   fatal?: boolean;
@@ -205,4 +206,29 @@ export function fetchFestivals(
     eventStartDate,
     lDongRegnCd,
   });
+}
+
+/**
+ * 축제 한 건의 소개 정보. 운영시간(playtime)을 얻으려고 호출한다.
+ *
+ * 콘텐츠 하나당 한 번이라 전체 장소(3만여 건)에는 쓸 수 없다. 축제는 전국
+ * 274건(2026-09-04 실측)이라 하루 배치에 얹어도 부담이 없다.
+ *
+ * 실패해도 배치를 멈추지 않는다. 운영시간은 있으면 좋은 값이지 없으면
+ * 일정을 못 만드는 값이 아니다 — 못 얻으면 제약 없이 배치된다.
+ */
+export async function fetchFestivalPlaytime(
+  contentId: string,
+): Promise<string | null> {
+  try {
+    const { items } = await requestPage<{ playtime?: string }>('detailIntro2', {
+      contentId,
+      contentTypeId: FESTIVAL_CONTENT_TYPE_ID,
+      numOfRows: '1',
+      pageNo: '1',
+    });
+    return items[0]?.playtime ?? null;
+  } catch {
+    return null;
+  }
 }

@@ -19,5 +19,19 @@ export function toPlace(row: PlaceListRow): Place {
     tags: row.tags,
     popularity: row.popularity,
     rating: row.rating,
+    opensAt: toMinutes(row.event_open_time),
   };
+}
+
+/**
+ * 'HH:MM' 또는 'HH:MM:SS'(Postgres time) -> 자정 기준 분.
+ *
+ * 축제만 값이 있다. 일반 장소는 영업시간을 수집하지 않아 비어 있고, 그때는
+ * undefined를 돌려줘 시간 제약 없이 배치되게 한다.
+ */
+function toMinutes(time: string | null): number | undefined {
+  if (!time) return undefined;
+  const [hour, minute] = time.split(':').map(Number);
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return undefined;
+  return hour * 60 + minute;
 }
