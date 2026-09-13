@@ -191,11 +191,19 @@ describe('toFestivalResponse', () => {
     expect(toFestivalResponse(row, TODAY).ongoing).toBe(true);
   });
 
-  it('통합 지역코드도 되돌린다', () => {
-    // 전남광주는 areaCode가 없어 REGION_CODES에 lDong 코드를 넣었다.
-    const row = festival('광주 축제', '2026-09-05', '2026-09-06', {
+  it('통합 지역코드는 addr1로 광주/전남을 나눠 되돌린다', () => {
+    // 전남광주는 areaCode가 없어 REGION_CODES에 lDong 코드를 넣었고,
+    // JEONNAM/GWANGJU가 그 코드(12)를 공유한다 — addr1의 시군구명으로 가른다.
+    const gwangju = festival('광주 축제', '2026-09-05', '2026-09-06', {
       region_code: '12',
+      addr1: '전남광주통합특별시 광산구 하남산단6번로 63',
     });
-    expect(toFestivalResponse(row, TODAY).region).toBe('JEONNAM_GWANGJU');
+    expect(toFestivalResponse(gwangju, TODAY).region).toBe('GWANGJU');
+
+    const jeonnam = festival('전남 축제', '2026-09-05', '2026-09-06', {
+      region_code: '12',
+      addr1: '전남광주통합특별시 나주시 죽림길 20',
+    });
+    expect(toFestivalResponse(jeonnam, TODAY).region).toBe('JEONNAM');
   });
 });

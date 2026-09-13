@@ -218,6 +218,33 @@ describe('PlacesService.findRowsByRegion', () => {
       new PlacesService(client).findRowsByRegion('TOKYO' as unknown as 'SEOUL'),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
+
+  it('JEONNAM과 GWANGJU는 같은 db 코드로 조회하고 addr1로 나눠 돌려준다', async () => {
+    // 둘 다 통합 코드(12)로만 조회 가능해 DB는 두 지역을 섞어 돌려준다(regions.ts 참고).
+    const rows = makeRows(2);
+    rows[0].addr1 = '전남광주통합특별시 광산구 하남산단6번로 63';
+    rows[1].addr1 = '전남광주통합특별시 나주시 죽림길 20';
+
+    const { client: gwangjuClient, filters: gwangjuFilters } = fakeSupabase([
+      rows,
+    ]);
+    const gwangju = await new PlacesService(gwangjuClient).findRowsByRegion(
+      'GWANGJU',
+    );
+    expect(gwangjuFilters['eq:region_code']).toBe('12');
+    expect(gwangju).toHaveLength(1);
+    expect(gwangju[0].addr1).toBe('전남광주통합특별시 광산구 하남산단6번로 63');
+
+    const { client: jeonnamClient, filters: jeonnamFilters } = fakeSupabase([
+      rows,
+    ]);
+    const jeonnam = await new PlacesService(jeonnamClient).findRowsByRegion(
+      'JEONNAM',
+    );
+    expect(jeonnamFilters['eq:region_code']).toBe('12');
+    expect(jeonnam).toHaveLength(1);
+    expect(jeonnam[0].addr1).toBe('전남광주통합특별시 나주시 죽림길 20');
+  });
 });
 
 describe('PlacesService 캐시', () => {

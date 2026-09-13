@@ -10,7 +10,12 @@ import {
   PlaceListRow,
 } from '../../infra/supabase/places.types';
 import { SUPABASE_CLIENT } from '../../infra/supabase/supabase.provider';
-import { REGION_CODES, RegionCode } from '../../infra/tour-api/regions';
+import {
+  REGION_CODES,
+  RegionCode,
+  SHARED_DB_CODE_REGIONS,
+  classifyJeonnamGwangju,
+} from '../../infra/tour-api/regions';
 import { TtlCache } from '../../common/ttl-cache';
 import type { PlaceCategory } from '../../core';
 
@@ -141,12 +146,20 @@ export class PlacesService {
       if (pageRows.length < PAGE_SIZE) break;
     }
 
-    this.cache.set(cacheKey, rows);
+    // JEONNAM/GWANGJU는 조회 코드(dbRegionCode)를 공유해서 위 쿼리가 두 지역을
+    // 섞어 돌려준다. addr1로 다시 나눠야 실제로 그 지역에 속한 행만 남는다.
+    const scopedRows = SHARED_DB_CODE_REGIONS.has(regionCode)
+      ? rows.filter((row) => classifyJeonnamGwangju(row.addr1) === regionCode)
+      : rows;
 
-    this.logger.log(`findRowsByRegion(${regionCode}) -> ${rows.length} places`);
+    this.cache.set(cacheKey, scopedRows);
+
+    this.logger.log(
+      `findRowsByRegion(${regionCode}) -> ${scopedRows.length} places`,
+    );
     // 얕은 복사를 돌려준다. 호출측이 배열을 in-place로 정렬/변형해도 캐시가 오염되지 않는다
     // (지금 호출자들은 map/slice만 쓰지만, 이 함수가 배열을 넘겨준다는 사실만 보고
     //  나중에 정렬을 넣기 쉽다).
-    return [...rows];
+    return [...scopedRows];
   }
 }

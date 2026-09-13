@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { REGION_BY_DB_CODE } from '../../../infra/tour-api/regions';
+import { regionFromDbRow } from '../../../infra/tour-api/regions';
 import type { RegionCode } from '../../../infra/tour-api/regions';
 import { FestivalListRow } from '../../../infra/supabase/places.types';
 import {
@@ -80,7 +80,7 @@ export function toFestivalResponse(
     startDate,
     endDate,
     // 지역이 매핑되지 않는 행은 서비스에서 걸러내므로 여기서는 단언한다.
-    region: REGION_BY_DB_CODE[row.region_code],
+    region: regionFromDbRow(row.region_code, row.addr1) as RegionCode,
     ongoing: startDate <= today,
     durationDays: durationDays(startDate, endDate),
   };

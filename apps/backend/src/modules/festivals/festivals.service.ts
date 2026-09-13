@@ -6,7 +6,7 @@ import {
   FestivalListRow,
 } from '../../infra/supabase/places.types';
 import { SUPABASE_CLIENT } from '../../infra/supabase/supabase.provider';
-import { REGION_BY_DB_CODE, REGION_CODES } from '../../infra/tour-api/regions';
+import { REGION_CODES, regionFromDbRow } from '../../infra/tour-api/regions';
 import {
   DEFAULT_FESTIVAL_LIMIT,
   FestivalQueryDto,
@@ -118,7 +118,7 @@ export class FestivalsService {
     // 지원 목록에 없는 지역코드의 행은 버린다. 일정을 만들 수 없으므로
     // 홈에 띄우면 눌러도 아무 일이 없는 카드가 된다.
     const rows = ((data ?? []) as unknown as FestivalListRow[]).filter(
-      (row) => REGION_BY_DB_CODE[row.region_code] !== undefined,
+      (row) => regionFromDbRow(row.region_code, row.addr1) !== undefined,
     );
 
     this.cache.set(cacheKey, rows);
