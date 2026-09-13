@@ -72,7 +72,12 @@ export const CAFE_TAG = '카페';
  */
 export function generateSchedule(input: GenerateScheduleInput): ScheduleDay[] {
   const keywordTags = resolveTagsForKeywords(input.keywords);
-  const scored = scoreAndSortPlaces(input.candidatePlaces, keywordTags);
+  const scored = scoreAndSortPlaces(
+    input.candidatePlaces,
+    keywordTags,
+    undefined,
+    input.weather,
+  );
 
   // 스코어는 클러스터링 이후 순서 배치 단계에서도 필요하므로 id로 들고 다닌다.
   // (Place에 score를 얹으면 응답 DTO까지 새어나가므로 별도 맵으로 유지)

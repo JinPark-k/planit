@@ -69,3 +69,75 @@ describe('scoreAndSortPlaces', () => {
     expect(ratingFocused[0].place.id).toBe('lowTagHighRating');
   });
 });
+
+describe('날씨 보정', () => {
+  it('weather를 안 주면 기존과 완전히 동일한 점수를 낸다', () => {
+    const p = place('a', ['실내', '전시'], 0.8, 0.6);
+    const withoutWeather = scorePlace(p, []);
+    const explicitUndefined = scorePlace(
+      p,
+      [],
+      DEFAULT_SCORING_WEIGHTS,
+      undefined,
+    );
+    expect(withoutWeather.score).toBe(explicitUndefined.score);
+  });
+
+  it('RAIN이면 실내 태그를 가진 장소 점수가 1.2배가 된다', () => {
+    const indoor = place('indoor', ['실내'], 0.8, 0.6);
+    const base = scorePlace(indoor, []);
+    const rainy = scorePlace(indoor, [], DEFAULT_SCORING_WEIGHTS, 'RAIN');
+    expect(rainy.score).toBeCloseTo(base.score * 1.2, 10);
+  });
+
+  it('RAIN이어도 실내 태그가 없으면 보정하지 않는다', () => {
+    const outdoor = place('outdoor', ['자연', '산책'], 0.8, 0.6);
+    const base = scorePlace(outdoor, []);
+    const rainy = scorePlace(outdoor, [], DEFAULT_SCORING_WEIGHTS, 'RAIN');
+    expect(rainy.score).toBeCloseTo(base.score, 10);
+  });
+
+  it('CLEAR면 야외 태그를 가진 장소 점수가 1.15배가 된다', () => {
+    const outdoor = place('outdoor', ['자연', '산책'], 0.8, 0.6);
+    const base = scorePlace(outdoor, []);
+    const clear = scorePlace(outdoor, [], DEFAULT_SCORING_WEIGHTS, 'CLEAR');
+    expect(clear.score).toBeCloseTo(base.score * 1.15, 10);
+  });
+
+  it('CLEAR여도 야외 태그가 없으면 보정하지 않는다', () => {
+    const indoor = place('indoor', ['실내'], 0.8, 0.6);
+    const base = scorePlace(indoor, []);
+    const clear = scorePlace(indoor, [], DEFAULT_SCORING_WEIGHTS, 'CLEAR');
+    expect(clear.score).toBeCloseTo(base.score, 10);
+  });
+
+  it('어느 쪽 태그도 아니면 어떤 날씨에도 보정하지 않는다', () => {
+    const neutral = place('neutral', ['맛집', '한식'], 0.8, 0.6);
+    const base = scorePlace(neutral, []);
+    expect(
+      scorePlace(neutral, [], DEFAULT_SCORING_WEIGHTS, 'RAIN').score,
+    ).toBeCloseTo(base.score, 10);
+    expect(
+      scorePlace(neutral, [], DEFAULT_SCORING_WEIGHTS, 'CLEAR').score,
+    ).toBeCloseTo(base.score, 10);
+  });
+
+  it('scoreAndSortPlaces도 weather를 그대로 반영해 순위를 바꿀 수 있다', () => {
+    const places = [
+      place('indoor', ['실내'], 0.5, 0.5),
+      place('outdoor', ['자연'], 0.5, 0.5),
+    ];
+    // 태그일치도 0(키워드 없음), popularity/rating 동률이라 보정 전에는 동점 -> 원래 순서 유지.
+    const noWeather = scoreAndSortPlaces(places, []);
+    expect(noWeather[0].place.id).toBe('indoor');
+
+    const rainy = scoreAndSortPlaces(
+      places,
+      [],
+      DEFAULT_SCORING_WEIGHTS,
+      'RAIN',
+    );
+    expect(rainy[0].place.id).toBe('indoor');
+    expect(rainy[0].score).toBeGreaterThan(rainy[1].score);
+  });
+});

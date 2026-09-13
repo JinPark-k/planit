@@ -1,4 +1,5 @@
 import { GeoPoint, TravelMode } from '../travel-time';
+import { WeatherCondition } from '../scoring';
 
 /** 런타임 목록이 필요해 const 배열로 두고 타입을 파생시킨다(요청 검증/Swagger 문서용). */
 export const PLACE_CATEGORIES = ['SIGHTSEEING', 'FOOD', 'ACTIVITY'] as const;
@@ -63,4 +64,10 @@ export interface GenerateScheduleInput {
    * 무엇이 빠졌는지는 호출측이 결과와 대조해 판단한다(core는 이유를 알리지 않는다).
    */
   mustIncludePlaceIds?: ReadonlySet<string>;
+  /**
+   * 필수 포함 장소(주로 축제)의 개최일 기상청 예보 요약. 있으면 scoring에 그대로 전달해
+   * 강수 예보 시 실내 장소, 맑음 예보 시 야외 장소 점수를 올린다.
+   * 없으면(예보를 못 구했거나 애초에 날짜가 없는 자동생성 흐름) 보정 없이 기존과 동일하게 동작한다.
+   */
+  weather?: WeatherCondition;
 }

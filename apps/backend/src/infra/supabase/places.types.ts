@@ -58,21 +58,25 @@ export const PLACE_LIST_COLUMNS = [
   'tel',
   // 축제만 값이 있다. 일정 배치에서 개장 전 시각을 피하는 데 쓴다.
   'event_open_time',
+  // 축제만 값이 있다. "담기" 흐름(generateFromPlaces)이 mustIncludePlaceIds 중
+  // 축제를 찾아 그 개최일 날씨를 조회하는 데 쓴다(schedule.service.ts).
+  'event_start_date',
+  'event_end_date',
 ] as const;
 
 /** 목록 조회 결과 row. PlaceRow의 부분집합이라 PlaceRow를 그대로 넘겨도 된다. */
 export type PlaceListRow = Pick<PlaceRow, (typeof PLACE_LIST_COLUMNS)[number]>;
 
 /**
- * 축제 조회에서 읽는 컬럼. 장소 목록 컬럼에 개최 기간과 지역을 더한다.
+ * 축제 조회에서 읽는 컬럼. 장소 목록 컬럼에 지역을 더한다.
+ * (개최 기간(event_start_date/event_end_date)은 날씨 조회용으로 PLACE_LIST_COLUMNS에
+ * 이미 포함돼 있어 여기서는 중복 추가하지 않는다.)
  *
  * 지역이 필요한 이유: 축제를 눌러 일정을 만들 때 어느 지역으로 만들지를
  * 축제에서 가져온다. 사용자가 지역을 따로 고르지 않는다.
  */
 export const FESTIVAL_LIST_COLUMNS = [
   ...PLACE_LIST_COLUMNS,
-  'event_start_date',
-  'event_end_date',
   'region_code',
 ] as const;
 
