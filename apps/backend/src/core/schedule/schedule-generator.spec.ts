@@ -362,6 +362,351 @@ describe('하루 마감 시각(DAY_END_TIME)', () => {
   });
 });
 
+describe('이동 구간 상한(MAX_TRAVEL_LEG_MINUTES)', () => {
+  it('이동시간이 상한(120분)을 넘는 장소는 배치하지 않는다', () => {
+    const near = place('near', 'SIGHTSEEING', 33.45, 126.55, 1, 1);
+    // near에서 아주 멀어 이동시간이 상한을 훨씬 넘는다.
+    const far = place('far', 'SIGHTSEEING', 34.5, 127.6, 0.5, 0.5);
+
+    const travelMinutes = getTravelTime(
+      near.location,
+      far.location,
+      'CAR',
+    ).minutes;
+    expect(travelMinutes).toBeGreaterThan(120);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [near, far],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const ids = day.items.map((i) => i.place.id);
+    expect(ids).toContain('near');
+    expect(ids).not.toContain('far');
+  });
+
+  it('이동시간이 상한 이내(120분 이하)면 정상 배치된다', () => {
+    const near = place('near', 'SIGHTSEEING', 33.45, 126.55, 1, 1);
+    // 상한 바로 아래(118분)가 되도록 좌표를 잡았다.
+    const withinCap = place(
+      'withinCap',
+      'SIGHTSEEING',
+      33.45 + 0.34,
+      126.55,
+      0.5,
+      0.5,
+    );
+
+    const travelMinutes = getTravelTime(
+      near.location,
+      withinCap.location,
+      'CAR',
+    ).minutes;
+    expect(travelMinutes).toBeLessThanOrEqual(120);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [near, withinCap],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const ids = day.items.map((i) => i.place.id);
+    expect(ids).toContain('near');
+    expect(ids).toContain('withinCap');
+  });
+
+  it('mustInclude 축제는 상한과 무관하게 하루 첫 장소로 배치된다', () => {
+    // 축제는 필러와 아주 멀리 떨어져 있다(이동시간 상한을 훨씬 넘는 거리). 하지만
+    // 하루의 첫 장소는 currentLocation이 없어 이동시간이 0으로 계산되므로 상한 대상이 아니다.
+    const festival = place('festival', 'SIGHTSEEING', 39.0, 125.0, 0.1, 0.1);
+    const filler = place('filler', 'SIGHTSEEING', 33.45, 126.55, 1, 1);
+
+    const travelMinutes = getTravelTime(
+      festival.location,
+      filler.location,
+      'CAR',
+    ).minutes;
+    expect(travelMinutes).toBeGreaterThan(120);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [festival, filler],
+      dayCount: 1,
+      travelMode: 'CAR',
+      mustIncludePlaceIds: new Set(['festival']),
+    });
+
+    expect(day.items[0].place.id).toBe('festival');
+    expect(day.items[0].travelFromPreviousMinutes).toBeUndefined();
+  });
+
+  it('mustInclude 장소도 이동시간 상한을 넘으면 배치하지 않는다', () => {
+    // "담기"로 고른 장소라도 예외가 아니다 — 조용히 비상식적인 이동을 만들기보다
+    // 빠뜨리고, 빠졌다는 사실은 schedule.service.ts가 excludedPlaces로 알린다.
+    //
+    // 둘 다 mustInclude로 담되 관련도 차이를 크게 둬서 pickedNear가 확실히 먼저
+    // 선택되게 한다(하루 첫 장소라 이동시간이 0으로 계산되어 상한 검사 자체가
+    // 의미 없어지는 것을 피하기 위함). pickedNear가 배치된 뒤 currentLocation이
+    // 실제 좌표를 가지므로, 그다음 pinned 후보인 pickedFar는 실측 이동시간으로
+    // 상한 검사를 받는다.
+    const pickedNear = place('pickedNear', 'SIGHTSEEING', 33.45, 126.55, 1, 1);
+    const pickedFar = place('pickedFar', 'SIGHTSEEING', 34.5, 127.6, 0.1, 0.1);
+
+    const travelMinutes = getTravelTime(
+      pickedNear.location,
+      pickedFar.location,
+      'CAR',
+    ).minutes;
+    expect(travelMinutes).toBeGreaterThan(120);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [pickedNear, pickedFar],
+      dayCount: 1,
+      travelMode: 'CAR',
+      mustIncludePlaceIds: new Set(['pickedNear', 'pickedFar']),
+    });
+
+    const ids = day.items.map((i) => i.place.id);
+    expect(ids).toContain('pickedNear');
+    expect(ids).not.toContain('pickedFar');
+  });
+});
+
+describe('이동 상한 초과 후보가 있어도 하루 채움을 멈추지 않는다 (회귀 방지)', () => {
+  // 실데이터 검증(12개 지역 x 3일 일정)에서 canPlace 하나로 마감/이동상한을 합쳐
+  // break하던 이전 구현은 36곳이 통째로 사라지는 회귀를 냈다. 예: 전남 하루별
+  // 장소 수 패턴이 [5, 5, 7] -> [8, 1, 1]로 무너짐. pickNext가 고른 최상위 후보가
+  // 좌표 오류로 이동 상한에 걸리면, 그 후보 하나만 걷어내고 다음 후보로 넘어가야
+  // 한다 — 하루 채움 루프 전체를 멈추면 안 된다.
+  const START = { lat: 33.45, lng: 126.55 };
+
+  it('상한을 넘는 후보 하나가 채움 순서 중간에 걸려도, 그 뒤 후보가 이어서 배치된다', () => {
+    // near_a/near_b: START 바로 옆이라 근접성이 압도적으로 높아 먼저 선택된다.
+    // far: 점수가 near_a/near_b보다 낮지만 near_c보다는 관련도가 높아 세 번째로
+    //   선택되고, 이동 상한(120분)에 걸려 배치되지 않는다.
+    // near_c: far보다 관련도가 낮지만 이동시간은 상한 이내라, far가 걸러진 뒤에도
+    //   채움이 이어진다면 네 번째로 배치돼야 한다.
+    const nearA = place('near-a', 'SIGHTSEEING', 33.451, 126.551, 0.5, 0.5);
+    const nearB = place('near-b', 'SIGHTSEEING', 33.452, 126.552, 0.5, 0.5);
+    const nearC = place('near-c', 'SIGHTSEEING', 33.52, 126.55, 0.1, 0.1);
+    const far = place('far', 'SIGHTSEEING', 34.5, 127.6, 1, 1);
+
+    const travelMinutes = getTravelTime(START, far.location, 'CAR').minutes;
+    expect(travelMinutes).toBeGreaterThan(120);
+    // 세 번째 후보로 선택되는 시점에도 마감(21:00)은 넉넉히 남아 있어야 한다 —
+    // 이 테스트가 이동 상한 때문에 걸러지는 것이지, 마감 때문에 멈추는 게 아님을 보장한다.
+    expect(travelMinutes).toBeLessThan(600);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [nearA, nearB, nearC, far],
+      dayCount: 1,
+      travelMode: 'CAR',
+      dayStartOverrides: { 1: { location: START } },
+    });
+
+    const ids = day.items.map((i) => i.place.id);
+    expect(ids).not.toContain('far');
+    expect(ids).toContain('near-a');
+    expect(ids).toContain('near-b');
+    expect(ids).toContain('near-c');
+  });
+
+  it('이동 상한을 넘는 후보가 pickNext의 최상위 선택이어도 하루가 1곳으로 끊기지 않는다', () => {
+    // far가 인기도/평점에서 압도적이라 관련도만 보면 항상 1순위지만, 좌표가 멀어
+    // 이동 상한에 걸린다. 근처 후보들(near0~2)은 점수가 낮지만 이동 상한 이내라
+    // far가 걸러진 뒤에도 하루가 계속 채워져야 한다 — 예전 버그처럼 하루가
+    // far 하나 시도하다 끊겨 1곳(혹은 0곳)으로 남으면 안 된다.
+    const near0 = place('near0', 'SIGHTSEEING', 33.52, 126.55, 0.1, 0.1);
+    const near1 = place('near1', 'SIGHTSEEING', 33.38, 126.55, 0.1, 0.1);
+    const near2 = place('near2', 'SIGHTSEEING', 33.45, 126.62, 0.1, 0.1);
+    const far = place('far', 'SIGHTSEEING', 34.5, 127.6, 1, 1);
+
+    const travelMinutes = getTravelTime(START, far.location, 'CAR').minutes;
+    expect(travelMinutes).toBeGreaterThan(120);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [near0, near1, near2, far],
+      dayCount: 1,
+      travelMode: 'CAR',
+      dayStartOverrides: { 1: { location: START } },
+    });
+
+    const ids = day.items.map((i) => i.place.id);
+    expect(ids).not.toContain('far');
+    expect(ids).toContain('near0');
+    expect(ids).toContain('near1');
+    expect(ids).toContain('near2');
+  });
+
+  it('점심 앵커: 이동 상한을 넘는 식당 후보는 건너뛰고 가까운 식당을 점심으로 배치한다', () => {
+    // farRestaurant가 점수는 더 높아 anchor의 pickNext 1순위지만 이동 상한에 걸린다.
+    // 예전 버그(anchor의 `if (!next || !canPlace(next)) return undefined`)라면
+    // 여기서 점심 슬롯 전체가 비었을 것이다 — 근처에 멀쩡한 nearRestaurant가
+    // 남아 있어도 통째로 포기했다. 고쳐진 동작은 점심 슬롯이 비지 않고
+    // nearRestaurant가 배치되는 것이다.
+    const nearRestaurant = place(
+      'near-restaurant',
+      'FOOD',
+      33.52,
+      126.55,
+      0.1,
+      0.1,
+    );
+    const farRestaurant = place('far-restaurant', 'FOOD', 34.5, 127.6, 1, 1);
+
+    const travelMinutes = getTravelTime(
+      START,
+      farRestaurant.location,
+      'CAR',
+    ).minutes;
+    expect(travelMinutes).toBeGreaterThan(120);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [nearRestaurant, farRestaurant],
+      dayCount: 1,
+      travelMode: 'CAR',
+      dayStartOverrides: { 1: { location: START } },
+    });
+
+    const lunch = day.items.find(
+      (i) =>
+        i.place.category === 'FOOD' &&
+        minutesFromClock(i.startTime) >= minutesFromClock('12:00') &&
+        minutesFromClock(i.startTime) < minutesFromClock('13:00'),
+    );
+    expect(lunch).toBeDefined();
+    expect(lunch!.place.id).toBe('near-restaurant');
+
+    const ids = day.items.map((i) => i.place.id);
+    expect(ids).not.toContain('far-restaurant');
+  });
+});
+
+describe('고립 후보 사전 제외 (excludeIsolatedPlaces)', () => {
+  // 실데이터 회귀: SEOUL [9,7,9] -> [9,1,9], GYEONGNAM [9,5,9] -> [9,1,9],
+  // JEONBUK [9,2,2] -> [9,1,1]. 원인은 좌표가 틀린 장소(가장 가까운 이웃까지도
+  // 120분을 넘는 장소)가 클러스터 시드로 앉으면, 이동 상한이 정상 동작해도 그날은
+  // 두 번째 장소부터 계속 상한에 걸려 1곳으로 끝난다는 것. 클러스터링 전에
+  // 이런 후보를 걸러내면 애초에 시드가 될 수 없다.
+
+  /** 서로 가까운 좌표 그룹 (다른 지역과 확실히 분리됨). */
+  const SEOUL_GROUP: Place[] = [
+    place('seoul-1', 'SIGHTSEEING', 37.5665, 126.978, 0.5, 0.5),
+    place('seoul-2', 'SIGHTSEEING', 37.5651, 126.9895, 0.5, 0.5),
+    place('seoul-3', 'SIGHTSEEING', 37.5796, 126.977, 0.5, 0.5),
+    place('seoul-4', 'SIGHTSEEING', 37.56, 126.985, 0.5, 0.5),
+    place('seoul-5', 'SIGHTSEEING', 37.572, 126.98, 0.5, 0.5),
+  ];
+  const BUSAN_GROUP: Place[] = [
+    place('busan-1', 'SIGHTSEEING', 35.1796, 129.0756, 0.5, 0.5),
+    place('busan-2', 'SIGHTSEEING', 35.1587, 129.1604, 0.5, 0.5),
+    place('busan-3', 'SIGHTSEEING', 35.0951, 129.0409, 0.5, 0.5),
+    place('busan-4', 'SIGHTSEEING', 35.17, 129.1, 0.5, 0.5),
+    place('busan-5', 'SIGHTSEEING', 35.19, 129.05, 0.5, 0.5),
+  ];
+  // 어느 그룹과도 멀고, 혼자라 자기 자신 외엔 이웃도 없다(실데이터의 좌표 오류 장소를 흉내).
+  const ISOLATED = place('isolated', 'SIGHTSEEING', 39.0, 125.0, 0.9, 0.9);
+
+  it('고립된 후보는 일정에 들어가지 않는다', () => {
+    const nearGroup = SEOUL_GROUP.slice(0, 3);
+    const travelToNearest = Math.min(
+      ...nearGroup.map(
+        (p) => getTravelTime(ISOLATED.location, p.location, 'CAR').minutes,
+      ),
+    );
+    expect(travelToNearest).toBeGreaterThan(120);
+
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [...nearGroup, ISOLATED],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    const ids = day.items.map((i) => i.place.id);
+    expect(ids).not.toContain('isolated');
+    expect(ids).toContain('seoul-1');
+    expect(ids).toContain('seoul-2');
+    expect(ids).toContain('seoul-3');
+  });
+
+  it('고립된 후보가 하루를 망치지 않는다 (이번 회귀의 핵심)', () => {
+    // ISOLATED가 걸러지지 않으면 farthest-point sampling이 SEOUL/BUSAN 중 한 그룹
+    // 대신(혹은 더해) ISOLATED를 시드로 뽑을 수 있고, 그러면 그 날은 이동 상한에
+    // 막혀 1곳으로 끝난다. 걸러지면 dayCount=2가 SEOUL_GROUP과 BUSAN_GROUP을
+    // 각각 하루씩 채워야 한다 — 두 그룹 모두 여러 곳이 배치된다.
+    const days = generateSchedule({
+      keywords: [],
+      candidatePlaces: [...SEOUL_GROUP, ...BUSAN_GROUP, ISOLATED],
+      dayCount: 2,
+      travelMode: 'CAR',
+    });
+
+    expect(days).toHaveLength(2);
+    for (const day of days) {
+      expect(day.items.length).toBeGreaterThan(1);
+    }
+
+    const allIds = days.flatMap((d) => d.items.map((i) => i.place.id));
+    expect(allIds).not.toContain('isolated');
+    // 두 그룹 모두 실종되지 않고 어딘가에 배치되어야 한다.
+    expect(allIds.some((id) => id.startsWith('seoul-'))).toBe(true);
+    expect(allIds.some((id) => id.startsWith('busan-'))).toBe(true);
+  });
+
+  it('서로 가까운 장소들끼리는 본토와 멀어도 살아남는다 (섬 시나리오)', () => {
+    // 울릉도/독도/백령도처럼 본토와는 멀지만 자기들끼리는 가까운 그룹은 제외 대상이
+    // 아니다 — 가장 가까운 "이웃"이 상한 이내이기만 하면 된다. 실제 울릉도 좌표를
+    // 흉내낸 두 지점을 쓴다.
+    const ULLEUNGDO_GROUP: Place[] = [
+      place('ulleungdo-1', 'SIGHTSEEING', 37.5057, 130.7997, 0.9, 0.9),
+      place('ulleungdo-2', 'SIGHTSEEING', 37.51, 130.805, 0.9, 0.9),
+    ];
+    const travelWithinIsland = getTravelTime(
+      ULLEUNGDO_GROUP[0].location,
+      ULLEUNGDO_GROUP[1].location,
+      'CAR',
+    ).minutes;
+    const travelFromMainland = getTravelTime(
+      SEOUL_GROUP[0].location,
+      ULLEUNGDO_GROUP[0].location,
+      'CAR',
+    ).minutes;
+    expect(travelWithinIsland).toBeLessThanOrEqual(120);
+    expect(travelFromMainland).toBeGreaterThan(120);
+
+    const days = generateSchedule({
+      keywords: [],
+      candidatePlaces: [...SEOUL_GROUP, ...ULLEUNGDO_GROUP],
+      dayCount: 2,
+      travelMode: 'CAR',
+    });
+
+    const allIds = days.flatMap((d) => d.items.map((i) => i.place.id));
+    expect(allIds).toContain('ulleungdo-1');
+    expect(allIds).toContain('ulleungdo-2');
+  });
+
+  it('후보가 1개뿐이면 제외하지 않는다 (비교 대상이 없어 전부 제외되는 것을 막는 가드)', () => {
+    const [day] = generateSchedule({
+      keywords: [],
+      candidatePlaces: [ISOLATED],
+      dayCount: 1,
+      travelMode: 'CAR',
+    });
+
+    expect(day.items).toHaveLength(1);
+    expect(day.items[0].place.id).toBe('isolated');
+  });
+});
+
 describe('카테고리 균형 (FOOD는 끼니 슬롯에만)', () => {
   // 실데이터 문제: 제주 후보의 53%가 음식점이라, 앵커로 안 뽑힌 음식점이
   // 일반 풀에 섞이면 최근접 탐색이 계속 식당을 집어 하루 9곳 중 7곳이 음식점이 됐다.

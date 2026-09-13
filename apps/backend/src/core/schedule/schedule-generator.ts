@@ -50,6 +50,78 @@ const PROXIMITY_WEIGHT = 1 - RELEVANCE_WEIGHT;
 const MAX_REASONABLE_TRAVEL_MINUTES = 40;
 
 /**
+ * 이동 한 구간(직전 장소 -> 이 장소)이 이 시간을 넘으면 그 장소를 아예 배치하지 않는 상한(분).
+ *
+ * MAX_REASONABLE_TRAVEL_MINUTES(40분)와는 용도가 다르다. 그건 다음 장소를 고르는
+ * 스코어링에서 근접성 점수를 1->0으로 깎는 용도일 뿐 이동 자체를 막지 않는다.
+ * 이 상수는 그 이동을 실행할지 말지를 결정하는 하드 상한이다.
+ *
+ * 값은 실측으로 정했다. 12개 지역에서 3일 일정을 생성해 이동 구간 232개를 실측한 결과:
+ *   p50 3분 / p90 19분 / p95 31분, 정상 구간 최대 90분(충북) -> 그다음 값 220분 -> 최대 586분.
+ * 90분과 220분 사이에는 구간이 하나도 없다 (232개 중 11개=4.7%가 220분 이상).
+ * 220분대 이상은 TourAPI 원본 좌표 오류(주소는 맞는 지역인데 좌표가 다른 지역을 가리킴)로
+ * 생긴 값이라 실제 이동시간이 아니다. 좌표 데이터 자체를 고치는 건 이번 범위가 아니므로
+ * 여기서 상한으로 걸러낸다. 120분은 정상 구간 최대(90)와 쓰레기 구간 최소(220) 사이에서
+ * 양쪽에 넉넉한 여유를 둔 값이다.
+ */
+const MAX_TRAVEL_LEG_MINUTES = 120;
+
+/**
+ * 후보 중 "가장 가까운 다른 후보까지의 이동시간조차 MAX_TRAVEL_LEG_MINUTES를 넘는" 장소를
+ * 클러스터링 전에 걸러낸다.
+ *
+ * 이런 장소는 좌표가 어디에 놓이든 상한에 걸린다 — 어디서 출발해도 거기 도착 못 하고,
+ * 거기서 출발해도 아무 데도 못 간다. clusterPlacesByDay가 이런 장소를 하루의 시드로
+ * 앉히면, orderWithinDay의 이동 상한(withinTravelCap)이 정상 동작해도 그 뒤로는 두
+ * 번째 장소부터 계속 상한에 걸려 하루가 1곳으로 끝난다(실데이터: SEOUL [9,7,9] ->
+ * [9,1,9], GYEONGNAM [9,5,9] -> [9,1,9], JEONBUK [9,2,2] -> [9,1,1], 전부 그날의
+ * 시작 장소가 좌표 오류였다). 이미 배치 시점에 적용 중인 상한의 논리를 후보 선정
+ * 시점에 한 번 더 적용하는 것뿐이다.
+ *
+ * 실측(운영 DB 30,801건): 가장 가까운 이웃까지도 120분을 넘는 장소는 9건(0.029%) —
+ * 789분 라키비움 남해, 535분 국립생물자원관, 524분 건지산, 427분 아크앤북 광안리,
+ * 261분 안민고개, 165분 오천서원, 150분 삼각산, 126분 모래미 해변, 126분 송도항.
+ * 9건 전부 주소-좌표 불일치로 확인됨(예: 삼각산은 주소가 서울 강북구인데 좌표는 경기
+ * 광주 부근). 울릉도/독도/백령도/가거도 같은 실제 도서지역은 하나도 걸리지 않았다 —
+ * 섬끼리는 서로 가까워 이웃이 있기 때문. 즉 이 규칙은 진짜 고립 데이터(섬)를 건드리지
+ * 않고 좌표 오류만 골라낸다.
+ *
+ * mustIncludeIds(사용자가 "담기"로 고른 장소)도 예외 없이 이 규칙을 적용한다. 좌표가
+ * 틀린 장소는 사용자가 골랐어도 실제로 갈 수 있는 곳이 아니다 — "담았다"는 사실이
+ * 나쁜 좌표를 고치지는 않는다. 예외를 두면 그 장소가 클러스터 시드로 앉아 하루를 다시
+ * 1곳으로 무너뜨리는 이번 회귀가 그대로 재현된다. core는 제외 이유를 알리지 않지만,
+ * schedule.service.ts가 요청과 결과를 대조해 excludedPlaces로 이미 알리고 있다(다른
+ * 이유로 빠지는 mustInclude 장소와 동일한 경로).
+ *
+ * 후보가 2개 이하이면 필터를 건너뛰고 그대로 반환한다. 후보가 1개면 비교 대상이
+ * 없어 그 하나가 전부 제외되어 빈 배열이 된다 — 이건 명백히 잘못된 결과다.
+ * 후보가 정확히 2개일 때도 같은 문제가 대칭적으로 일어난다: 둘이 서로 상한 밖이면
+ * "가장 가까운 이웃"이 서로뿐이라 둘 다 제외되어 역시 빈 배열이 된다. 이 규칙은
+ * "주변에 몰려 있는 다수 후보 중 혼자 동떨어진 것"을 찾기 위한 것이라 최소 3개는
+ * 있어야 "몰려 있음"과 "동떨어짐"을 구분할 신호가 생긴다 — 2개뿐이면 둘 중 어느 쪽이
+ * 이상치인지 판단할 근거가 없다(운영 DB 30,801건 실측에서도 이런 2개짜리 고립 쌍은
+ * 나타나지 않았다 — 지역마다 후보가 수백~수천 개이기 때문).
+ * O(n^2)이지만 Array.prototype.some이 이웃을 하나라도 찾으면 즉시 중단하므로,
+ * 정상 데이터(대부분 근처에 이웃이 있음)에서는 사실상 O(n)에 가깝다.
+ */
+function excludeIsolatedPlaces(
+  places: Place[],
+  travelMode: TravelMode,
+): Place[] {
+  if (places.length <= 2) {
+    return places;
+  }
+  return places.filter((place) =>
+    places.some(
+      (other) =>
+        other !== place &&
+        getTravelTime(place.location, other.location, travelMode).minutes <=
+          MAX_TRAVEL_LEG_MINUTES,
+    ),
+  );
+}
+
+/**
  * 카페를 끼니(점심/저녁)와 구분하기 위한 태그.
  *
  * TourAPI는 contentTypeId 39를 통째로 FOOD로 주기 때문에 카페/전통찻집도 category가 FOOD다.
@@ -72,8 +144,12 @@ export const CAFE_TAG = '카페';
  */
 export function generateSchedule(input: GenerateScheduleInput): ScheduleDay[] {
   const keywordTags = resolveTagsForKeywords(input.keywords);
-  const scored = scoreAndSortPlaces(
+  const reachablePlaces = excludeIsolatedPlaces(
     input.candidatePlaces,
+    input.travelMode,
+  );
+  const scored = scoreAndSortPlaces(
+    reachablePlaces,
     keywordTags,
     undefined,
     input.weather,
@@ -268,14 +344,44 @@ function orderWithinDay(
 
   const dayEnd = parseClock(DAY_END_TIME);
 
-  /** 마감 시각 이후에는 새 장소를 시작하지 않는다. */
-  const canPlace = (place: Place): boolean => arrivalAt(place) <= dayEnd;
+  /**
+   * 마감 시각 이후에는 새 장소를 시작하지 않는다.
+   *
+   * mustIncludePlaceIds(사용자가 "담기"로 고른 장소)도 예외 없이 이 마감을 적용한다.
+   * 조용히 마감을 넘겨 배치하는 것보다 빼는 편이 낫다 — 빠졌다는 사실은
+   * schedule.service.ts의 generateFromPlaces가 요청과 결과를 대조해 excludedPlaces로
+   * 이미 알리고 있으므로, 사용자에게 조용히 사라지지 않는다.
+   *
+   * drainUntil/anchor에서 이 조건에 걸리면 그 자리에서 완전히 멈춘다(break / return
+   * undefined). 이 조건은 "지금 시각 기준 하루에 남은 시간이 없다"는 뜻이라, remaining/pool의
+   * 다른 후보를 봐도 결과가 같다 — clock은 이미 그 지점까지 와 있으므로 다음으로 좋은 후보
+   * 역시 대개 마감을 넘긴다. 계속 뒤지는 건 낭비이거나(넘김) 우연히 통과해도 하루 순서를
+   * 어지럽힌다.
+   */
+  const withinDeadline = (place: Place): boolean => arrivalAt(place) <= dayEnd;
+
+  /**
+   * 이동 한 구간(직전 장소 -> 이 장소)이 이 시간을 넘으면 그 장소를 배치하지 않는다 —
+   * TourAPI 원본 좌표 오류로 인접한 것처럼 보이는 두 장소 사이에 9시간대 이동이 계산되는
+   * 사례가 실제로 있었다(예: 국립생물자원관 주소는 인천인데 저장된 좌표는 경북 내륙).
+   *
+   * drainUntil/anchor에서 이 조건에 걸려도 하루 채움을 멈추면 안 된다 — 이건 "하루에 남은
+   * 시간이 없다"는 신호가 아니라 "이 장소 하나의 좌표가 쓰레기"라는 신호이기 때문이다.
+   * 실데이터 검증(12개 지역 x 3일 일정)에서 이 구분 없이 canPlace 하나로 합쳐 break/return
+   * undefined 하던 이전 구현은 36곳이 통째로 사라지는 회귀를 냈다. 예를 들어 전남은 하루별
+   * 장소 수 패턴이 [5, 5, 7]이어야 할 것이 [8, 1, 1]로 무너졌다 — pickNext가 고른 최상위
+   * 후보 하나가 좌표 오류로 이 상한에 걸리자, 바로 옆에 멀쩡한 후보가 여럿 남아 있었는데도
+   * drainUntil이 하루 채움 루프 전체를 break해버렸기 때문이다. 그래서 이 조건에 걸리면
+   * 그 장소 하나만 후보 풀에서 제거하고 다음 최상위 후보로 다시 시도한다 — 절대 멈추지 않는다.
+   */
+  const withinTravelCap = (place: Place): boolean =>
+    travelMinutesTo(place) <= MAX_TRAVEL_LEG_MINUTES;
 
   /**
    * 그 장소를 실제로 시작하게 되는 시각. 이동시간을 더한 뒤, 아직 문을 열지
    * 않았으면 개장까지 기다린 시각이다.
    *
-   * canPlace가 이 값을 봐야 하는 이유: 18:00에 여는 축제에 17:00에 도착하면
+   * withinDeadline이 이 값을 봐야 하는 이유: 18:00에 여는 축제에 17:00에 도착하면
    * 이동시간만으로는 마감(21:00) 안이지만, 기다린 뒤 체류까지 하면 넘길 수 있다.
    */
   const arrivalAt = (place: Place): number => {
@@ -291,7 +397,13 @@ function orderWithinDay(
       (clockLimit === null || clock < clockLimit)
     ) {
       const next = pickNext(remaining, generalRelevance);
-      if (!next || !canPlace(next)) break;
+      if (!next || !withinDeadline(next)) break;
+      if (!withinTravelCap(next)) {
+        // 이 후보 하나만 좌표가 쓰레기인 것뿐, 하루가 시간이 없는 게 아니다.
+        // 풀에서 제거하지 않으면 다음 루프에서 pickNext가 같은 후보를 또 골라 무한루프가 된다.
+        remaining = remaining.filter((p) => p !== next);
+        continue;
+      }
       placeNext(next);
       remaining = remaining.filter((p) => p !== next);
     }
@@ -317,10 +429,21 @@ function orderWithinDay(
     if (clock < earliest) {
       clock = earliest;
     }
-    const next = pickNext(pool, relevance);
-    if (!next || !canPlace(next)) return undefined;
-    placeNext(next);
-    return next;
+    // 이동 상한에 걸린 후보는 이 로컬 목록에서만 걷어내고 다음 후보를 본다 — 호출측의
+    // mealPool/cafePool(outer `pool`)은 건드리지 않는다. 실제로 배치되는 장소만 호출측이
+    // (anchor가 반환한 뒤) 자기 풀에서 제거하므로, 여기서 outer pool을 줄이면 안 된다.
+    let localPool = pool;
+    while (localPool.length > 0) {
+      const next = pickNext(localPool, relevance);
+      if (!next || !withinDeadline(next)) return undefined;
+      if (!withinTravelCap(next)) {
+        localPool = localPool.filter((p) => p !== next);
+        continue;
+      }
+      placeNext(next);
+      return next;
+    }
+    return undefined;
   };
 
   // 오전
@@ -349,7 +472,7 @@ function orderWithinDay(
   const dinner = anchor(mealPool, mealRelevance, DINNER_WINDOW_EARLIEST);
   if (dinner) mealPool = mealPool.filter((p) => p !== dinner);
 
-  // 저녁 이후 ~ 마감 시각(DAY_END_TIME)까지. drainUntil이 canPlace로 마감을 지킨다.
+  // 저녁 이후 ~ 마감 시각(DAY_END_TIME)까지. drainUntil이 withinDeadline으로 마감을 지킨다.
   drainUntil(null);
 
   return items;

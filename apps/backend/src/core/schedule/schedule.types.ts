@@ -60,7 +60,8 @@ export interface GenerateScheduleInput {
    * candidatePlaces의 부분집합이어야 한다 — 후보 풀에 없는 id는 무시된다.
    *
    * 이 장소들은 일차의 지리적 중심이 되고, 매 슬롯에서 나머지 후보보다 먼저 선택된다.
-   * 다만 하루 마감(DAY_END_TIME)까지 자리가 없으면 여전히 빠질 수 있다.
+   * 다만 하루 마감(DAY_END_TIME)까지 자리가 없거나, 직전 장소로부터의 이동시간이
+   * 상한(MAX_TRAVEL_LEG_MINUTES)을 넘으면 여전히 빠질 수 있다.
    * 무엇이 빠졌는지는 호출측이 결과와 대조해 판단한다(core는 이유를 알리지 않는다).
    */
   mustIncludePlaceIds?: ReadonlySet<string>;
