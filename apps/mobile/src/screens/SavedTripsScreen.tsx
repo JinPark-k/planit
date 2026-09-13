@@ -29,9 +29,9 @@ export function SavedTripsScreen({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>저장한 여행</Text>
+        <Text style={styles.title}>내 여행</Text>
         <Text style={styles.subtitle}>
-          골라 담기로 만든 여행 루트를 다시 확인해 보세요.
+          저장한 여행 루트를 언제든 다시 확인해 보세요.
         </Text>
       </View>
 
@@ -63,7 +63,7 @@ export function SavedTripsScreen({
           />
           <Text style={styles.emptyTitle}>아직 저장한 여행이 없어요</Text>
           <Text style={styles.emptyBody}>
-            골라 담기에서 여행을 만든 뒤{`\n`}‘여행 저장하기’를 눌러 보세요.
+            여행 일정을 만든 뒤{`\n`}‘여행 저장하기’를 눌러 보세요.
           </Text>
         </View>
       ) : (
