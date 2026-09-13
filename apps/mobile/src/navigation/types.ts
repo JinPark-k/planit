@@ -1,5 +1,6 @@
 import { ExcludedPlace, Festival, Place, ScheduleDay } from '../api/types';
 import { VisitContext } from '../screens/placeDetail.format';
+import type { SavedTrip } from '../storage/savedTrips';
 
 /**
  * "여행" 탭의 스택. 일정을 만들고 결과를 보는 흐름.
@@ -53,8 +54,16 @@ export type HomeStackParamList = {
   PlaceDetail: { place: Place; visit?: VisitContext };
 };
 
+/** 기기에 저장한 골라 담기 일정을 다시 보는 스택. */
+export type SavedTripsStackParamList = {
+  SavedTripsHome: undefined;
+  SavedSchedule: { trip: SavedTrip };
+  PlaceDetail: { place: Place; visit?: VisitContext };
+};
+
 export type RootTabParamList = {
   Home: undefined;
   Search: undefined;
   Trip: undefined;
+  Saved: undefined;
 };
