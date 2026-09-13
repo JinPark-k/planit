@@ -266,6 +266,44 @@ describe('ScheduleService.generateFromPlaces - 축제 날씨 보정', () => {
 
     expect(scheduledIds(result)).toContain('fest-1');
   });
+
+  it('축제를 두 개 담으면 개최일이 이른 쪽의 좌표/날짜로 조회한다', async () => {
+    mockedFetchDayCondition.mockResolvedValue('CLEAR');
+    // 늦은 축제를 앞에 둔다. 행 순서대로 집는 구현이면 이 테스트가 깨진다.
+    const rows = [
+      festivalRow('fest-late', 33.46, 126.58, '2099-02-10', '2099-02-15'),
+      festivalRow('fest-early', 33.45, 126.57, '2099-01-01', '2099-01-05'),
+      row('filler', 'SIGHTSEEING', 33.47, 126.59),
+    ];
+
+    await serviceWith(rows).generateFromPlaces(
+      fromPlacesDto({ placeIds: ['fest-late', 'fest-early'] }),
+    );
+
+    expect(mockedFetchDayCondition).toHaveBeenCalledWith(
+      33.45,
+      126.57,
+      '2099-01-01',
+    );
+  });
+
+  it('개최일이 같으면 앞선 행을 쓴다', async () => {
+    mockedFetchDayCondition.mockResolvedValue('CLEAR');
+    const rows = [
+      festivalRow('fest-a', 33.45, 126.57, '2099-01-01', '2099-01-05'),
+      festivalRow('fest-b', 33.46, 126.58, '2099-01-01', '2099-01-05'),
+    ];
+
+    await serviceWith(rows).generateFromPlaces(
+      fromPlacesDto({ placeIds: ['fest-a', 'fest-b'] }),
+    );
+
+    expect(mockedFetchDayCondition).toHaveBeenCalledWith(
+      33.45,
+      126.57,
+      '2099-01-01',
+    );
+  });
 });
 
 describe('resolveForecastDate', () => {
