@@ -8,6 +8,7 @@ import {
 import { generateSchedule } from '../api/schedule';
 import { GenerateScheduleRequest } from '../api/types';
 import { REGION_OPTIONS } from '../constants/regions';
+import { useTripSave } from '../hooks/useTripSave';
 import { PlanFormScreen } from '../screens/PlanFormScreen';
 import { ScheduleScreen } from '../screens/ScheduleScreen';
 import { PlaceDetailScreen } from '../screens/PlaceDetailScreen';
@@ -62,10 +63,15 @@ function PlanFormRoute({ navigation }: Props<'PlanForm'>) {
 
 function ScheduleRoute({ route, navigation }: Props<'Schedule'>) {
   const { days, regionLabel } = route.params;
+  const { handleSave, saveState, saveError } = useTripSave(days, regionLabel);
+
   return (
     <ScheduleScreen
       days={days}
       regionLabel={regionLabel}
+      onSave={handleSave}
+      saveState={saveState}
+      saveError={saveError}
       onBack={() => navigation.popToTop()}
       onRestart={() => navigation.popToTop()}
       onSelectPlace={(item, day) =>

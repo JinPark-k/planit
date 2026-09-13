@@ -46,7 +46,7 @@ function tabIcon(source: ImageSourcePropType) {
  * 거기서 여행을 시작한다. 제안서가 말한 "축제를 앵커로 삼는" 진입점이라
  * 첫 탭에 둔다.
  *
- * 저장 여행은 인증 없이 기기에 보관한 골라 담기 일정을 다시 보여 준다.
+ * 내 여행은 인증 없이 기기에 보관한 일정을 다시 보여 준다.
  */
 export function RootTabs() {
   return (
@@ -76,7 +76,7 @@ export function RootTabs() {
       <Tab.Screen
         name="Saved"
         component={SavedTripsStack}
-        options={{ title: '저장 여행', tabBarIcon: tabIcon(TAB_ICONS.saved) }}
+        options={{ title: '내 여행', tabBarIcon: tabIcon(TAB_ICONS.saved) }}
       />
     </Tab.Navigator>
   );
