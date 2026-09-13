@@ -11,7 +11,7 @@ import { PickConditionScreen } from '../screens/PickConditionScreen';
 import { PickListScreen, PickListSubmit } from '../screens/PickListScreen';
 import { PlaceDetailScreen } from '../screens/PlaceDetailScreen';
 import { ScheduleScreen } from '../screens/ScheduleScreen';
-import { saveTrip } from '../storage/savedTrips';
+import { useTripSave } from '../hooks/useTripSave';
 import { colors } from '../theme';
 import { PickSessionProvider } from './pickSession';
 import { SearchStackParamList } from './types';
@@ -63,22 +63,7 @@ function PickListRoute({ navigation }: Props<'PickList'>) {
 
 function ScheduleRoute({ route, navigation }: Props<'Schedule'>) {
   const { days, regionLabel, excludedPlaces } = route.params;
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>(
-    'idle',
-  );
-  const [saveError, setSaveError] = useState<string | undefined>();
-
-  const handleSave = async () => {
-    setSaveState('saving');
-    setSaveError(undefined);
-    try {
-      await saveTrip({ days, regionLabel });
-      setSaveState('saved');
-    } catch {
-      setSaveState('idle');
-      setSaveError('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
-    }
-  };
+  const { handleSave, saveState, saveError } = useTripSave(days, regionLabel);
 
   return (
     <ScheduleScreen

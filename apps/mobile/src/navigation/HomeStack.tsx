@@ -8,6 +8,7 @@ import {
 import { generateScheduleFromPlaces } from '../api/scheduleFromPlaces';
 import { Festival } from '../api/types';
 import { REGION_OPTIONS } from '../constants/regions';
+import { useTripSave } from '../hooks/useTripSave';
 import { FestivalPlanScreen } from '../screens/FestivalPlanScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { PlaceDetailScreen } from '../screens/PlaceDetailScreen';
@@ -83,12 +84,17 @@ function FestivalPlanRoute({ route, navigation }: Props<'FestivalPlan'>) {
 
 function ScheduleRoute({ route, navigation }: Props<'Schedule'>) {
   const { days, regionLabel, excludedPlaces, anchor } = route.params;
+  const { handleSave, saveState, saveError } = useTripSave(days, regionLabel);
+
   return (
     <ScheduleScreen
       days={days}
       regionLabel={regionLabel}
       excludedPlaces={excludedPlaces}
       anchor={anchor}
+      onSave={handleSave}
+      saveState={saveState}
+      saveError={saveError}
       onBack={() => navigation.goBack()}
       // "다시 만들기"는 처음부터라는 뜻이라 축제 목록으로 보낸다.
       onRestart={() => navigation.popToTop()}
