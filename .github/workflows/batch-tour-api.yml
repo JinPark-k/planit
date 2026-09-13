@@ -20,7 +20,9 @@ on:
           - CHUNGNAM
           - DAEJEON
           - JEONBUK
-          - JEONNAM_GWANGJU
+          # GWANGJU는 일부러 뺐다: JEONNAM과 조회 코드(lDongRegnCd=12)가 같아서
+          # 골라도 JEONNAM과 똑같은 TourAPI 호출 + upsert를 한 번 더 하는 것뿐이다.
+          - JEONNAM
           - GYEONGBUK
           - DAEGU
           - GYEONGNAM
@@ -42,7 +44,9 @@ jobs:
           REGION_CODE: ${{ inputs.region_code }}
         run: |
           if [ -z "$REGION_CODE" ] || [ "$REGION_CODE" = "ALL" ]; then
-            regions='["SEOUL","GYEONGGI","INCHEON","GANGWON","CHUNGBUK","CHUNGNAM","DAEJEON","JEONBUK","JEONNAM_GWANGJU","GYEONGBUK","DAEGU","GYEONGNAM","ULSAN","BUSAN","JEJU"]'
+            # GWANGJU는 뺀다: JEONNAM과 조회 코드(lDongRegnCd=12)가 같아
+            # 이미 JEONNAM 실행이 광주 데이터까지 upsert한다(regions.ts 참고).
+            regions='["SEOUL","GYEONGGI","INCHEON","GANGWON","CHUNGBUK","CHUNGNAM","DAEJEON","JEONBUK","JEONNAM","GYEONGBUK","DAEGU","GYEONGNAM","ULSAN","BUSAN","JEJU"]'
           else
             regions="[\"$REGION_CODE\"]"
           fi
