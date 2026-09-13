@@ -6,3 +6,7 @@
  * (env.ts의 `?? 기본값` 경로를 타게 된다).
  */
 jest.mock('react-native-config', () => ({ __esModule: true, default: {} }));
+
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);

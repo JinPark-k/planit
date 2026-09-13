@@ -81,4 +81,43 @@ describe('ScheduleScreen 장소 선택', () => {
     expect(item.startTime).toBe('14:30');
     expect(item.stayMinutes).toBe(120);
   });
+
+  it('골라 담기 일정은 저장할 수 있고 저장 후 버튼이 비활성화된다', () => {
+    const onSave = jest.fn();
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <ScheduleScreen
+          days={days()}
+          regionLabel="제주"
+          onBack={() => {}}
+          onRestart={() => {}}
+          onSave={onSave}
+          saveState="idle"
+          onSelectPlace={() => {}}
+        />,
+      );
+    });
+
+    const saveButton = pressableByLabel(tree, '여행 저장하기');
+    ReactTestRenderer.act(() => saveButton.props.onPress());
+    expect(onSave).toHaveBeenCalledTimes(1);
+
+    ReactTestRenderer.act(() => {
+      tree.update(
+        <ScheduleScreen
+          days={days()}
+          regionLabel="제주"
+          onBack={() => {}}
+          onRestart={() => {}}
+          onSave={onSave}
+          saveState="saved"
+          onSelectPlace={() => {}}
+        />,
+      );
+    });
+
+    expect(pressableByLabel(tree, '여행 저장하기').props.disabled).toBe(true);
+    expect(tree.root.findByProps({ children: '저장 완료' })).toBeDefined();
+  });
 });

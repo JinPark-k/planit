@@ -11,6 +11,7 @@ import { PickConditionScreen } from '../screens/PickConditionScreen';
 import { PickListScreen, PickListSubmit } from '../screens/PickListScreen';
 import { PlaceDetailScreen } from '../screens/PlaceDetailScreen';
 import { ScheduleScreen } from '../screens/ScheduleScreen';
+import { saveTrip } from '../storage/savedTrips';
 import { colors } from '../theme';
 import { PickSessionProvider } from './pickSession';
 import { SearchStackParamList } from './types';
@@ -62,11 +63,31 @@ function PickListRoute({ navigation }: Props<'PickList'>) {
 
 function ScheduleRoute({ route, navigation }: Props<'Schedule'>) {
   const { days, regionLabel, excludedPlaces } = route.params;
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>(
+    'idle',
+  );
+  const [saveError, setSaveError] = useState<string | undefined>();
+
+  const handleSave = async () => {
+    setSaveState('saving');
+    setSaveError(undefined);
+    try {
+      await saveTrip({ days, regionLabel });
+      setSaveState('saved');
+    } catch {
+      setSaveState('idle');
+      setSaveError('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
+  };
+
   return (
     <ScheduleScreen
       days={days}
       regionLabel={regionLabel}
       excludedPlaces={excludedPlaces}
+      onSave={handleSave}
+      saveState={saveState}
+      saveError={saveError}
       // 뒤로는 담던 목록으로 돌아간다. 화면이 하나였을 때는 popToTop이 곧
       // 목록이었지만, 조건 화면이 앞에 생기면서 목록을 건너뛰게 됐다.
       onBack={() => navigation.goBack()}
