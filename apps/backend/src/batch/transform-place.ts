@@ -118,6 +118,9 @@ export function transformPlace(
     tags: resolveTags({ contentTypeId, lclsSystm2, lclsSystm3 }),
     event_start_date: parseTourApiDate(festival.eventstartdate),
     event_end_date: parseTourApiDate(festival.eventenddate),
+    // 운영시간은 detailIntro2를 따로 불러야 얻는다. 배치가 축제 행에만 채운다.
+    event_open_time: null,
+    event_close_time: null,
     last_synced_at: syncedAt,
   };
 }

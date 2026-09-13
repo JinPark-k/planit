@@ -27,6 +27,9 @@ export interface PlaceRow {
   /** 'YYYY-MM-DD'. 축제(contentTypeId=15)만 non-null. */
   event_start_date: string | null;
   event_end_date: string | null;
+  /** 'HH:MM'. TourAPI detailIntro2의 playtime에서 뽑는다. 파싱 실패 시 null. */
+  event_open_time: string | null;
+  event_close_time: string | null;
   created_at: string;
   last_synced_at: string;
 }
@@ -53,6 +56,8 @@ export const PLACE_LIST_COLUMNS = [
   'addr2',
   'image_url',
   'tel',
+  // 축제만 값이 있다. 일정 배치에서 개장 전 시각을 피하는 데 쓴다.
+  'event_open_time',
 ] as const;
 
 /** 목록 조회 결과 row. PlaceRow의 부분집합이라 PlaceRow를 그대로 넘겨도 된다. */
