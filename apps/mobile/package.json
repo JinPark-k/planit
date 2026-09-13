@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "android:local": "ENVFILE=.env.local react-native run-android",
+    "ios": "react-native run-ios --scheme planit",
+    "ios:local": "ENVFILE=.env.local react-native run-ios --scheme planit",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "start": "react-native start",

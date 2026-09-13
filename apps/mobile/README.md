@@ -62,6 +62,17 @@ If everything is set up correctly, you should see your new app running in the An
 
 This is one way to run your app — you can also build it directly from Android Studio or Xcode.
 
+### 로컬 백엔드로 실행하기
+
+기본 `ios` / `android` 스크립트는 `apps/mobile/.env`의 운영 백엔드 주소를 쓴다. 이 파일은 항상 운영 주소를 가리켜야 하므로 로컬 작업으로 수정하지 않는다 (릴리스 빌드도 이 파일을 쓰기 때문에, 고쳤다가 되돌리는 걸 잊으면 배포된 앱이 `localhost`를 보게 된다).
+
+로컬 백엔드로 테스트하려면 `apps/mobile/.env.local.example`을 복사해 `apps/mobile/.env.local`을 만들고 (react-native-config가 `ENVFILE`로 지정한 파일을 통째로 갈아끼우므로 `KAKAO_JS_KEY` 등 `.env`의 다른 키도 함께 채운다) 다음으로 실행한다:
+
+```sh
+pnpm --filter @planit/mobile ios:local
+pnpm --filter @planit/mobile android:local
+```
+
 ## Step 3: Modify your app
 
 Now that you have successfully run the app, let's make changes!
