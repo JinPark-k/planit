@@ -122,7 +122,7 @@ async function resolveFestivalWeather(
   rows: PlaceListRow[],
   mustIncludePlaceIds: ReadonlySet<string>,
 ): Promise<WeatherCondition | undefined> {
-  const festivalRow = rows.find(
+  const festivalRows = rows.filter(
     (row) =>
       mustIncludePlaceIds.has(row.content_id) &&
       // null과 undefined 둘 다 "값 없음"으로 본다. row가 findRowsByRegion(실제 Supabase 조회)을
@@ -130,6 +130,18 @@ async function resolveFestivalWeather(
       // 필드 자체를 생략해 undefined가 되는 경우까지 방어한다.
       row.event_start_date != null,
   );
+
+  // 축제는 둘 이상 담을 수 있다. 행 순서대로 아무거나 집으면 어느 개최일로 예보를
+  // 볼지가 DB 정렬에 좌우되므로, 가장 이른 개최일을 고른다.
+  // event_start_date는 'YYYY-MM-DD'라 사전순 비교가 곧 날짜순 비교다
+  // (festivals.service.ts의 sortByImminence와 같은 방식).
+  const [festivalRow] = festivalRows.sort((a, b) => {
+    const aStart = a.event_start_date as string;
+    const bStart = b.event_start_date as string;
+    if (aStart === bStart) return 0;
+    return aStart < bStart ? -1 : 1;
+  });
+
   if (!festivalRow) return undefined;
 
   const today = todayInKst();
