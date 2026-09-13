@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { DayStartOverride, generateSchedule } from '../../core';
+import {
+  DayStartOverride,
+  WeatherCondition,
+  generateSchedule,
+} from '../../core';
+import { fetchDayCondition } from '../../infra/weather/kma.client';
+import { PlaceListRow } from '../../infra/supabase/places.types';
 import { toPlace } from '../../infra/supabase/place.mapper';
 import { PlacesService } from '../places/places.service';
+import { todayInKst } from '../festivals/festivals.service';
 import { GenerateScheduleDto } from './dto/generate-schedule.dto';
 import { GenerateScheduleFromPlacesDto } from './dto/generate-schedule-from-places.dto';
 import {
@@ -59,6 +66,8 @@ export class ScheduleService {
       }
     }
 
+    const weather = await resolveFestivalWeather(rows, mustIncludePlaceIds);
+
     const days = generateSchedule({
       keywords: dto.keywords ?? [],
       dayCount: dto.dayCount,
@@ -66,6 +75,7 @@ export class ScheduleService {
       dayStartOverrides: toDayStartOverrides(dto),
       candidatePlaces: rows.map(toPlace),
       mustIncludePlaceIds,
+      weather,
     });
 
     // core는 무엇이 빠졌는지 알리지 않는다. 요청한 것과 결과를 대조해 여기서 찾는다.
@@ -99,4 +109,55 @@ export function toDayStartOverrides(
     };
   }
   return overrides;
+}
+
+/**
+ * mustIncludePlaceIds 중 축제(=event_start_date가 있는 row)를 찾아 그 개최일 날씨를 조회한다.
+ * "담기" 흐름에서만 쓴다 — generate(자동생성)는 날짜를 안 받으므로 예보를 붙일 기준이 없다.
+ *
+ * UNKNOWN이나 조회 실패(fetchDayCondition은 throw하지 않는다)는 undefined로 돌려
+ * generateSchedule이 weather 없을 때와 동일하게 동작하게 한다.
+ */
+async function resolveFestivalWeather(
+  rows: PlaceListRow[],
+  mustIncludePlaceIds: ReadonlySet<string>,
+): Promise<WeatherCondition | undefined> {
+  const festivalRow = rows.find(
+    (row) =>
+      mustIncludePlaceIds.has(row.content_id) &&
+      // null과 undefined 둘 다 "값 없음"으로 본다. row가 findRowsByRegion(실제 Supabase 조회)을
+      // 거치면 항상 null이 명시적으로 들어오지만, 최소 컬럼만 채운 값(예: 테스트 fixture)이
+      // 필드 자체를 생략해 undefined가 되는 경우까지 방어한다.
+      row.event_start_date != null,
+  );
+  if (!festivalRow) return undefined;
+
+  const today = todayInKst();
+  const forecastDate = resolveForecastDate(
+    festivalRow.event_start_date as string,
+    festivalRow.event_end_date as string,
+    today,
+  );
+  if (!forecastDate) return undefined;
+
+  const condition = await fetchDayCondition(
+    festivalRow.lat,
+    festivalRow.lng,
+    forecastDate,
+  );
+  return condition === 'UNKNOWN' ? undefined : condition;
+}
+
+/**
+ * 축제 기간 중 예보를 붙일 날짜를 고른다 — 오늘 이후 가장 이른 날(이미 시작했으면 오늘).
+ * 이미 끝난 축제(event_end_date < today)는 null을 돌려줘 예보를 건너뛰게 한다
+ * (정상 흐름에서는 나오지 않아야 하지만, 방어적으로 둔다).
+ */
+export function resolveForecastDate(
+  eventStartDate: string,
+  eventEndDate: string,
+  today: string,
+): string | null {
+  if (eventEndDate < today) return null;
+  return eventStartDate > today ? eventStartDate : today;
 }

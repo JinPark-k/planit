@@ -1,8 +1,19 @@
-import { ScheduleService, toDayStartOverrides } from './schedule.service';
+import {
+  ScheduleService,
+  toDayStartOverrides,
+  resolveForecastDate,
+} from './schedule.service';
 import { GenerateScheduleDto } from './dto/generate-schedule.dto';
 import { GenerateScheduleFromPlacesDto } from './dto/generate-schedule-from-places.dto';
 import { PlaceListRow } from '../../infra/supabase/places.types';
 import { PlacesService } from '../places/places.service';
+import { fetchDayCondition } from '../../infra/weather/kma.client';
+
+jest.mock('../../infra/weather/kma.client', () => ({
+  fetchDayCondition: jest.fn(),
+}));
+
+const mockedFetchDayCondition = fetchDayCondition as jest.Mock;
 
 function dto(partial: Partial<GenerateScheduleDto> = {}): GenerateScheduleDto {
   return {
@@ -64,6 +75,33 @@ function row(
     addr2: null,
     image_url: null,
     tel: null,
+  };
+}
+
+/** 축제 row. event_start_date/end_date가 있어야 generateFromPlaces가 "축제"로 인식한다. */
+function festivalRow(
+  contentId: string,
+  lat: number,
+  lng: number,
+  eventStartDate: string,
+  eventEndDate: string,
+): PlaceListRow {
+  return {
+    content_id: contentId,
+    name: `축제-${contentId}`,
+    lat,
+    lng,
+    category: 'SIGHTSEEING',
+    tags: ['축제'],
+    popularity: 0,
+    rating: 0.5,
+    addr1: '제주특별자치도',
+    addr2: null,
+    image_url: null,
+    tel: null,
+    event_open_time: null,
+    event_start_date: eventStartDate,
+    event_end_date: eventEndDate,
   };
 }
 
@@ -179,5 +217,73 @@ describe('ScheduleService.generateFromPlaces', () => {
     expect(result.days).toHaveLength(1);
     expect(result.days[0].items.length).toBeGreaterThan(0);
     expect(result.excludedPlaces).toEqual([]);
+  });
+});
+
+describe('ScheduleService.generateFromPlaces - 축제 날씨 보정', () => {
+  beforeEach(() => {
+    mockedFetchDayCondition.mockReset();
+  });
+
+  it('mustIncludePlaceIds 중 축제가 있으면 그 좌표/날짜로 예보를 조회한다', async () => {
+    mockedFetchDayCondition.mockResolvedValue('RAIN');
+    const rows = [
+      festivalRow('fest-1', 33.45, 126.57, '2099-01-01', '2099-01-05'),
+      row('filler', 'SIGHTSEEING', 33.46, 126.58),
+    ];
+
+    await serviceWith(rows).generateFromPlaces(
+      fromPlacesDto({ placeIds: ['fest-1'] }),
+    );
+
+    // 축제 기간이 아직 시작 전(미래)이므로 개최 시작일로 조회해야 한다.
+    expect(mockedFetchDayCondition).toHaveBeenCalledWith(
+      33.45,
+      126.57,
+      '2099-01-01',
+    );
+  });
+
+  it('축제를 담지 않으면 예보를 조회하지 않는다', async () => {
+    const rows = [row('sight', 'SIGHTSEEING', 33.45, 126.57)];
+
+    await serviceWith(rows).generateFromPlaces(
+      fromPlacesDto({ placeIds: ['sight'] }),
+    );
+
+    expect(mockedFetchDayCondition).not.toHaveBeenCalled();
+  });
+
+  it('예보가 UNKNOWN이어도 에러 없이 일정을 만든다', async () => {
+    mockedFetchDayCondition.mockResolvedValue('UNKNOWN');
+    const rows = [
+      festivalRow('fest-1', 33.45, 126.57, '2099-01-01', '2099-01-05'),
+    ];
+
+    const result = await serviceWith(rows).generateFromPlaces(
+      fromPlacesDto({ placeIds: ['fest-1'] }),
+    );
+
+    expect(scheduledIds(result)).toContain('fest-1');
+  });
+});
+
+describe('resolveForecastDate', () => {
+  it('축제가 아직 시작 전이면 시작일을 쓴다', () => {
+    expect(resolveForecastDate('2099-01-05', '2099-01-10', '2026-09-01')).toBe(
+      '2099-01-05',
+    );
+  });
+
+  it('이미 진행 중이면 오늘 날짜를 쓴다', () => {
+    expect(resolveForecastDate('2026-08-01', '2026-09-10', '2026-09-01')).toBe(
+      '2026-09-01',
+    );
+  });
+
+  it('이미 끝난 축제면 null을 돌려준다(방어적 처리, 정상 흐름에서는 나오지 않아야 함)', () => {
+    expect(
+      resolveForecastDate('2026-01-01', '2026-01-05', '2026-09-01'),
+    ).toBeNull();
   });
 });
