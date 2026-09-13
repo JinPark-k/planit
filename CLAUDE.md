@@ -64,6 +64,19 @@ LLM 미사용, 규칙 기반으로 구현 (비용 예측 가능성 때문에 확
 - iOS: Live Activities (ActivityKit) — 동일 용도
 - React Native 자체 지원 기능이 아니므로 각각 Kotlin / Swift 네이티브 모듈로 별도 구현
 
+## 로컬 백엔드로 실행하기
+
+`apps/mobile/.env`는 항상 운영 백엔드를 가리키고, 로컬 작업으로 이 파일을 수정하지 않는다 (아카이브/릴리스 빌드가 그대로 이 파일을 쓰기 때문에, 고쳤다가 되돌리는 걸 잊으면 배포된 앱이 `localhost`를 보게 된다).
+
+로컬 백엔드로 테스트하려면 `apps/mobile/.env.local.example`을 복사해 `apps/mobile/.env.local`을 만들고 다음으로 실행한다 (react-native-config가 `ENVFILE`로 지정한 파일을 통째로 갈아끼우는 방식이라, `.env.local`에 `.env`의 모든 키를 다시 채워야 한다 — 예: `KAKAO_JS_KEY`):
+
+```
+pnpm --filter @planit/mobile ios:local
+pnpm --filter @planit/mobile android:local
+```
+
+옵션 없는 `ios` / `android` 스크립트는 그대로 운영 주소(`.env`)를 쓴다.
+
 # Git 워크플로
 
 - `main`에 직접 push하지 않습니다. 모든 변경은 브랜치를 만들고 PR을 거쳐 머지합니다.
