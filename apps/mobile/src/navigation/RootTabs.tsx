@@ -3,6 +3,7 @@ import { Image, ImageSourcePropType, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { colors, spacing, typography } from '../theme';
 import { HomeStack } from './HomeStack';
+import { SavedTripsStack } from './SavedTripsStack';
 import { SearchStack } from './SearchStack';
 import { TripStack } from './TripStack';
 import { RootTabParamList } from './types';
@@ -13,6 +14,7 @@ const TAB_ICONS = {
   home: require('../assets/tab-home-plane.png'),
   pick: require('../assets/tab-pick.png'),
   auto: require('../assets/tab-auto.png'),
+  saved: require('../assets/tab-saved.png'),
 } satisfies Record<string, ImageSourcePropType>;
 
 /**
@@ -44,7 +46,7 @@ function tabIcon(source: ImageSourcePropType) {
  * 거기서 여행을 시작한다. 제안서가 말한 "축제를 앵커로 삼는" 진입점이라
  * 첫 탭에 둔다.
  *
- * 목업의 My 탭은 아직 없다. 인증이 없어 지금 만들면 눌러도 빈 화면이 나온다.
+ * 저장 여행은 인증 없이 기기에 보관한 골라 담기 일정을 다시 보여 준다.
  */
 export function RootTabs() {
   return (
@@ -70,6 +72,11 @@ export function RootTabs() {
         name="Trip"
         component={TripStack}
         options={{ title: '자동 생성', tabBarIcon: tabIcon(TAB_ICONS.auto) }}
+      />
+      <Tab.Screen
+        name="Saved"
+        component={SavedTripsStack}
+        options={{ title: '저장 여행', tabBarIcon: tabIcon(TAB_ICONS.saved) }}
       />
     </Tab.Navigator>
   );

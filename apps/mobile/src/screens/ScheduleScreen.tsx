@@ -23,7 +23,11 @@ interface Props {
   days: ScheduleDay[];
   regionLabel: string;
   onBack: () => void;
-  onRestart: () => void;
+  onRestart?: () => void;
+  /** 골라 담기로 만든 일정에서만 제공한다. */
+  onSave?: () => void;
+  saveState?: 'idle' | 'saving' | 'saved';
+  saveError?: string;
   /** 장소를 누르면 상세로. day는 상세 화면의 "n일차 · HH:MM 도착"에 쓴다. */
   onSelectPlace: (item: ScheduleItem, day: number) => void;
   /**
@@ -48,6 +52,9 @@ export function ScheduleScreen({
   regionLabel,
   onBack,
   onRestart,
+  onSave,
+  saveState = 'idle',
+  saveError,
   onSelectPlace,
   excludedPlaces,
   anchor,
@@ -152,17 +159,58 @@ export function ScheduleScreen({
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={onRestart}
-          style={({ pressed }) => [
-            styles.restartButton,
-            pressed && styles.restartButtonPressed,
-          ]}>
-          <Text style={styles.restartText}>다시 만들기</Text>
-        </Pressable>
-      </View>
+      {(onSave !== undefined || onRestart !== undefined) && (
+        <View style={styles.footer}>
+          {saveError !== undefined && (
+            <Text style={styles.saveError}>{saveError}</Text>
+          )}
+          {onSave !== undefined && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="여행 저장하기"
+              disabled={saveState !== 'idle' || !hasAnyItem}
+              onPress={onSave}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                (saveState !== 'idle' || !hasAnyItem) &&
+                  styles.primaryButtonDisabled,
+                pressed && saveState === 'idle' && styles.primaryButtonPressed,
+              ]}>
+              <Text style={styles.primaryButtonText}>
+                {saveState === 'saving'
+                  ? '저장 중...'
+                  : saveState === 'saved'
+                    ? '저장 완료'
+                    : '여행 저장하기'}
+              </Text>
+            </Pressable>
+          )}
+          {onRestart !== undefined && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="다시 만들기"
+              onPress={onRestart}
+              style={({ pressed }) => [
+                onSave === undefined
+                  ? styles.primaryButton
+                  : styles.secondaryButton,
+                pressed &&
+                  (onSave === undefined
+                    ? styles.primaryButtonPressed
+                    : styles.secondaryButtonPressed),
+              ]}>
+              <Text
+                style={
+                  onSave === undefined
+                    ? styles.primaryButtonText
+                    : styles.secondaryButtonText
+                }>
+                다시 만들기
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -407,11 +455,17 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: spacing.lg,
+    gap: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
   },
-  restartButton: {
+  saveError: {
+    ...typography.micro,
+    color: colors.warn,
+    textAlign: 'center',
+  },
+  primaryButton: {
     height: 50,
     borderRadius: radius.lg,
     alignItems: 'center',
@@ -419,12 +473,31 @@ const styles = StyleSheet.create({
     // 이 화면의 주 버튼(다시 만들기)이라 CTA 패턴대로 primary(라임)를 쓴다.
     backgroundColor: colors.primary,
   },
-  restartButtonPressed: {
+  primaryButtonPressed: {
     backgroundColor: colors.primaryPressed,
   },
-  restartText: {
+  primaryButtonDisabled: {
+    opacity: 0.55,
+  },
+  primaryButtonText: {
     ...typography.button,
     // primary가 밝은 라임이라 흰 텍스트는 대비를 통과하지 못한다.
     color: colors.text,
+  },
+  secondaryButton: {
+    height: 50,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  secondaryButtonPressed: {
+    backgroundColor: colors.accentLight,
+  },
+  secondaryButtonText: {
+    ...typography.button,
+    color: colors.accent,
   },
 });
