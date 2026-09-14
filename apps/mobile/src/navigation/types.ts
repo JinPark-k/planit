@@ -58,6 +58,8 @@ export type HomeStackParamList = {
 export type SavedTripsStackParamList = {
   SavedTripsHome: undefined;
   SavedSchedule: { trip: SavedTrip };
+  /** 저장된 일정으로 실제 여행(잠금화면 표시)을 시작하는 화면. */
+  TripStart: { trip: SavedTrip };
   PlaceDetail: { place: Place; visit?: VisitContext };
 };
 
