@@ -45,6 +45,15 @@ interface Props {
    * 사용자가 자기 달력을 맞출 수 있다.
    */
   anchor?: { placeId: string; label: string };
+  /** 저장한 여행에서 아직 시작 전일 때만 넘어온다(SavedTripsStack). */
+  onStartTrip?: () => void;
+  /** 이 여행이 지금 진행 중일 때만 넘어온다. */
+  onEndTrip?: () => void;
+  /**
+   * 진행 중일 때 표시할 배너 문구. 있으면 "진행 중"이라는 뜻이라 footer가
+   * 여행 시작하기 대신 여행 종료 버튼을 보여준다.
+   */
+  liveFrame?: { title: string; body: string };
 }
 
 export function ScheduleScreen({
@@ -58,6 +67,9 @@ export function ScheduleScreen({
   onSelectPlace,
   excludedPlaces,
   anchor,
+  onStartTrip,
+  onEndTrip,
+  liveFrame,
 }: Props) {
   const [tab, setTab] = useState<DayTab>('ALL');
 
@@ -105,6 +117,13 @@ export function ScheduleScreen({
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.list}>
+        {liveFrame !== undefined && (
+          <View style={styles.liveBanner}>
+            <Text style={styles.liveBannerTitle}>{liveFrame.title}</Text>
+            <Text style={styles.liveBannerBody}>{liveFrame.body}</Text>
+          </View>
+        )}
+
         {excludedPlaces !== undefined && excludedPlaces.length > 0 && (
           <View style={styles.excludedCard}>
             <Text style={styles.excludedTitle}>
@@ -159,10 +178,39 @@ export function ScheduleScreen({
         )}
       </ScrollView>
 
-      {(onSave !== undefined || onRestart !== undefined) && (
+      {(onSave !== undefined ||
+        onRestart !== undefined ||
+        onStartTrip !== undefined ||
+        onEndTrip !== undefined) && (
         <View style={styles.footer}>
           {saveError !== undefined && (
             <Text style={styles.saveError}>{saveError}</Text>
+          )}
+          {liveFrame === undefined && onStartTrip !== undefined && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="여행 시작하기"
+              disabled={!hasAnyItem}
+              onPress={onStartTrip}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                !hasAnyItem && styles.primaryButtonDisabled,
+                pressed && hasAnyItem && styles.primaryButtonPressed,
+              ]}>
+              <Text style={styles.primaryButtonText}>여행 시작하기</Text>
+            </Pressable>
+          )}
+          {liveFrame !== undefined && onEndTrip !== undefined && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="여행 종료"
+              onPress={onEndTrip}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                pressed && styles.secondaryButtonPressed,
+              ]}>
+              <Text style={styles.secondaryButtonText}>여행 종료</Text>
+            </Pressable>
           )}
           {onSave !== undefined && (
             <Pressable
@@ -325,6 +373,22 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  liveBanner: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    // 진행 중인 여정 정보라 totalCard와 같은 accent 톤을 쓴다.
+    backgroundColor: colors.accentLight,
+  },
+  liveBannerTitle: {
+    ...typography.bodyStrong,
+    color: colors.accent,
+  },
+  liveBannerBody: {
+    marginTop: spacing.xxs,
+    ...typography.small,
+    color: colors.text,
   },
   excludedCard: {
     marginTop: spacing.md,
