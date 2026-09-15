@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
 import { fetchFestivals } from '../api/festivals';
 import { Festival } from '../api/types';
 import { Chip } from '../components/Chip';
+import { PlaceImage } from '../components/PlaceImage';
 import { REGION_OPTIONS } from '../constants/regions';
 import { colors, radius, spacing, typography } from '../theme';
 import {
@@ -146,15 +146,7 @@ function FestivalCard({
       accessibilityLabel={`${festival.name}, ${regionLabel(festival)}, ${festivalPeriod(festival)}`}
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
-      {festival.imageUrl !== undefined ? (
-        <Image
-          source={{ uri: festival.imageUrl }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={styles.image} />
-      )}
+      <PlaceImage place={festival} style={styles.image} />
 
       <View style={styles.cardBody}>
         <View style={styles.badgeRow}>
@@ -226,7 +218,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: IMAGE_HEIGHT,
-    backgroundColor: colors.placeholder,
   },
   cardBody: {
     padding: spacing.md,
