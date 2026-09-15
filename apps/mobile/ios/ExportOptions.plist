@@ -18,10 +18,17 @@
 	<key>signingCertificate</key>
 	<string>iPhone Distribution</string>
 
+	<!-- 위젯 익스텐션(PlanitLiveActivity)도 별도 번들 ID/프로파일이 필요하다.
+	     여기 빠뜨리면 xcodebuild -exportArchive가
+	     "No profiles for 'com.mjj.planit.LiveActivity' were found"로 실패한다
+	     — 위 "planit AppStore" 항목이 예전에 같은 이유로 겪었던 사고와 동일한
+	     패턴이니 이후 타겟을 추가할 때도 잊지 말 것. -->
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>com.mjj.planit</key>
 		<string>planit AppStore</string>
+		<key>com.mjj.planit.LiveActivity</key>
+		<string>planit LiveActivity AppStore</string>
 	</dict>
 
 	<!-- 심볼을 함께 올려야 App Store Connect에서 크래시 로그가 해석된다. -->

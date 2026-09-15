@@ -76,13 +76,23 @@ export function LiveTripProvider({ children }: { children: React.ReactNode }) {
    */
   const [tick, setTick] = useState(0);
 
-  // 1. 마운트 시 1회: activeTrip/capability 초기값을 불러온다.
+  // 1. 마운트 시 1회: activeTrip/capability 초기값을 불러오고, 진행 중인 여행이
+  // 있으면 네이티브 표시를 재조정한다.
   useEffect(() => {
     let cancelled = false;
 
     getActiveTrip()
       .then(trip => {
-        if (!cancelled) setActiveTripState(trip);
+        if (cancelled) return;
+        setActiveTripState(trip);
+        // 여기서 refresh를 부르지 않으면 콜드 스타트에서 재조정이 아예 돌지
+        // 않는다 — AppState 리스너는 "변화"에만 반응하는데 앱이 새로 뜰 때는
+        // 이미 active라 change 이벤트가 오지 않기 때문이다. iOS에서 특히
+        // 치명적이다: 시스템이 8시간 캡으로 Live Activity를 지웠거나 사용자가
+        // 앱을 강제 종료한 뒤 다시 열었을 때, 복구는 refresh()의 reconcile로만
+        // 일어난다. 이게 없으면 앱을 한 번 백그라운드로 보냈다가 돌아와야만
+        // 잠금화면 표시가 되살아난다.
+        if (trip) refreshLiveTrip();
       })
       .catch(() => {
         if (!cancelled) setActiveTripState(null);

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Mobile.entitlements와 반드시 같은 그룹 문자열. 위젯 익스텐션이 앱과
+	     같은 App Group에 있어야 TripSessionStore가 저장한 플랜/오버라이드
+	     인덱스를 읽을 수 있다. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.mjj.planit</string>
+	</array>
+</dict>
+</plist>
