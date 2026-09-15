@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Image,
-  ImageStyle,
   StyleProp,
   StyleSheet,
   Text,
@@ -53,29 +52,29 @@ export function PlaceImage({
   emptyLabel,
   size = 'thumb',
 }: PlaceImageProps) {
-  if (place.imageUrl !== undefined) {
-    return (
-      <Image
-        source={{ uri: place.imageUrl }}
-        // 호출부가 넘기는 style은 전부 View 기준(ViewStyle)이다. Image가
-        // 요구하는 ImageStyle과 거의 같지만 overflow 값 범위만 더 좁아서
-        // 타입만 안 맞을 뿐 실제로 쓰는 속성(width/height/radius 등)은 겹친다.
-        style={style as StyleProp<ImageStyle>}
-        resizeMode="cover"
-      />
-    );
-  }
+  // 다운로드에 실패한 URI를 기억한다. boolean으로 두면 목록에서 틀린다 —
+  // 골라 담기는 카테고리 필터를 바꾸는 게 주된 사용법이라 같은 자리의 컴포넌트
+  // 인스턴스에 다른 장소가 흘러든다. 그때 앞 장소의 실패가 남아 멀쩡한 사진이
+  // 안 나온다. URI를 기억하면 렌더 시점에 자연히 맞아떨어져 초기화 코드가 없다.
+  const [failedUri, setFailedUri] = useState<string>();
+  const uri = place.imageUrl;
+  const showPhoto = uri !== undefined && uri !== failedUri;
+
+  const Icon = PLACE_ICONS[placeIconKind(place)];
+  const { px, stroke } = ICON[size];
 
   // 상세 화면은 사진이 있으면 4:3, 없으면 height 160으로 줄어든다(회색 덩어리가
   // 화면 절반을 먹고 본문이 밀리는 걸 막던 기존 결정). 호출부는 렌더 전에 사진
   // 유무를 모르므로 이 스타일을 style에 조건부로 섞어 넣을 수 없다 — "비어있을
   // 때만" 적용되도록 컴포넌트 내부에서 더한다.
-  const Icon = PLACE_ICONS[placeIconKind(place)];
-  const { px, stroke } = ICON[size];
-
   return (
     <View
-      style={[style, styles.empty, emptyStyle]}
+      style={[
+        style,
+        styles.box,
+        showPhoto ? null : styles.empty,
+        showPhoto ? null : emptyStyle,
+      ]}
       // 아이콘은 장식이다. 목록 행은 바깥 Pressable이 이미 장소 이름으로
       // accessibilityLabel을 갖고 있어서, 안쪽 아이콘까지 읽히면 같은 장소를
       // 스크린리더가 두 번 말한다. emptyLabel("사진 없음")은 반대로 실제
@@ -83,20 +82,34 @@ export function PlaceImage({
       accessibilityElementsHidden={emptyLabel === undefined}
       importantForAccessibility={
         emptyLabel === undefined ? 'no-hide-descendants' : 'auto'
-      }>
+      }
+    >
       <Icon color={colors.accent} size={px} strokeWidth={stroke} />
-      {emptyLabel !== undefined && (
+      {!showPhoto && emptyLabel !== undefined && (
         <Text style={styles.emptyText}>{emptyLabel}</Text>
+      )}
+      {showPhoto && (
+        <Image
+          source={{ uri }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          onError={() => setFailedUri(uri)}
+        />
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  empty: {
-    backgroundColor: colors.accentLight,
+  // 사진은 아이콘 위를 absoluteFill로 덮는다. 모서리는 이제 부모가 자르므로
+  // overflow가 없으면 안드로이드에서 사진이 radius 밖으로 삐져나온다.
+  box: {
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  empty: {
+    backgroundColor: colors.accentLight,
     gap: spacing.xs,
   },
   emptyText: {

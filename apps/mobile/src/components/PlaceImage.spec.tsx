@@ -111,8 +111,41 @@ describe('PlaceImage', () => {
     const tree = render({ place: { imageUrl: undefined, ...NEUTRAL_PLACE } });
     const empty = tree.root.findByType(View);
     expect(empty.props.accessibilityElementsHidden).toBe(true);
-    expect(empty.props.importantForAccessibility).toBe(
-      'no-hide-descendants',
-    );
+    expect(empty.props.importantForAccessibility).toBe('no-hide-descendants');
+  });
+
+  it('내려받기에 실패하면 사진을 내리고 아이콘을 남긴다', () => {
+    const tree = render({
+      place: { ...NEUTRAL_PLACE, imageUrl: 'https://example.invalid/a.jpg' },
+    });
+    ReactTestRenderer.act(() => {
+      tree.root.findByType(Image).props.onError();
+    });
+    expect(tree.root.findAllByType(Image)).toHaveLength(0);
+    expect(tree.root.findAllByType(PLACE_ICONS.food)).toHaveLength(1);
+  });
+
+  // failedUri를 boolean으로 두면 여기서 깨진다. 목록은 같은 자리의 인스턴스에
+  // 다른 장소가 흘러들기 때문에, 앞 장소의 실패가 남으면 멀쩡한 사진이 안 나온다.
+  it('다른 장소로 바뀌면 앞 장소의 실패가 따라오지 않는다', () => {
+    const tree = render({
+      place: { ...NEUTRAL_PLACE, imageUrl: 'https://example.invalid/a.jpg' },
+    });
+    ReactTestRenderer.act(() => {
+      tree.root.findByType(Image).props.onError();
+    });
+    expect(tree.root.findAllByType(Image)).toHaveLength(0);
+
+    ReactTestRenderer.act(() => {
+      tree.update(
+        <PlaceImage
+          place={{
+            ...NEUTRAL_PLACE,
+            imageUrl: 'https://example.invalid/b.jpg',
+          }}
+        />,
+      );
+    });
+    expect(tree.root.findAllByType(Image)).toHaveLength(1);
   });
 });
