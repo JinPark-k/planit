@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 앱 타겟과 PlanitLiveActivity 위젯 타겟이 같은 App Group을 공유해야
+	     TripSessionStore(App Group UserDefaults)로 플랜을 주고받을 수 있다.
+	     Apple 개발자 포털에서 이미 두 App ID(com.mjj.planit,
+	     com.mjj.planit.LiveActivity) 모두에 할당해 둔 그룹이다. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.mjj.planit</string>
+	</array>
+</dict>
+</plist>
