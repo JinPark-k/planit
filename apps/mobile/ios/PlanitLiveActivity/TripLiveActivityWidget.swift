@@ -108,11 +108,20 @@ private struct ExpandedBottomView: View {
 /// 다음 프레임까지 남은 시간을 스스로 흘러가는 카운트다운으로 보여준다.
 /// Text(timerInterval:)은 시스템이 관리하는 타이머라 update() 호출 없이도
 /// 매초 갱신된다 — 반자동인 티가 크게 준다.
+///
+/// 단 "일정 진행 중"일 때만 띄운다. 야간(HIDE) 프레임에는 진행률이 없는데,
+/// 시뮬레이터로 실제 야간 구간을 띄워 보니 "오늘 일정이 끝났어요" 옆에
+/// `8:06:--`(내일 첫 일정까지 남은 시간)이 붙어서, 무엇을 세는 숫자인지 알 수
+/// 없는 상태가 됐다. 자고 일어날 때까지 남은 시간은 사용자가 알아야 할 정보가
+/// 아니다. 진행률(progressRange)이 있는 프레임 = 오늘 일정이 도는 중이라는 뜻이라
+/// 그 조건을 그대로 쓴다.
 private struct CountdownText: View {
     let state: TripActivityAttributes.ContentState
 
     var body: some View {
-        if let nextFrameAt = state.nextFrameAt, nextFrameAt > .now {
+        if state.progressRangeEnd != nil,
+           let nextFrameAt = state.nextFrameAt,
+           nextFrameAt > .now {
             Text(timerInterval: Date.now...nextFrameAt, countsDown: true)
                 .monospacedDigit()
         }
