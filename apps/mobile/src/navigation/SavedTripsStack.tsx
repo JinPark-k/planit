@@ -6,12 +6,15 @@ import {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLiveTrip } from '../hooks/useLiveTrip';
 import { PlaceDetailScreen } from '../screens/PlaceDetailScreen';
 import { SavedTripsScreen } from '../screens/SavedTripsScreen';
 import { ScheduleScreen } from '../screens/ScheduleScreen';
+import { TripStartScreen } from '../screens/TripStartScreen';
 import { listSavedTrips } from '../storage/savedTrips';
 import type { SavedTrip } from '../storage/savedTrips';
 import { colors } from '../theme';
+import { toDateKey } from '../trip/tripDate';
 import { SavedTripsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<SavedTripsStackParamList>();
@@ -61,6 +64,19 @@ function SavedTripsHomeRoute({ navigation }: Props<'SavedTripsHome'>) {
 
 function SavedScheduleRoute({ route, navigation }: Props<'SavedSchedule'>) {
   const { trip } = route.params;
+  const { activeTrip, frame, endTrip } = useLiveTrip();
+  const isActive = activeTrip?.tripId === trip.id;
+
+  // frame이 있어도 야간 HIDE 구간이나 다음 장소 시작 전 대기 구간에서는
+  // title/body가 비어 있을 수 있다. isActive인 동안은 항상 배너+종료 버튼
+  // 조합이 유지돼야 한다 — 사용자가 이미 여행을 시작했다는 사실 자체가
+  // "진행 중"이지, 지금 이 순간에 보여줄 문구가 있는지와는 별개다.
+  const liveFrame = isActive
+    ? {
+        title: frame?.title ?? trip.regionLabel,
+        body: frame?.body ?? '여행이 진행 중이에요.',
+      }
+    : undefined;
 
   return (
     <ScheduleScreen
@@ -77,6 +93,37 @@ function SavedScheduleRoute({ route, navigation }: Props<'SavedSchedule'>) {
           },
         })
       }
+      liveFrame={liveFrame}
+      onEndTrip={isActive ? endTrip : undefined}
+      onStartTrip={
+        isActive ? undefined : () => navigation.navigate('TripStart', { trip })
+      }
+    />
+  );
+}
+
+function TripStartRoute({ route, navigation }: Props<'TripStart'>) {
+  const { trip } = route.params;
+  const { capability, starting, error, startTrip } = useLiveTrip();
+  const [value, setValue] = useState(() => toDateKey(new Date()));
+
+  const handleConfirm = () => {
+    startTrip(trip, value).then(success => {
+      if (success) navigation.goBack();
+    });
+  };
+
+  return (
+    <TripStartScreen
+      days={trip.days}
+      regionLabel={trip.regionLabel}
+      value={value}
+      onChange={setValue}
+      onConfirm={handleConfirm}
+      onBack={() => navigation.goBack()}
+      capability={capability}
+      starting={starting}
+      error={error}
     />
   );
 }
@@ -98,6 +145,7 @@ export function SavedTripsStack() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="SavedTripsHome" component={SavedTripsHomeRoute} />
         <Stack.Screen name="SavedSchedule" component={SavedScheduleRoute} />
+        <Stack.Screen name="TripStart" component={TripStartRoute} />
         <Stack.Screen name="PlaceDetail" component={PlaceDetailRoute} />
       </Stack.Navigator>
     </SafeAreaView>

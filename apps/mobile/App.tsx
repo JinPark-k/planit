@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootTabs } from './src/navigation/RootTabs';
 import { colors } from './src/theme';
 import { SplashScreen } from './src/components/SplashScreen';
+import { LiveTripProvider } from './src/hooks/useLiveTrip';
 
 /**
  * 화면이 셋일 때는 useState로 전환했지만, 탭이 생기면서 탭별 스택과 뒤로가기를
@@ -25,9 +26,11 @@ function App() {
         accessibilityElementsHidden={launching}
         importantForAccessibility={launching ? 'no-hide-descendants' : 'auto'}
       >
-        <NavigationContainer>
-          <RootTabs />
-        </NavigationContainer>
+        <LiveTripProvider>
+          <NavigationContainer>
+            <RootTabs />
+          </NavigationContainer>
+        </LiveTripProvider>
       </View>
       {launching && <SplashScreen onFinish={() => setLaunching(false)} />}
     </SafeAreaProvider>
