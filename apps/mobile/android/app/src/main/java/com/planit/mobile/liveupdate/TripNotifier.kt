@@ -93,6 +93,13 @@ object TripNotifier {
      *
      * NotificationCompat.ProgressStyle은 내부에 Api36Impl을 들고 있어 구버전에서
      * 알아서 일반 진행바로 낮춰 준다 — 여기서 SDK_INT 분기를 할 필요가 없다.
+     *
+     * 승격 요청을 NotificationCompat으로만 할 수 있는 이유: 플랫폼 쪽에는 요청
+     * 수단이 없다. API 36 android.jar의 Notification.Builder에는
+     * setRequestPromotedOngoing이 없고 EXTRA_REQUEST_PROMOTED_ONGOING 상수도
+     * 공개돼 있지 않다(javap으로 확인). Notification.FLAG_PROMOTED_ONGOING은
+     * 존재하지만 그건 시스템이 승격 "결과"로 켜 주는 플래그이지 요청 수단이
+     * 아니다 — 앱이 직접 세워도 승격되지 않는다.
      */
     private fun applyProgress(
         builder: NotificationCompat.Builder,
@@ -119,6 +126,9 @@ object TripNotifier {
         style.setProgress(progress.coerceIn(0, totalLength))
 
         builder.setStyle(style)
+        // 상태바 칩에 들어갈 짧은 문구. 자리가 좁아 TS가 미리 줄여 보낸다.
+        frame.shortText?.let { builder.setShortCriticalText(it) }
+        builder.setRequestPromotedOngoing(true)
     }
 
     /** progressAt + 프레임 시각 이후 경과 시간 * progressPerMinute을 [0, progressMax]로 clamp. */

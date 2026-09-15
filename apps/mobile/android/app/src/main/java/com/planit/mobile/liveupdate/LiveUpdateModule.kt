@@ -129,6 +129,18 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
                 return result
             }
 
+            if (Build.VERSION.SDK_INT >= 36) {
+                // 승격은 요청일 뿐 보장이 아니다. 사용자가 앱별로 Live Updates를
+                // 꺼 둘 수 있어서, 화면에 "상태바에도 보여요"라고 말하기 전에
+                // 실제로 가능한지 물어본다.
+                val canPromote = manager.canPostPromotedNotifications()
+                result.putBoolean("supported", true)
+                result.putBoolean("allowed", true)
+                result.putBoolean("statusBar", canPromote)
+                if (!canPromote) result.putString("reason", "PROMOTION_DISABLED")
+                return result
+            }
+
             result.putBoolean("supported", true)
             result.putBoolean("allowed", true)
             result.putBoolean("statusBar", false)

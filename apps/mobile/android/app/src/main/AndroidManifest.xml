@@ -2,6 +2,11 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!--
+      상태바 칩/NowBar 승격(Android 16 Live Updates)에 필요하다. 런타임 권한이
+      아니라 install-time이고, API 36 미만 기기에서는 무시된다.
+    -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
