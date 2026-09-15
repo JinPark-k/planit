@@ -67,14 +67,14 @@ function SavedScheduleRoute({ route, navigation }: Props<'SavedSchedule'>) {
   const { activeTrip, frame, endTrip } = useLiveTrip();
   const isActive = activeTrip?.tripId === trip.id;
 
-  // frame이 있어도 야간 HIDE 구간이나 다음 장소 시작 전 대기 구간에서는
-  // title/body가 비어 있을 수 있다. isActive인 동안은 항상 배너+종료 버튼
-  // 조합이 유지돼야 한다 — 사용자가 이미 여행을 시작했다는 사실 자체가
-  // "진행 중"이지, 지금 이 순간에 보여줄 문구가 있는지와는 별개다.
+  // isActive인 동안은 항상 배너+종료 버튼 조합이 유지돼야 한다 — 사용자가 이미
+  // 여행을 시작했다는 사실 자체가 "진행 중"이지, 지금 이 순간에 보여줄 프레임이
+  // 있는지와는 별개다. 프레임이 없는 건 출발일이 아직 오지 않은 경우뿐이다
+  // (야간 구간은 HIDE 프레임이 문구를 들고 있다).
   const liveFrame = isActive
     ? {
         title: frame?.title ?? trip.regionLabel,
-        body: frame?.body ?? '여행이 진행 중이에요.',
+        body: frame?.body ?? '아직 여행 시작 전이에요.',
       }
     : undefined;
 

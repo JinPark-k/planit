@@ -82,6 +82,19 @@ describe('buildFrames - 일차 경계', () => {
     expect(leadIn?.at).toBe(stops[1].startAt - 60 * 60000);
   });
 
+  it('HIDE 프레임도 다음 일차를 알리는 문구를 들고 있다', () => {
+    const stops = [
+      stop(1, 'a', 'A', [2026, 2, 2], [9, 0], 60),
+      stop(2, 'b', '비자림', [2026, 2, 3], [9, 0], 60),
+    ];
+    const frames = buildFrames(stops, { leadInMinutes: 60 });
+
+    // Android는 이 구간에 알림을 내리지만 앱 안 배너와 iOS는 표시를 유지한다.
+    const hide = frames.find(f => f.kind === 'HIDE');
+    expect(hide?.title).toBe('오늘 일정이 끝났어요');
+    expect(hide?.body).toBe('내일 09:00 비자림부터');
+  });
+
   it('짧은 밤(리드인 시각이 HIDE 시각과 같음)이면 HIDE를 생략한다', () => {
     const stops = [
       stop(1, 'a', 'A', [2026, 2, 2], [22, 30], 60), // day1 23:30에 끝남
