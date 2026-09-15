@@ -8,26 +8,88 @@
 
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-Mobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-Mobile.a */; };
+		0FDBB5B040535D90B3394A87 /* TripLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0FEBD1EC5DE402ADB46F23 /* TripLiveActivityWidget.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		1CE6A1B1C00622EF0501B6E0 /* TripLiveActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5EC4979800CE4258310C763 /* TripLiveActivityController.swift */; };
+		1ED9E883501806BB69390FF5 /* TripPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751567AC41122A267CF6650C /* TripPlan.swift */; };
+		2023D33A8ACDB0967923B080 /* LiveActivityModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 5C21E1E3210041E231D1B903 /* LiveActivityModule.m */; };
+		3DA51DC2381AB94A38612A5F /* TripPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751567AC41122A267CF6650C /* TripPlan.swift */; };
+		661439C90DBE3061C90E089A /* PlanitLiveActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 621C41AECBF420315BAE25EC /* PlanitLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6E28023D39F1D3475524D726 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C2FB84E66CD95E8412F65E /* LiveActivityModule.swift */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
+		786E86CDC45D1EB93E11348A /* NextStopIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF5925DED31E385F29696B0 /* NextStopIntent.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		88F868E6E6CBCBD6C4ECAD61 /* TripSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87CB6E4CE7162662BCC13293 /* TripSessionStore.swift */; };
+		8B805C22A05CC0F774BA9A25 /* TripLiveActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5EC4979800CE4258310C763 /* TripLiveActivityController.swift */; };
+		93A5D352AA603D37139F93FA /* NextStopIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF5925DED31E385F29696B0 /* NextStopIntent.swift */; };
+		A78EB7F243822AE7468CD658 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E3B1B121C0462807AFD0FE96 /* Foundation.framework */; };
+		C3433E65C206372E762BA4F5 /* TripSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87CB6E4CE7162662BCC13293 /* TripSessionStore.swift */; };
+		D4B2602B657027187A6F5BC8 /* TripActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE0ACDDDA0707BDF2C8005 /* TripActivityAttributes.swift */; };
 		DD9D215B51516A680C57AEE1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		EDC0FDFE6920B37ECF45EB5C /* TripActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE0ACDDDA0707BDF2C8005 /* TripActivityAttributes.swift */; };
+		FD74F1A9524FDA3DC8B0B587 /* PlanitLiveActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CDF911694D36D9E7B1B35AC /* PlanitLiveActivityBundle.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1124350BD32CAB792E263BA3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CB74A49B9CA66A7955444001;
+			remoteInfo = PlanitLiveActivity;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B39518D1E3E69A452B67EDFF /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				661439C90DBE3061C90E089A /* PlanitLiveActivity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* Mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Mobile/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Mobile/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Mobile/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		14CE0ACDDDA0707BDF2C8005 /* TripActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TripActivityAttributes.swift; path = Mobile/LiveActivity/TripActivityAttributes.swift; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-Mobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Mobile.debug.xcconfig"; path = "Target Support Files/Pods-Mobile/Pods-Mobile.debug.xcconfig"; sourceTree = "<group>"; };
+		3C0FEBD1EC5DE402ADB46F23 /* TripLiveActivityWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TripLiveActivityWidget.swift; path = PlanitLiveActivity/TripLiveActivityWidget.swift; sourceTree = "<group>"; };
+		3CDF911694D36D9E7B1B35AC /* PlanitLiveActivityBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PlanitLiveActivityBundle.swift; path = PlanitLiveActivity/PlanitLiveActivityBundle.swift; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-Mobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Mobile.release.xcconfig"; path = "Target Support Files/Pods-Mobile/Pods-Mobile.release.xcconfig"; sourceTree = "<group>"; };
+		5C21E1E3210041E231D1B903 /* LiveActivityModule.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = LiveActivityModule.m; path = Mobile/LiveActivity/LiveActivityModule.m; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-Mobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Mobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		60355503E4F3B8A190563187 /* PlanitLiveActivity.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; name = PlanitLiveActivity.entitlements; path = PlanitLiveActivity/PlanitLiveActivity.entitlements; sourceTree = "<group>"; };
+		621C41AECBF420315BAE25EC /* PlanitLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PlanitLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		63C2FB84E66CD95E8412F65E /* LiveActivityModule.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LiveActivityModule.swift; path = Mobile/LiveActivity/LiveActivityModule.swift; sourceTree = "<group>"; };
+		6DF5925DED31E385F29696B0 /* NextStopIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NextStopIntent.swift; path = Mobile/LiveActivity/NextStopIntent.swift; sourceTree = "<group>"; };
+		751567AC41122A267CF6650C /* TripPlan.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TripPlan.swift; path = Mobile/LiveActivity/TripPlan.swift; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Mobile/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Mobile/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		87CB6E4CE7162662BCC13293 /* TripSessionStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TripSessionStore.swift; path = Mobile/LiveActivity/TripSessionStore.swift; sourceTree = "<group>"; };
+		B5EC4979800CE4258310C763 /* TripLiveActivityController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TripLiveActivityController.swift; path = Mobile/LiveActivity/TripLiveActivityController.swift; sourceTree = "<group>"; };
+		BB9123FFE81D93C08E45C653 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = Info.plist; path = PlanitLiveActivity/Info.plist; sourceTree = "<group>"; };
+		E3B1B121C0462807AFD0FE96 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		EF6F91D7C5E735DF5672379B /* Mobile.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; name = Mobile.entitlements; path = Mobile/Mobile.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		10DB19B72E83A83CD2A711AA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A78EB7F243822AE7468CD658 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -39,6 +101,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		06C647564F0272175D7469F6 /* LiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				63C2FB84E66CD95E8412F65E /* LiveActivityModule.swift */,
+				5C21E1E3210041E231D1B903 /* LiveActivityModule.m */,
+				14CE0ACDDDA0707BDF2C8005 /* TripActivityAttributes.swift */,
+				751567AC41122A267CF6650C /* TripPlan.swift */,
+				87CB6E4CE7162662BCC13293 /* TripSessionStore.swift */,
+				B5EC4979800CE4258310C763 /* TripLiveActivityController.swift */,
+				6DF5925DED31E385F29696B0 /* NextStopIntent.swift */,
+			);
+			name = LiveActivity;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* Mobile */ = {
 			isa = PBXGroup;
 			children = (
@@ -47,6 +123,8 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				06C647564F0272175D7469F6 /* LiveActivity */,
+				EF6F91D7C5E735DF5672379B /* Mobile.entitlements */,
 			);
 			name = Mobile;
 			sourceTree = "<group>";
@@ -56,6 +134,7 @@
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				5DCACB8F33CDC322A6C60F78 /* libPods-Mobile.a */,
+				D1116E4452B1676FF9EF7555 /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -75,6 +154,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				8EE1EDCD4C738D4569F2BEC5 /* PlanitLiveActivity */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -85,8 +165,20 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* Mobile.app */,
+				621C41AECBF420315BAE25EC /* PlanitLiveActivity.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8EE1EDCD4C738D4569F2BEC5 /* PlanitLiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				3CDF911694D36D9E7B1B35AC /* PlanitLiveActivityBundle.swift */,
+				3C0FEBD1EC5DE402ADB46F23 /* TripLiveActivityWidget.swift */,
+				BB9123FFE81D93C08E45C653 /* Info.plist */,
+				60355503E4F3B8A190563187 /* PlanitLiveActivity.entitlements */,
+			);
+			name = PlanitLiveActivity;
 			sourceTree = "<group>";
 		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
@@ -96,6 +188,14 @@
 				5709B34CF0A7D63546082F79 /* Pods-Mobile.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		D1116E4452B1676FF9EF7555 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				E3B1B121C0462807AFD0FE96 /* Foundation.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,15 +212,34 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				B39518D1E3E69A452B67EDFF /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				60A22E791D49153107E644A9 /* PBXTargetDependency */,
 			);
 			name = Mobile;
 			productName = Mobile;
 			productReference = 13B07F961A680F5B00A75B9A /* Mobile.app */;
 			productType = "com.apple.product-type.application";
+		};
+		CB74A49B9CA66A7955444001 /* PlanitLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F54F635D97F3EBF5DEAF692D /* Build configuration list for PBXNativeTarget "PlanitLiveActivity" */;
+			buildPhases = (
+				F1A492F0F414F22EDDB16324 /* Sources */,
+				10DB19B72E83A83CD2A711AA /* Frameworks */,
+				0D00B8579190122FA8C76636 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PlanitLiveActivity;
+			productName = PlanitLiveActivity;
+			productReference = 621C41AECBF420315BAE25EC /* PlanitLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -149,11 +268,19 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Mobile */,
+				CB74A49B9CA66A7955444001 /* PlanitLiveActivity */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0D00B8579190122FA8C76636 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		13B07F8E1A680F5B00A75B9A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -247,19 +374,83 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				6E28023D39F1D3475524D726 /* LiveActivityModule.swift in Sources */,
+				2023D33A8ACDB0967923B080 /* LiveActivityModule.m in Sources */,
+				EDC0FDFE6920B37ECF45EB5C /* TripActivityAttributes.swift in Sources */,
+				1ED9E883501806BB69390FF5 /* TripPlan.swift in Sources */,
+				C3433E65C206372E762BA4F5 /* TripSessionStore.swift in Sources */,
+				8B805C22A05CC0F774BA9A25 /* TripLiveActivityController.swift in Sources */,
+				93A5D352AA603D37139F93FA /* NextStopIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F1A492F0F414F22EDDB16324 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FD74F1A9524FDA3DC8B0B587 /* PlanitLiveActivityBundle.swift in Sources */,
+				0FDBB5B040535D90B3394A87 /* TripLiveActivityWidget.swift in Sources */,
+				D4B2602B657027187A6F5BC8 /* TripActivityAttributes.swift in Sources */,
+				3DA51DC2381AB94A38612A5F /* TripPlan.swift in Sources */,
+				88F868E6E6CBCBD6C4ECAD61 /* TripSessionStore.swift in Sources */,
+				1CE6A1B1C00622EF0501B6E0 /* TripLiveActivityController.swift in Sources */,
+				786E86CDC45D1EB93E11348A /* NextStopIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		60A22E791D49153107E644A9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = PlanitLiveActivity;
+			target = CB74A49B9CA66A7955444001 /* PlanitLiveActivity */;
+			targetProxy = 1124350BD32CAB792E263BA3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		0826002032FB0EED230D060D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = PlanitLiveActivity/PlanitLiveActivity.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PlanitLiveActivity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mjj.planit.LiveActivity;
+				PRODUCT_NAME = PlanitLiveActivity;
+				PROVISIONING_PROFILE_SPECIFIER = "planit LiveActivity AppStore";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-Mobile.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Mobile/Mobile.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Mobile/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -273,8 +464,6 @@
 					"-ObjC",
 					"-lc++",
 				);
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mjj.planit;
 				PRODUCT_NAME = planit;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -291,7 +480,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Mobile/Mobile.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
 				INFOPLIST_FILE = Mobile/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -304,12 +497,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
-				PROVISIONING_PROFILE_SPECIFIER = "planit AppStore";
-				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mjj.planit;
 				PRODUCT_NAME = planit;
+				PROVISIONING_PROFILE_SPECIFIER = "planit AppStore";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -475,6 +665,34 @@
 			};
 			name = Release;
 		};
+		F6584F1408D1DB6C8E0CD0FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = PlanitLiveActivity/PlanitLiveActivity.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = Y4Q4TS7RTR;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PlanitLiveActivity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mjj.planit.LiveActivity;
+				PRODUCT_NAME = PlanitLiveActivity;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -492,6 +710,15 @@
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
 				83CBBA211A601CBA00E9B192 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F54F635D97F3EBF5DEAF692D /* Build configuration list for PBXNativeTarget "PlanitLiveActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0826002032FB0EED230D060D /* Release */,
+				F6584F1408D1DB6C8E0CD0FE /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

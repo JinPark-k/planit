@@ -41,6 +41,10 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Live Activities는 별도 capability/entitlement가 없다 — 이 키 하나면
+	     충분하다(Apple 개발자 포털에는 대응 항목이 없으니 찾지 말 것). -->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
