@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import { Place } from '../api/types';
 import { Chip } from '../components/Chip';
+import { PlaceImage } from '../components/PlaceImage';
 import { openKakaoMapPlace } from '../deeplink';
 import { CATEGORY_LABELS } from '../constants/categories';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
@@ -59,18 +59,15 @@ export function PlaceDetailScreen({ place, visit, onBack }: Props) {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.hero}>
-          {place.imageUrl !== undefined ? (
-            <Image
-              source={{ uri: place.imageUrl }}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
-          ) : (
-            // 실측 900건 중 16%가 이미지가 없다. 빈 공간 대신 이유를 적어 준다.
-            <View style={styles.heroEmpty}>
-              <Text style={styles.heroEmptyText}>사진 없음</Text>
-            </View>
-          )}
+          {/* 운영 DB 30,801건 중 17.0%(5,244건)가 이미지가 없다(맛집만 보면
+              29.4%). 빈 공간 대신 이유를 적어 준다. */}
+          <PlaceImage
+            place={place}
+            style={styles.heroImage}
+            emptyStyle={styles.heroEmpty}
+            emptyLabel="사진 없음"
+            size="hero"
+          />
 
           <Pressable
             accessibilityRole="button"
@@ -184,13 +181,6 @@ const styles = StyleSheet.create({
     // 사진이 있을 때의 4:3을 그대로 쓰면 회색 덩어리가 화면 절반을 먹고
     // 이름·태그·주소가 스크롤 아래로 밀린다. 자리만 표시하고 본문을 끌어올린다.
     height: 160,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.placeholder,
-  },
-  heroEmptyText: {
-    ...typography.caption,
-    color: colors.textMuted,
   },
   backButton: {
     position: 'absolute',

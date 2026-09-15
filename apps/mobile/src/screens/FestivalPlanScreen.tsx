@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
 import { Festival } from '../api/types';
 import { Chip } from '../components/Chip';
 import { DayCountPicker } from '../components/DayCountPicker';
+import { PlaceImage } from '../components/PlaceImage';
 import { Section } from '../components/Section';
 import { REGION_OPTIONS } from '../constants/regions';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
@@ -70,15 +70,7 @@ export function FestivalPlanScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
-        {festival.imageUrl !== undefined ? (
-          <Image
-            source={{ uri: festival.imageUrl }}
-            style={styles.image}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.image} />
-        )}
+        <PlaceImage place={festival} style={styles.image} size="hero" />
 
         <View style={styles.badgeRow}>
           <Chip label={regionLabel} variant="soft" size="sm" />
@@ -177,7 +169,6 @@ const styles = StyleSheet.create({
     height: IMAGE_HEIGHT,
     marginTop: spacing.lg,
     borderRadius: radius.lg,
-    backgroundColor: colors.placeholder,
   },
   badgeRow: {
     flexDirection: 'row',

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import { fetchRecommendations } from '../api/recommend';
 import { Place, PlaceCategory } from '../api/types';
 import { CategoryPicker } from '../components/CategoryPicker';
 import { Chip } from '../components/Chip';
+import { PlaceImage } from '../components/PlaceImage';
 import { CATEGORY_LABELS } from '../constants/categories';
 import { REGION_OPTIONS } from '../constants/regions';
 import { usePickSession } from '../navigation/pickSession';
@@ -220,15 +220,7 @@ function PlaceRow({
         picked && styles.rowPicked,
         pressed && styles.rowPressed,
       ]}>
-      {place.imageUrl !== undefined ? (
-        <Image
-          source={{ uri: place.imageUrl }}
-          style={styles.thumb}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={styles.thumb} />
-      )}
+      <PlaceImage place={place} style={styles.thumb} size="thumb" />
 
       <View style={styles.rowText}>
         <Text style={styles.placeName} numberOfLines={1}>
@@ -353,7 +345,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: radius.md,
-    backgroundColor: colors.placeholder,
   },
   rowText: {
     flex: 1,

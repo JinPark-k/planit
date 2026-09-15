@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
 } from 'react-native';
 import { ExcludedPlace, ScheduleDay, ScheduleItem } from '../api/types';
 import { Chip } from '../components/Chip';
+import { PlaceImage } from '../components/PlaceImage';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
 import {
   DayTab,
@@ -307,15 +307,7 @@ function TimelineRow({
           )}
         </View>
 
-        {item.place.imageUrl !== undefined ? (
-          <Image
-            source={{ uri: item.place.imageUrl }}
-            style={styles.thumb}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.thumb, styles.thumbPlaceholder]} />
-        )}
+        <PlaceImage place={item.place} style={styles.thumb} size="thumb" />
       </Pressable>
     </View>
   );
@@ -489,10 +481,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: radius.md,
-    backgroundColor: colors.placeholder,
-  },
-  thumbPlaceholder: {
-    backgroundColor: colors.placeholder,
   },
   totalCard: {
     marginTop: spacing.md,
