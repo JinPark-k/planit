@@ -15,7 +15,7 @@ export interface PlaceImageProps {
   place: Pick<Place, 'imageUrl' | 'category' | 'tags'>;
   /** 상자의 기하는 호출부가 준다. */
   style?: StyleProp<ViewStyle>;
-  /** 사진이 없을 때만 더해지는 스타일. */
+  /** 사진이 없을 때 style을 대신할 스타일. 더해지는 게 아니라 갈아치운다. */
   emptyStyle?: StyleProp<ViewStyle>;
   /** 사진이 없을 때 적을 문구. 상세 화면만 쓴다. */
   emptyLabel?: string;
@@ -65,15 +65,17 @@ export function PlaceImage({
 
   // 상세 화면은 사진이 있으면 4:3, 없으면 height 160으로 줄어든다(회색 덩어리가
   // 화면 절반을 먹고 본문이 밀리는 걸 막던 기존 결정). 호출부는 렌더 전에 사진
-  // 유무를 모르므로 이 스타일을 style에 조건부로 섞어 넣을 수 없다 — "비어있을
-  // 때만" 적용되도록 컴포넌트 내부에서 더한다.
+  // 유무를 모르므로 이 스타일을 조건부로 줄 수 없어 컴포넌트가 갈아끼운다.
+  //
+  // 더하지 않고 갈아치우는 이유: 상세의 style에는 aspectRatio 4/3가 들어 있는데,
+  // 여기에 height 160을 겹쳐도 Yoga는 aspectRatio를 버리지 않는다. 폭이 213(160의
+  // 4/3)으로 고정돼 빈 자리가 화면 절반만 차지하고 뒤 배경이 드러났다.
   return (
     <View
       style={[
-        style,
+        showPhoto || emptyStyle === undefined ? style : emptyStyle,
         styles.box,
         showPhoto ? null : styles.empty,
-        showPhoto ? null : emptyStyle,
       ]}
       // 아이콘은 장식이다. 목록 행은 바깥 Pressable이 이미 장소 이름으로
       // accessibilityLabel을 갖고 있어서, 안쪽 아이콘까지 읽히면 같은 장소를

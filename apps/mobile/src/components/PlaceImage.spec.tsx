@@ -71,10 +71,10 @@ describe('PlaceImage', () => {
     expect(flat.height).toBeUndefined();
   });
 
-  // 상세 화면은 style(aspectRatio 4/3)과 emptyStyle(height 160)을 함께 넘긴다.
-  // Yoga는 width와 height가 둘 다 정해지면 aspectRatio를 무시하므로 빈 자리는
-  // 4:3이 아니라 160으로 그려진다 — 문서에만 있는 규칙이라 여기서 고정해 둔다.
-  it('빈 상태에서 emptyStyle이 style보다 뒤에 온다', () => {
+  // 상세는 style에 aspectRatio 4/3, emptyStyle에 height 160을 준다. 둘을 겹치면
+  // Yoga가 aspectRatio를 버리지 않아 폭이 213으로 고정되고 빈 자리가 화면 절반만
+  // 찬다(실제로 그렇게 그려졌다). 그래서 갈아치운다 — 이 동작을 여기서 고정한다.
+  it('빈 상태에서 emptyStyle이 style을 갈아치운다', () => {
     const tree = render({
       place: { imageUrl: undefined, ...NEUTRAL_PLACE },
       style: { width: '100%', aspectRatio: 4 / 3 },
@@ -82,7 +82,8 @@ describe('PlaceImage', () => {
     });
     const flat = StyleSheet.flatten(tree.root.findByType(View).props.style);
     expect(flat.height).toBe(160);
-    expect(flat.aspectRatio).toBe(4 / 3);
+    expect(flat.aspectRatio).toBeUndefined();
+    expect(flat.width).toBe('100%');
   });
 
   it('카페 태그면 커피 아이콘을 그린다', () => {
