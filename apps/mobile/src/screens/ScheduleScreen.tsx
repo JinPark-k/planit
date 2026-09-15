@@ -307,7 +307,7 @@ function TimelineRow({
           )}
         </View>
 
-        <PlaceImage place={item.place} style={styles.thumb} />
+        <PlaceImage place={item.place} style={styles.thumb} size="thumb" />
       </Pressable>
     </View>
   );

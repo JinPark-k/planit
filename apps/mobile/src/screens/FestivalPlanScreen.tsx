@@ -70,7 +70,7 @@ export function FestivalPlanScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
-        <PlaceImage place={festival} style={styles.image} />
+        <PlaceImage place={festival} style={styles.image} size="hero" />
 
         <View style={styles.badgeRow}>
           <Chip label={regionLabel} variant="soft" size="sm" />

@@ -146,7 +146,7 @@ function FestivalCard({
       accessibilityLabel={`${festival.name}, ${regionLabel(festival)}, ${festivalPeriod(festival)}`}
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
-      <PlaceImage place={festival} style={styles.image} />
+      <PlaceImage place={festival} style={styles.image} size="hero" />
 
       <View style={styles.cardBody}>
         <View style={styles.badgeRow}>

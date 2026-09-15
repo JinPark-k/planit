@@ -220,7 +220,7 @@ function PlaceRow({
         picked && styles.rowPicked,
         pressed && styles.rowPressed,
       ]}>
-      <PlaceImage place={place} style={styles.thumb} />
+      <PlaceImage place={place} style={styles.thumb} size="thumb" />
 
       <View style={styles.rowText}>
         <Text style={styles.placeName} numberOfLines={1}>

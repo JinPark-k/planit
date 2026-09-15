@@ -30,7 +30,16 @@ export const typography = {
   microStrong: { fontSize: 12, fontWeight: '600' },
 } satisfies Record<string, TextStyle>;
 
-/** 아이콘 글리프(←) 크기. 글자 역할과 섞이면 안 돼서 따로 둔다. */
+/**
+ * 아이콘 글리프(←) 크기. 글자 역할과 섞이면 안 돼서 따로 둔다.
+ *
+ * lg·xl은 값을 절대 크기가 아니라 담기는 상자 대비 비율로 정했다:
+ * lg는 짧은 변의 약 45%(64px 썸네일 → 28px), xl은 높이의 약 30%
+ * (히어로 160~180px → 48px). 64px 정사각 빈 자리에 md(20px)를 그대로 쓰면
+ * 넓은 연보라 배경 안에 점 하나가 떠 있는 꼴이 된다.
+ */
 export const iconSize = {
   md: 20,
+  lg: 28,
+  xl: 48,
 } as const;

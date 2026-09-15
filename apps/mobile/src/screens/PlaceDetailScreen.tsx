@@ -59,12 +59,14 @@ export function PlaceDetailScreen({ place, visit, onBack }: Props) {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.hero}>
-          {/* 실측 900건 중 16%가 이미지가 없다. 빈 공간 대신 이유를 적어 준다. */}
+          {/* 운영 DB 30,801건 중 17.0%(5,244건)가 이미지가 없다(맛집만 보면
+              29.4%). 빈 공간 대신 이유를 적어 준다. */}
           <PlaceImage
             place={place}
             style={styles.heroImage}
             emptyStyle={styles.heroEmpty}
             emptyLabel="사진 없음"
+            size="hero"
           />
 
           <Pressable

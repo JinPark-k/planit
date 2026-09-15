@@ -12,5 +12,9 @@ module.exports = {
     // .mjs는 변환 시도조차 되지 않는다(transformIgnorePatterns로는 해결 안 됨).
     // 같은 패키지가 CJS 빌드도 제공하므로 테스트에서는 그쪽을 쓴다.
     '^lucide-react-native$': '<rootDir>/../../node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
+    // 개별 아이콘은 서브패스(lucide-react-native/icons/coffee)로 import하는데,
+    // 이쪽도 기본은 .mjs만 있어 위와 같은 이유로 CJS 빌드로 우회한다.
+    '^lucide-react-native/icons/(.*)$':
+      '<rootDir>/../../node_modules/lucide-react-native/dist/cjs/icons/$1.js',
   },
 };
