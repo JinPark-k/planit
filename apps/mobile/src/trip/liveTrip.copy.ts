@@ -76,6 +76,29 @@ export function travelCopy(params: { nextPlaceName: string; nextStartAt: number 
 }
 
 /**
+ * 일차가 끝나고 다음 일차 리드인까지의 야간 구간 문구.
+ *
+ * HIDE 프레임에도 문구가 필요한 이유는 플랫폼마다 HIDE의 해석이 다르기 때문이다.
+ * Android는 이 구간에 알림을 실제로 내리므로 이 문구를 쓰지 않지만, 앱 안 배너와
+ * iOS Live Activity는 표시를 유지한다(iOS는 Activity.request가 포그라운드에서만
+ * 성공해서, 한 번 내리면 다음 날 아침에 다시 띄울 방법이 없다).
+ *
+ * 실제로 밤 구간을 띄워 보니 "여행이 진행 중이에요" 같은 문구는 아무 정보가 없었다.
+ * 지금 알아야 할 건 "오늘은 끝났고 내일 몇 시에 어디부터인지"다.
+ */
+export function nightCopy(params: {
+  nextFirstPlaceName: string;
+  nextFirstStartAt: number;
+}): FrameCopy {
+  const { nextFirstPlaceName, nextFirstStartAt } = params;
+  return {
+    title: '오늘 일정이 끝났어요',
+    body: `내일 ${formatHHMM(nextFirstStartAt)} ${nextFirstPlaceName}부터`,
+    shortText: '오늘 일정 끝',
+  };
+}
+
+/**
  * 다음 일차 시작을 앞두고 미리 띄우는 리드인 카피.
  *
  * "내일"이라고 고정한 것은 연속된 일차(N일차 다음 N+1일차) 전환을 가정한 것이다.

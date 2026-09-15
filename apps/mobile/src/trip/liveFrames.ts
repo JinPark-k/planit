@@ -1,5 +1,5 @@
 import { LiveTripStop } from './liveTimeline';
-import { leadInCopy, stayCopy, travelCopy } from './liveTrip.copy';
+import { leadInCopy, nightCopy, stayCopy, travelCopy } from './liveTrip.copy';
 
 /**
  * 잠금화면(Android Live Updates / iOS Live Activities)에 표시할 내용을 미리 계산해
@@ -179,7 +179,16 @@ export function buildFrames(
     // 짧은 밤: 리드인 시각이 이 일차의 HIDE 시각보다 앞서거나 같으면 HIDE를 생략한다.
     // 그렇지 않으면 화면이 잠깐 꺼졌다가 곧바로 다시 켜지는 깜빡임이 생긴다.
     if (leadInAt > day.dayEnd) {
-      frames.push({ at: day.dayEnd, kind: 'HIDE' });
+      frames.push({
+        at: day.dayEnd,
+        kind: 'HIDE',
+        // HIDE에도 문구를 싣는다 — Android는 알림을 내리지만 앱 안 배너와 iOS는
+        // 이 구간에도 표시를 유지한다(liveTrip.copy.ts의 nightCopy 주석 참고).
+        ...nightCopy({
+          nextFirstPlaceName: nextDay.stops[0].placeName,
+          nextFirstStartAt: nextDay.dayStart,
+        }),
+      });
     }
 
     frames.push(

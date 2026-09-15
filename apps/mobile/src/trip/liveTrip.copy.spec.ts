@@ -1,4 +1,10 @@
-import { leadInCopy, stayCopy, travelCopy, truncateForChip } from './liveTrip.copy';
+import {
+  leadInCopy,
+  nightCopy,
+  stayCopy,
+  travelCopy,
+  truncateForChip,
+} from './liveTrip.copy';
 
 const t = (h: number, m: number) => new Date(2026, 2, 2, h, m).getTime();
 
@@ -59,6 +65,15 @@ describe('travelCopy', () => {
   it('shortText에도 말줄임이 적용된다', () => {
     const copy = travelCopy({ nextPlaceName: '아주아주아주아주긴장소명', nextStartAt: t(9, 0) });
     expect(copy.shortText).toBe('아주아주아주아주… 이동');
+  });
+});
+
+describe('nightCopy', () => {
+  it('오늘이 끝났음과 내일 첫 일정을 함께 알린다', () => {
+    const copy = nightCopy({ nextFirstPlaceName: '비자림', nextFirstStartAt: t(9, 0) });
+    expect(copy.title).toBe('오늘 일정이 끝났어요');
+    expect(copy.body).toBe('내일 09:00 비자림부터');
+    expect(copy.shortText).toBe('오늘 일정 끝');
   });
 });
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  상태바 알림 아이콘. 상태바에서는 알파 채널만 렌더링되는 단색 실루엣이라
+  런처 아이콘(컬러)을 그대로 쓰면 흰 덩어리로 뭉개진다. 이 앱의 상징인
+  종이비행기를 단순한 실루엣으로 그렸다(Material "send" 아이콘과 동일한
+  glyph). fillColor는 반드시 불투명 흰색이어야 시스템이 알파 마스크로 올바르게
+  틴트한다.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M2.01,21L23,12 2.01,3 2,10l15,2 -15,2z" />
+</vector>

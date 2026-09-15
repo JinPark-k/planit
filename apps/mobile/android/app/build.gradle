@@ -171,4 +171,14 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // 잠금화면 Live Update(liveupdate/TripNotifier.kt)가 NotificationCompat을 쓴다.
+    // 승격 알림을 "요청"하는 공개 API가 플랫폼 Notification.Builder에는 없고
+    // NotificationCompat에만 있어서다(setRequestPromotedOngoing, core 1.16+).
+    //
+    // react-android가 이미 전이로 끌어오지만 명시해 둔다 — 쓰는 걸 선언하지 않으면
+    // RN이 나중에 이 의존성을 떼는 순간 이유를 알기 어려운 컴파일 실패로 나타난다.
+    // 버전은 RN Gradle 플러그인이 strictly로 고정한 값과 같아야 한다. RN을 올린 뒤
+    // 여기서 버전 충돌이 나면, 그건 RN이 고정한 버전이 바뀌었다는 신호다.
+    implementation("androidx.core:core-ktx:1.17.0")
 }
