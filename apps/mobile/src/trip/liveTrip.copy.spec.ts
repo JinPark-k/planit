@@ -80,8 +80,8 @@ describe('nightCopy', () => {
 describe('leadInCopy', () => {
   it('다음 일차 시작 장소/시각을 안내한다', () => {
     const copy = leadInCopy({ firstPlaceName: '성산일출봉', firstStartAt: t(9, 0) });
-    expect(copy.title).toBe('내일 여행 시작');
+    expect(copy.title).toBe('곧 여행 시작');
     expect(copy.body).toBe('09:00 성산일출봉부터');
-    expect(copy.shortText).toBe('내일 여행');
+    expect(copy.shortText).toBe('곧 시작');
   });
 });

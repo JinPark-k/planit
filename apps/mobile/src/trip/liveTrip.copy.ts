@@ -101,15 +101,17 @@ export function nightCopy(params: {
 /**
  * 다음 일차 시작을 앞두고 미리 띄우는 리드인 카피.
  *
- * "내일"이라고 고정한 것은 연속된 일차(N일차 다음 N+1일차) 전환을 가정한 것이다.
- * 스케줄표에 일차가 건너뛰는 경우(예: 1일차 다음 3일차)는 실제로는 잘 없지만,
- * 생기더라도 "내일"이 문맥상 크게 어색하지 않아 지금은 분기를 두지 않는다.
+ * "내일"이라고 쓰지 않는다. 리드인은 그 일차 첫 일정의 한 시간 전에 뜨므로
+ * 화면에 보이는 시점은 **언제나 그 일정과 같은 날 아침**이다. 시뮬레이터로
+ * 07:33에 띄워 보니 "내일 여행 시작 / 09:00 추자도부터"가 나왔는데, 그 09:00은
+ * 오늘이다. 밤 사이 문구(nightCopy)의 "내일"은 전날 저녁에 보이므로 맞지만
+ * 여기는 아니다. 날짜를 말하지 않으면 두 경우 모두 옳다.
  */
 export function leadInCopy(params: { firstPlaceName: string; firstStartAt: number }): FrameCopy {
   const { firstPlaceName, firstStartAt } = params;
   return {
-    title: '내일 여행 시작',
+    title: '곧 여행 시작',
     body: `${formatHHMM(firstStartAt)} ${firstPlaceName}부터`,
-    shortText: '내일 여행',
+    shortText: '곧 시작',
   };
 }

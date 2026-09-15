@@ -78,7 +78,7 @@ describe('buildFrames - 일차 경계', () => {
     const hide = frames.find(f => f.kind === 'HIDE');
     expect(hide?.at).toBe(stops[0].endAt);
 
-    const leadIn = frames.find(f => f.title === '내일 여행 시작');
+    const leadIn = frames.find(f => f.title === '곧 여행 시작');
     expect(leadIn?.at).toBe(stops[1].startAt - 60 * 60000);
   });
 
@@ -129,7 +129,7 @@ describe('buildFrames - 일차 경계', () => {
     const ats = frames.map(f => f.at);
     expect(ats).toEqual([...ats].sort((a, b) => a - b));
 
-    const leadIn = frames.find(f => f.title === '내일 여행 시작');
+    const leadIn = frames.find(f => f.title === '곧 여행 시작');
     expect(leadIn?.at).toBe(stops[0].endAt);
     expect(frames.some(f => f.kind === 'HIDE')).toBe(false);
   });

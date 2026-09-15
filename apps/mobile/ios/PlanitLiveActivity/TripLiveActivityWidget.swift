@@ -63,6 +63,13 @@ private struct LockScreenView: View {
 
             ProgressSection(state: context.state)
 
+            // 잠금화면에도 버튼을 둔다. Dynamic Island 확장 뷰에만 두면 이 기능을
+            // 쓸 수 있는 사람이 Pro 모델 사용자 중 섬을 길게 눌러 본 사람으로
+            // 줄어든다. 게다가 시작 화면이 "다음 장소로 넘기려면 잠금화면 버튼을
+            // 누르거나 앱을 열면 됩니다"라고 약속하고 있어서, 여기 버튼이 없으면
+            // 앱이 거짓말을 하는 셈이 된다.
+            NextStopButton(state: context.state)
+
             if context.isStale {
                 StaleHint()
             }
@@ -87,20 +94,30 @@ private struct ExpandedBottomView: View {
 
             ProgressSection(state: context.state)
 
-            if context.state.nextFrameAt != nil {
-                // Button(intent:)는 iOS 17+ 전용(AppIntents의 LiveActivityIntent).
-                // 16.2~16.x에서는 버튼 없이 정보만 보여준다.
-                if #available(iOS 17.0, *) {
-                    Button(intent: NextStopIntent()) {
-                        Label("다음 장소", systemImage: "arrow.right.circle")
-                    }
-                    .font(.caption2)
-                }
-            }
+            NextStopButton(state: context.state)
 
             if context.isStale {
                 StaleHint()
             }
+        }
+    }
+}
+
+/// 잠금화면과 Dynamic Island 확장 뷰가 공유하는 "다음 장소" 버튼.
+///
+/// Button(intent:)는 iOS 17+ 전용(AppIntents의 LiveActivityIntent)이라 16.2~16.x
+/// 에서는 정보만 보여준다. iOS는 시각이 됐다고 잠금화면 표시가 저절로 넘어가지
+/// 않으므로(Activity.update는 앱이 살아 있어야 한다) 이 버튼이 앱을 열지 않고
+/// 넘길 수 있는 유일한 수단이다.
+private struct NextStopButton: View {
+    let state: TripActivityAttributes.ContentState
+
+    var body: some View {
+        if state.nextFrameAt != nil, #available(iOS 17.0, *) {
+            Button(intent: NextStopIntent()) {
+                Label("다음 장소", systemImage: "arrow.right.circle")
+            }
+            .font(.caption2)
         }
     }
 }
@@ -136,8 +153,15 @@ private struct ProgressSection: View {
 
     var body: some View {
         if let start = state.progressRangeStart, let end = state.progressRangeEnd, start <= end {
-            ProgressView(timerInterval: start...end, countsDown: false)
-                .tint(.accentColor)
+            // 기본 레이블(경과 시간)을 숨긴다. 막대 아래에 "0:00" 같은 숫자가
+            // 하나 더 붙는데, 그게 무엇의 경과인지 카드만 봐서는 알 수 없다 —
+            // 시간 정보는 제목/본문(“12:07까지 · 다음 12:13 춘미향”)이 이미 말한다.
+            ProgressView(timerInterval: start...end, countsDown: false) {
+                EmptyView()
+            } currentValueLabel: {
+                EmptyView()
+            }
+            .tint(.accentColor)
         } else if let segments = state.segments, !segments.isEmpty {
             SegmentedProgressBar(segments: segments)
                 .frame(height: 6)
