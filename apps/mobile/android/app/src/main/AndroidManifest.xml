@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
       android:name=".MainApplication"
@@ -23,5 +25,23 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <!--
+        알람 발화 / 부팅 완료 / 시간·시간대 변경 시 저장된 여행 플랜으로
+        render(now)를 다시 돌리고 다음 알람을 재예약한다(TripAlarmReceiver
+        참고). exported="false"이지만 BOOT_COMPLETED/TIME_SET/TIMEZONE_CHANGED는
+        시스템만 보낼 수 있는 protected broadcast라 정상 수신된다 — 알람 발화와
+        "여행 종료" 액션은 명시적 Intent로 직접 보내므로 별도 필터가 필요 없다.
+      -->
+      <receiver
+        android:name=".liveupdate.TripAlarmReceiver"
+        android:exported="false">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED" />
+            <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+            <action android:name="android.intent.action.TIME_SET" />
+            <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+        </intent-filter>
+      </receiver>
     </application>
 </manifest>
