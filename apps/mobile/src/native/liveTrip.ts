@@ -64,6 +64,15 @@ export async function openLiveTripSettings(): Promise<void> {
   }
 }
 
+/** 실기기 진단값(Android 전용). 실패하면 빈 객체 — 진단이 앱을 막으면 안 된다. */
+export async function getLiveTripDiagnostics(): Promise<Record<string, unknown>> {
+  try {
+    return (await nativeModule()?.getDiagnostics()) ?? {};
+  } catch {
+    return {};
+  }
+}
+
 export async function getLiveTripCapability(): Promise<LiveTripCapability> {
   try {
     return (await nativeModule()?.getCapability()) ?? UNAVAILABLE_CAPABILITY;

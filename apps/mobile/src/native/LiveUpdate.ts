@@ -35,3 +35,9 @@ export async function openPromotionSettings(): Promise<void> {
   if (!isSupported()) return;
   return LiveUpdateModule.openPromotionSettings();
 }
+
+/** 실기기 진단값. 케이블 없이 승격이 막힌 이유를 좁히려고 둔 것이다. */
+export async function getDiagnostics(): Promise<Record<string, unknown>> {
+  if (!isSupported()) return {};
+  return LiveUpdateModule.getDiagnostics();
+}

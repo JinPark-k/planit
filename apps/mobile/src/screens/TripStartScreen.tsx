@@ -32,6 +32,11 @@ interface Props {
   error?: string;
   /** 상태바 표시가 꺼져 있을 때 설정으로 보낸다. Android에서만 넘어온다. */
   onOpenSettings?: () => void;
+  /**
+   * 안내 카드를 길게 누르면 호출된다. 케이블 없이 실기기에서 승격이 막힌
+   * 이유를 확인하려고 둔 통로 — 평소에는 보이지 않는다.
+   */
+  onShowDiagnostics?: () => void;
 }
 
 /**
@@ -61,6 +66,7 @@ export function TripStartScreen({
   regionLabel,
   value,
   onOpenSettings,
+  onShowDiagnostics,
   onChange,
   onConfirm,
   onBack,
@@ -111,7 +117,11 @@ export function TripStartScreen({
           ))}
         </View>
 
-        <View style={styles.guidanceCard}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="표시 안내"
+          onLongPress={onShowDiagnostics}
+          style={styles.guidanceCard}>
           <Text style={styles.guidanceText}>{guidance}</Text>
           {onOpenSettings !== undefined &&
             capability.supported &&
@@ -128,7 +138,7 @@ export function TripStartScreen({
                 <Text style={styles.settingsLinkText}>설정 열기</Text>
               </Pressable>
             )}
-        </View>
+        </Pressable>
       </ScrollView>
 
       <View style={styles.footer}>

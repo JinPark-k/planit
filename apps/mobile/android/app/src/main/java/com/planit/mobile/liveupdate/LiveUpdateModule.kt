@@ -110,6 +110,26 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
         promise.reject("LIVE_UPDATE_SETTINGS_FAILED", "열 수 있는 설정 화면이 없습니다")
     }
 
+    /**
+     * 실기기 진단용. 케이블이 없어 logcat을 볼 수 없는 상황에서, 승격이 왜
+     * 막혔는지를 기기가 직접 답하게 한다. 화면에서 안내 카드를 길게 눌러 본다.
+     */
+    @ReactMethod
+    fun getDiagnostics(promise: Promise) {
+        val context = reactApplicationContext
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val result = Arguments.createMap()
+        result.putInt("sdkInt", Build.VERSION.SDK_INT)
+        result.putBoolean("notificationsEnabled", manager.areNotificationsEnabled())
+        result.putInt("channelImportance", TripNotifier.channelImportance(context))
+        if (Build.VERSION.SDK_INT >= 36) {
+            result.putBoolean("canPostPromoted", manager.canPostPromotedNotifications())
+        }
+        TripNotifier.lastPromotable?.let { result.putBoolean("promotable", it) }
+        TripNotifier.postedPromoted(context)?.let { result.putBoolean("postedPromoted", it) }
+        promise.resolve(result)
+    }
+
     companion object {
         /**
          * 렌더 + 알람 재예약. TripAlarmReceiver(알람 발화·부팅·시간변경)와

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -7,6 +7,7 @@ import {
 } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLiveTrip } from '../hooks/useLiveTrip';
+import { getLiveTripDiagnostics } from '../native/liveTrip';
 import { PlaceDetailScreen } from '../screens/PlaceDetailScreen';
 import { SavedTripsScreen } from '../screens/SavedTripsScreen';
 import { ScheduleScreen } from '../screens/ScheduleScreen';
@@ -125,6 +126,17 @@ function TripStartRoute({ route, navigation }: Props<'TripStart'>) {
       starting={starting}
       error={error}
       onOpenSettings={openSettings}
+      onShowDiagnostics={() => {
+        // 케이블 없이 실기기를 봐야 해서 둔 통로. 승격이 막힌 이유를 기기가
+        // 직접 말하게 한다 — 우리가 추측으로 고치는 것보다 한 번에 끝난다.
+        getLiveTripDiagnostics().then(info => {
+          const lines = Object.entries(info).map(([k, v]) => `${k}: ${String(v)}`);
+          Alert.alert(
+            '표시 진단',
+            lines.length > 0 ? lines.join('\n') : '진단 정보를 읽지 못했어요.',
+          );
+        });
+      }}
     />
   );
 }
