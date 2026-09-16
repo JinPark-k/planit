@@ -22,7 +22,7 @@ import kotlin.math.roundToInt
 /** 여행 진행 상황 알림을 만들고, 갱신하고, 지운다. */
 object TripNotifier {
     const val CHANNEL_ID = "planit.trip.live"
-    const val NOTIFICATION_ID = 4200 // 이 앱 안에서 이 기능 전용으로 예약해 둔 ID.
+    private const val NOTIFICATION_ID = 4200 // 이 앱 안에서 이 기능 전용으로 예약해 둔 ID.
     private const val REQUEST_CODE_CONTENT = 1
     private const val REQUEST_CODE_END_ACTION = 2
     private const val TAG = "TripNotifier"
@@ -66,13 +66,8 @@ object TripNotifier {
         channelCreated = true
     }
 
-    /** 알림 객체만 만든다. 포그라운드 서비스가 startForeground에 넘겨야 해서 분리했다. */
-    fun build(
-        context: Context,
-        plan: LiveTripPlan,
-        frame: LiveTripFrame,
-        now: Long,
-    ): android.app.Notification {
+    fun post(context: Context, plan: LiveTripPlan, frame: LiveTripFrame, now: Long) {
+        if (Build.VERSION.SDK_INT < 26) return
         ensureChannel(context)
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -99,12 +94,7 @@ object TripNotifier {
 
         applyProgress(context, builder, frame, now)
 
-        return builder.build()
-    }
-
-    fun post(context: Context, plan: LiveTripPlan, frame: LiveTripFrame, now: Long) {
-        if (Build.VERSION.SDK_INT < 26) return
-        val notification = build(context, plan, frame, now)
+        val notification = builder.build()
         context.getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification)
 
         if (Build.VERSION.SDK_INT >= 36) {
