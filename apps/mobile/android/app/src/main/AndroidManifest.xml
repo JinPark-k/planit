@@ -8,6 +8,14 @@
     -->
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!--
+      여행이 도는 동안 포그라운드 서비스로 알림을 유지한다. 갤럭시가 앱별
+      "실시간 정보" 자격을 판단하는 기준으로 보이고, 플랫폼 가이드도 오래 도는
+      live 경험은 타입을 선언한 FGS 위에서 돌라고 말한다. 카메라·위치·미디어 등
+      기존 타입 중 맞는 게 없어 specialUse를 쓴다.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
       android:name=".MainApplication"
@@ -38,6 +46,15 @@
         시스템만 보낼 수 있는 protected broadcast라 정상 수신된다 — 알람 발화와
         "여행 종료" 액션은 명시적 Intent로 직접 보내므로 별도 필터가 필요 없다.
       -->
+      <service
+        android:name=".liveupdate.LiveTripService"
+        android:exported="false"
+        android:foregroundServiceType="specialUse">
+        <property
+          android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+          android:value="여행 일정 진행 상황을 잠금화면·상태바에 실시간으로 표시" />
+      </service>
+
       <receiver
         android:name=".liveupdate.TripAlarmReceiver"
         android:exported="false">

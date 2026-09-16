@@ -33,6 +33,9 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
         try {
             val parsedPlan = plan.toLiveTripPlan()
             TripSessionStore.save(reactApplicationContext, parsedPlan)
+            // 서비스 시작은 여기(앱 포그라운드)에서만 한다 — Android 12+는
+            // 백그라운드에서의 포그라운드 서비스 시작을 막는다.
+            LiveTripService.start(reactApplicationContext)
             render(reactApplicationContext, System.currentTimeMillis())
             promise.resolve(null)
         } catch (e: Exception) {
@@ -151,12 +154,14 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
             val current = frames.lastOrNull { it.at <= now }
 
             when (current?.kind) {
-                null, "HIDE" -> TripNotifier.cancel(context)
-                "SHOW" -> TripNotifier.post(context, plan, current, now)
+                // 아직 시작 전이면 띄울 게 없다.
+                null -> TripNotifier.cancel(context)
+                // HIDE(야간)에도 알림을 유지한다. 포그라운드 서비스가 도는 동안은
+                // 알림을 내릴 수 없고(내리면 서비스가 죽는다), HIDE 프레임에도
+                // 야간 문구가 실려 있어 그대로 보여주면 된다 — iOS와 같은 해석이다.
+                "HIDE", "SHOW" -> TripNotifier.post(context, plan, current, now)
                 "END" -> {
-                    TripNotifier.cancel(context)
-                    TripSessionStore.clear(context)
-                    TripAlarms.cancel(context)
+                    endTrip(context)
                     return
                 }
             }
@@ -172,6 +177,8 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
 
         /** "여행 종료" 액션, JS의 end() 양쪽에서 호출하는 즉시 종료 경로. */
         fun endTrip(context: Context) {
+            // 서비스를 먼저 멈춰야 알림이 남지 않는다(FGS는 알림을 붙잡고 있다).
+            LiveTripService.stop(context)
             TripNotifier.cancel(context)
             TripSessionStore.clear(context)
             TripAlarms.cancel(context)
