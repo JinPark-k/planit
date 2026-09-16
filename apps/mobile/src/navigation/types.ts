@@ -63,6 +63,12 @@ export type SavedTripsStackParamList = {
   PlaceDetail: { place: Place; visit?: VisitContext };
 };
 
+/**
+ * 하단 탭들. 탭을 오갈 때 각자의 스택 상태가 유지된다는 기존 규칙
+ * (SearchStackParamList 주석 참고)은 그대로 두되, "이미 그 탭에 있을 때 한
+ * 번 더 누르면 첫 화면으로 리셋"이라는 예외를 추가했다. 구현은 이 파일이
+ * 아니라 RootTabs.tsx의 screenListeners와 tabReset.ts에 있다.
+ */
 export type RootTabParamList = {
   Home: undefined;
   Search: undefined;
