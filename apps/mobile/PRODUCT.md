@@ -24,7 +24,7 @@ Unlike inspiration/list-style travel apps (OTA recommendation feeds) or LLM-chat
 - Trip data is sourced from TourAPI (Korean government tourism open data), collected via a scheduled batch pipeline (GitHub Actions cron), not fetched live.
 - Initial region coverage: Seoul, Busan, Jeju — architecture is designed to add more regions without rework.
 - In-app map display uses the Kakao Map JS SDK (markers + straight-line connections between stops). Actual turn-by-turn navigation is delegated to the Kakao Map / Google Maps apps via deep links, not built in-app.
-- While traveling, users can see the current/next schedule item on the lock screen (Android Live Updates / iOS Live Activities) without opening the app.
+- While traveling, users can see the current/next schedule item on the lock screen (Android Live Updates / iOS Live Activities) without opening the app. On Android this advances on its own at the scheduled times; on iOS it updates when the app returns to the foreground or the user taps a Lock Screen button, since ActivityKit only allows background updates via push. Samsung's Now Bar is not covered: One UI 8 keeps third-party Live Updates behind a developer option, so ordinary users do not see it.
 
 ## Capabilities and Constraints
 
