@@ -104,7 +104,7 @@ function SavedScheduleRoute({ route, navigation }: Props<'SavedSchedule'>) {
 
 function TripStartRoute({ route, navigation }: Props<'TripStart'>) {
   const { trip } = route.params;
-  const { capability, starting, error, startTrip } = useLiveTrip();
+  const { capability, starting, error, startTrip, openSettings } = useLiveTrip();
   const [value, setValue] = useState(() => toDateKey(new Date()));
 
   const handleConfirm = () => {
@@ -124,6 +124,7 @@ function TripStartRoute({ route, navigation }: Props<'TripStart'>) {
       capability={capability}
       starting={starting}
       error={error}
+      onOpenSettings={openSettings}
     />
   );
 }

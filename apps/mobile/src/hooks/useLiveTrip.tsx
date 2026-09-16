@@ -9,6 +9,7 @@ import { AppState, AppStateStatus, PermissionsAndroid, Platform } from 'react-na
 import {
   endLiveTrip,
   getLiveTripCapability,
+  openLiveTripSettings,
   refreshLiveTrip,
   startLiveTrip,
 } from '../native/liveTrip';
@@ -50,6 +51,8 @@ interface LiveTripValue {
   error?: string;
   startTrip(trip: SavedTrip, startDateKey: string): Promise<boolean>;
   endTrip(): Promise<void>;
+  /** 상태바·NowBar 표시 설정으로 보낸다. 돌아오면 capability를 다시 읽는다. */
+  openSettings(): Promise<void>;
 }
 
 const LiveTripContext = createContext<LiveTripValue | null>(null);
@@ -266,9 +269,23 @@ export function LiveTripProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const openSettings = useCallback(async (): Promise<void> => {
+    await openLiveTripSettings();
+    // 설정에서 켜고 돌아오면 AppState 'active'가 capability를 다시 읽는다.
+  }, []);
+
   return (
     <LiveTripContext.Provider
-      value={{ activeTrip, frame, capability, starting, error, startTrip, endTrip }}>
+      value={{
+        activeTrip,
+        frame,
+        capability,
+        starting,
+        error,
+        startTrip,
+        endTrip,
+        openSettings,
+      }}>
       {children}
     </LiveTripContext.Provider>
   );

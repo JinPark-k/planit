@@ -2,7 +2,9 @@ package com.planit.mobile.liveupdate
 
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -60,6 +62,33 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun getCapability(promise: Promise) {
         promise.resolve(computeCapability(reactApplicationContext))
+    }
+
+    /**
+     * 승격 알림 설정 화면을 연다. 사용자가 앱별로 Live Updates를 꺼 두면
+     * 잠금화면 알림은 떠도 상태바/NowBar로는 올라가지 않는데, 앱 안에서는
+     * 그 사실만 알릴 수 있을 뿐 켜 줄 수는 없다 — 설정으로 데려다주는 게
+     * 우리가 할 수 있는 전부다.
+     */
+    @ReactMethod
+    fun openPromotionSettings(promise: Promise) {
+        try {
+            // 상수 이름은 ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS다. 문서/블로그에
+            // 돌아다니는 ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS는 실제 SDK에 없다
+            // (android-36 android.jar를 javap으로 확인).
+            val intent = if (Build.VERSION.SDK_INT >= 36) {
+                Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS)
+            } else {
+                // API 36 미만에는 승격 설정 자체가 없다. 일반 알림 설정으로 보낸다.
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            }
+            intent.putExtra(Settings.EXTRA_APP_PACKAGE, reactApplicationContext.packageName)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            reactApplicationContext.startActivity(intent)
+            promise.resolve(null)
+        } catch (e: Exception) {
+            promise.reject("LIVE_UPDATE_SETTINGS_FAILED", e)
+        }
     }
 
     companion object {

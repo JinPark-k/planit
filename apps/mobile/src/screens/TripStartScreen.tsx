@@ -30,6 +30,8 @@ interface Props {
   capability: LiveTripCapability;
   starting?: boolean;
   error?: string;
+  /** 상태바 표시가 꺼져 있을 때 설정으로 보낸다. Android에서만 넘어온다. */
+  onOpenSettings?: () => void;
 }
 
 /**
@@ -44,7 +46,12 @@ function guidanceText(capability: LiveTripCapability): string {
     return '알림을 허용하면 잠금화면에도 표시할 수 있어요.';
   }
   if (Platform.OS === 'android') {
-    return '시간이 되면 잠금화면 표시가 자동으로 다음 장소로 넘어가요.';
+    if (!capability.statusBar) {
+      // 승격은 요청일 뿐 보장이 아니다. 기기가 "지금은 안 된다"고 답한 상태를
+      // 감추면, 상태바에 안 뜨는 이유를 사용자도 우리도 알 수 없다.
+      return '잠금화면에는 표시돼요. 상태바에도 띄우려면 실시간 업데이트를 켜 주세요.';
+    }
+    return '시간이 되면 잠금화면과 상태바 표시가 자동으로 다음 장소로 넘어가요.';
   }
   return '잠금화면에 남은 시간이 실시간으로 보여요. 다음 장소로 넘기려면 잠금화면 버튼을 누르거나 앱을 열면 됩니다.';
 }
@@ -53,6 +60,7 @@ export function TripStartScreen({
   days,
   regionLabel,
   value,
+  onOpenSettings,
   onChange,
   onConfirm,
   onBack,
@@ -105,6 +113,21 @@ export function TripStartScreen({
 
         <View style={styles.guidanceCard}>
           <Text style={styles.guidanceText}>{guidance}</Text>
+          {onOpenSettings !== undefined &&
+            capability.supported &&
+            capability.allowed &&
+            !capability.statusBar && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="실시간 업데이트 설정 열기"
+                onPress={onOpenSettings}
+                style={({ pressed }) => [
+                  styles.settingsLink,
+                  pressed && styles.settingsLinkPressed,
+                ]}>
+                <Text style={styles.settingsLinkText}>설정 열기</Text>
+              </Pressable>
+            )}
         </View>
       </ScrollView>
 
@@ -193,6 +216,21 @@ const styles = StyleSheet.create({
   previewDate: {
     ...typography.small,
     color: colors.text,
+  },
+  settingsLink: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+  },
+  settingsLinkPressed: {
+    backgroundColor: colors.accentLight,
+  },
+  settingsLinkText: {
+    ...typography.smallStrong,
+    color: colors.accent,
   },
   guidanceCard: {
     marginTop: spacing.lg,

@@ -89,9 +89,34 @@ describe('TripStartScreen 안내 문구', () => {
       const tree = renderScreen({ capability: FULL_CAPABILITY });
       expect(
         tree.root.findByProps({
-          children: '시간이 되면 잠금화면 표시가 자동으로 다음 장소로 넘어가요.',
+          children: '시간이 되면 잠금화면과 상태바 표시가 자동으로 다음 장소로 넘어가요.',
         }),
       ).toBeDefined();
+    } finally {
+      require('react-native').Platform.OS = originalOS;
+    }
+  });
+
+  it('안드로이드: 상태바 표시가 꺼져 있으면 알리고 설정으로 보낸다', () => {
+    const originalOS = require('react-native').Platform.OS;
+    require('react-native').Platform.OS = 'android';
+    try {
+      const onOpenSettings = jest.fn();
+      const tree = renderScreen({
+        capability: { supported: true, allowed: true, statusBar: false },
+        onOpenSettings,
+      });
+      expect(
+        tree.root.findByProps({
+          children:
+            '잠금화면에는 표시돼요. 상태바에도 띄우려면 실시간 업데이트를 켜 주세요.',
+        }),
+      ).toBeDefined();
+
+      ReactTestRenderer.act(() => {
+        pressableByLabel(tree, '실시간 업데이트 설정 열기').props.onPress();
+      });
+      expect(onOpenSettings).toHaveBeenCalled();
     } finally {
       require('react-native').Platform.OS = originalOS;
     }

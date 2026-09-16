@@ -69,6 +69,13 @@ object TripNotifier {
             .setOngoing(true) // setOngoing(true)도 승격 필수 조건.
             .setOnlyAlertOnce(true) // 갱신마다 다시 알리지 않는다 — 조용한 채널 정책과 짝.
             .setSilent(true)
+            // AOSP 문서에는 카테고리 요구가 없다(에뮬레이터에서는 이것 없이도
+            // 승격됐다). 하지만 갤럭시 NowBar는 활동 종류별로 카드를 분류하는
+            // UI라, 카테고리가 없으면 어디에 놓을지 몰라 후보에서 빠지는 것으로
+            // 보인다 — 실기기에서 알림은 떴는데 NowBar 토글 목록에 앱 자체가
+            // 나타나지 않았다. 여행 일정 진행은 "오래 도는 작업의 진행"이므로
+            // PROGRESS가 가장 정직하다.
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setContentIntent(contentIntent(context))
             .addAction(endAction(context))
 

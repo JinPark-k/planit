@@ -29,3 +29,9 @@ export async function getCapability(): Promise<LiveTripCapability> {
   }
   return LiveUpdateModule.getCapability();
 }
+
+/** 승격(상태바·NowBar) 설정 화면을 연다. Android 전용. */
+export async function openPromotionSettings(): Promise<void> {
+  if (!isSupported()) return;
+  return LiveUpdateModule.openPromotionSettings();
+}

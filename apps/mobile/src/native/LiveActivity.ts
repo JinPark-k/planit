@@ -29,3 +29,8 @@ export async function getCapability(): Promise<LiveTripCapability> {
   }
   return LiveActivityModule.getCapability();
 }
+
+/** iOS에는 "승격" 개념이 없다(Live Activity 자체가 잠금화면 표면이다). no-op. */
+export async function openPromotionSettings(): Promise<void> {
+  return;
+}
