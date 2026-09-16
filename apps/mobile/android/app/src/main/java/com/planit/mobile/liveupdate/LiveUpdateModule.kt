@@ -120,6 +120,9 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
         val manager = context.getSystemService(NotificationManager::class.java)
         val result = Arguments.createMap()
         result.putInt("sdkInt", Build.VERSION.SDK_INT)
+        // Live Updates는 안정판 Android 16에서 기본 비활성이고 QPR1부터 켜진다.
+        // sdkInt(36)만으로는 둘을 구분할 수 없어 빌드 문자열을 함께 보여준다.
+        result.putString("build", "${Build.MANUFACTURER} ${Build.MODEL} / ${Build.DISPLAY}")
         result.putBoolean("notificationsEnabled", manager.areNotificationsEnabled())
         result.putInt("channelImportance", TripNotifier.channelImportance(context))
         if (Build.VERSION.SDK_INT >= 36) {
