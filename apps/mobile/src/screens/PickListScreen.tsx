@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -51,22 +52,30 @@ export function PickListScreen({
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
 
 
-  const load = useCallback(() => {
-    if (region === null) return;
-    setLoading(true);
-    setListError(null);
-    fetchRecommendations(region, keywords, category)
-      .then(paged => setPlaces(paged.items))
-      .catch((cause: unknown) => {
-        setListError(
-          cause instanceof Error ? cause.message : '목록을 불러오지 못했습니다',
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [region, keywords, category]);
+  const load = useCallback(
+    (isRefresh = false) => {
+      if (region === null) return;
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+      setListError(null);
+      fetchRecommendations(region, keywords, category)
+        .then(paged => setPlaces(paged.items))
+        .catch((cause: unknown) => {
+          setListError(
+            cause instanceof Error ? cause.message : '목록을 불러오지 못했습니다',
+          );
+        })
+        .finally(() => {
+          setLoading(false);
+          setRefreshing(false);
+        });
+    },
+    [region, keywords, category],
+  );
 
   // 지역·키워드·카테고리가 바뀌면 다시 조회한다. 조회 버튼을 따로 두지 않는
   // 이유는 고르는 화면이라 결과가 바로 보이는 편이 낫기 때문이다.
@@ -108,6 +117,18 @@ export function PickListScreen({
         keyExtractor={place => place.id}
         contentContainerStyle={styles.list}
         keyboardShouldPersistTaps="handled"
+        // 새 데이터를 보려는 게 아니라 실패 복구용이다 — 백엔드에 TTL 10분
+        // 캐시가 있고(places.service.ts) 원 데이터도 하루 한 번 배치로만
+        // 바뀌어서 당겨도 대개 같은 결과가 온다. 여기 넣는 진짜 이유는 지금
+        // 조회 실패 시 에러 문구 한 줄만 뜨고 재시도 통로가 아예 없기
+        // 때문이다.
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => load(true)}
+            tintColor={colors.primaryDeep}
+          />
+        }
         ListHeaderComponent={
           <View>
             <View
