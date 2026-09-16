@@ -58,11 +58,60 @@ LLM 미사용, 규칙 기반으로 구현 (비용 예측 가능성 때문에 확
     설치한 사용자까지 폴백으로 보내게 된다. 열어 보고 실패하면 웹으로 가는
     방식이 네이티브 설정 없이 양쪽에서 옳게 동작한다.
 
-# 앱 전용 요구사항 (네이티브 모듈 필요)
+# 앱 전용 요구사항 (네이티브 모듈 필요) — 구현 완료
 
-- 안드로이드: Live Updates (Android 16+ 표준 API, `Notification.ProgressStyle`) — 갤럭시 NowBar는 이 표준 API를 감지해 자동으로 확장 표시됨. 용도: 현재 일정 / 다음 일정을 잠금화면에 실시간 표시
-- iOS: Live Activities (ActivityKit) — 동일 용도
-- React Native 자체 지원 기능이 아니므로 각각 Kotlin / Swift 네이티브 모듈로 별도 구현
+현재 일정 / 다음 일정을 잠금화면에 실시간 표시한다. React Native 자체 지원
+기능이 아니라 Kotlin / Swift 네이티브 모듈로 각각 구현돼 있다.
+
+**여행 도메인 로직은 네이티브에 두지 않는다.** TS가 일정을 "이 시각부터는 이렇게
+보여줘"라는 절대시각 프레임 목록으로 미리 평탄화해서 넘기고(`src/trip/liveFrames.ts`),
+네이티브는 두 줄만 한다 — 렌더는 `frames.last { at <= now }`, 다음 예약은
+`frames.first { at > now }`. CI가 Kotlin/Swift를 컴파일조차 하지 않기 때문에
+(`ci.yml`의 mobile job은 lint/typecheck/jest뿐) 네이티브에 둔 로직은 PR에서
+검증할 방법이 없다.
+
+- **안드로이드**: Live Updates (Android 16+ `Notification.ProgressStyle`).
+  알림 + `AlarmManager`로 돌고 포그라운드 서비스를 쓰지 않는다. 시각이 되면
+  저절로 다음 장소로 넘어가고, 밤에는 알림을 내렸다가 다음 일차 1시간 전에
+  다시 띄운다.
+- **iOS**: Live Activities (ActivityKit). `Activity.request`가 포그라운드에서만
+  성공하고 8시간 뒤 시스템이 강제 종료하므로, 밤에도 종료하지 않고 조용한
+  야간 카드를 유지한다. 같은 프레임 목록을 두 플랫폼이 다르게 해석하는 유일한
+  지점이다. 갱신은 앱 포그라운드 복귀 시 재조정 + 잠금화면 "다음 장소" 버튼.
+  시각에 맞춘 자동 진행은 APNs 푸시가 있어야 하고 아직 없다.
+
+## 이 표시가 실제로 보이는 조건 (실기기·에뮬레이터로 확인한 사실)
+
+**표준 API를 쓴다고 상태바/NowBar에 자동으로 뜨지 않는다.** 예전에 이 문서가
+"갤럭시 NowBar는 이 표준 API를 감지해 자동으로 확장 표시됨"이라고 적어 두었는데
+사실이 아니었고, 그 문장 하나 때문에 원인을 우리 알림에서 찾느라 한참 돌았다.
+
+확인한 결과 **우리 구현은 세 환경에서 모두 동일하게 옳고**, 차이는 전부 OS 쪽에 있다.
+
+| 환경 | 결과 | 이유 |
+|---|---|---|
+| AOSP Android 16 **QPR1** (에뮬레이터 `android-36.1`) | 상태바 칩 + 잠금화면 정상 | 기능 활성 |
+| **안정판** Android 16 (Unihertz Titan 2 Elite) | 알림창에만 표시 | **OS가 Live Updates를 기본 비활성**으로 둔다 |
+| One UI 8 / Android 16 (갤럭시) | 개발자 옵션을 켜야 NowBar | 삼성이 서드파티를 개발자 옵션 **"실시간 알림 테스트"** 뒤에 가둬 둠 |
+
+즉 **일반 사용자에게는 대체로 보이지 않는다.** Android 쪽이 보장하는 범위는
+잠금화면 알림 + 자동 진행까지로 본다. 상태바 칩/NowBar는 OS가 열어 주면 따라오는
+표면이다(One UI 9에서 여행 앱 범주 추가 예정이라 그때 다시 볼 것).
+
+기기가 우리를 어떻게 보는지는 이렇게 확인했다.
+
+- `hasPromotableCharacteristics()`는 어디서나 true — 알림 자체는 문제가 없다.
+- 갤럭시에서는 `canPostPromotedNotifications()`가 false였고 앱별 "실시간 정보"
+  설정 행 자체가 없었다(같은 기기의 배달의민족에는 있었다).
+
+원인을 찾느라 시도했다가 되돌린 것들 — 다시 걷지 않도록 적어 둔다.
+`setCategory`, 포그라운드 서비스(`specialUse`), 삼성 전용 후크
+(`com.samsung.android.support.ongoing_activity` meta-data와
+`android.ongoingActivityNoti.style` extra). **셋 다 원인이 아니었다.**
+
+기기에서 상태를 확인하려면 **여행 시작 화면의 안내 카드를 길게 누른다** —
+sdk/빌드/알림허용/채널중요도/승격가능/promotable/실제승격 여부를 보여준다.
+케이블 없이 실기기를 진단하려고 둔 통로다.
 
 # Git 워크플로
 

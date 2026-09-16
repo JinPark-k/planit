@@ -29,3 +29,15 @@ export async function getCapability(): Promise<LiveTripCapability> {
   }
   return LiveUpdateModule.getCapability();
 }
+
+/** 승격(상태바·NowBar) 설정 화면을 연다. Android 전용. */
+export async function openPromotionSettings(): Promise<void> {
+  if (!isSupported()) return;
+  return LiveUpdateModule.openPromotionSettings();
+}
+
+/** 실기기 진단값. 케이블 없이 승격이 막힌 이유를 좁히려고 둔 것이다. */
+export async function getDiagnostics(): Promise<Record<string, unknown>> {
+  if (!isSupported()) return {};
+  return LiveUpdateModule.getDiagnostics();
+}

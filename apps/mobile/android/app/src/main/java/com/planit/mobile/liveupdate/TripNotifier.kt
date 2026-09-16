@@ -14,6 +14,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.graphics.drawable.IconCompat
 import com.planit.mobile.MainActivity
 import com.planit.mobile.R
 import kotlin.math.roundToInt
@@ -33,6 +34,13 @@ object TripNotifier {
     private const val UNFILLED_SEGMENT_COLOR = 0xFFD9DDE3.toInt()
 
     private var channelCreated = false
+
+    /**
+     * 마지막으로 만든 알림이 승격 가능한 모양이었는지. 케이블 없이 실기기를
+     * 진단해야 해서(logcat을 볼 수 없다) 값을 들고 있다가 화면으로 꺼낸다.
+     */
+    var lastPromotable: Boolean? = null
+        private set
 
     /**
      * 알림 채널을 지연 생성한다. Application.onCreate에서 만들지 않는 이유:
@@ -67,12 +75,24 @@ object TripNotifier {
             .setContentTitle(frame.title ?: plan.title) // setContentTitle은 승격 필수 조건.
             .setContentText(frame.body)
             .setOngoing(true) // setOngoing(true)도 승격 필수 조건.
-            .setOnlyAlertOnce(true) // 갱신마다 다시 알리지 않는다 — 조용한 채널 정책과 짝.
-            .setSilent(true)
+            // setOnlyAlertOnce만으로 "갱신할 때 다시 알리지 않는다"가 충족된다.
+            // setSilent(true)는 쓰지 않는다 — 조용함은 채널에서 소리/진동을 끄는
+            // 것으로 이미 확보돼 있는데, setSilent는 알림을 "조용한 알림" 등급으로
+            // 내려 버린다. NowBar는 주목해야 할 진행 중 활동을 올리는 자리라
+            // 그렇게 내려간 알림을 후보에서 뺄 여지가 있다(갤럭시 실기기에서
+            // canPostPromotedNotifications()가 false였다).
+            .setOnlyAlertOnce(true)
+            // AOSP 문서에는 카테고리 요구가 없다(에뮬레이터에서는 이것 없이도
+            // 승격됐다). 하지만 갤럭시 NowBar는 활동 종류별로 카드를 분류하는
+            // UI라, 카테고리가 없으면 어디에 놓을지 몰라 후보에서 빠지는 것으로
+            // 보인다 — 실기기에서 알림은 떴는데 NowBar 토글 목록에 앱 자체가
+            // 나타나지 않았다. 여행 일정 진행은 "오래 도는 작업의 진행"이므로
+            // PROGRESS가 가장 정직하다.
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setContentIntent(contentIntent(context))
             .addAction(endAction(context))
 
-        applyProgress(builder, frame, now)
+        applyProgress(context, builder, frame, now)
 
         val notification = builder.build()
         context.getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification)
@@ -80,8 +100,25 @@ object TripNotifier {
         if (Build.VERSION.SDK_INT >= 36) {
             // 승격(상태바 칩/NowBar) 성공 여부를 기기에서 바로 확인할 방법이
             // 마땅치 않다 — 이 로그가 원인 추적의 유일한 단서.
-            Log.d(TAG, "hasPromotableCharacteristics=${notification.hasPromotableCharacteristics()}")
+            lastPromotable = notification.hasPromotableCharacteristics()
+            Log.d(TAG, "hasPromotableCharacteristics=$lastPromotable")
         }
+    }
+
+    /** 지금 게시돼 있는 알림이 실제로 승격됐는지. 없으면 null. */
+    fun postedPromoted(context: Context): Boolean? {
+        if (Build.VERSION.SDK_INT < 36) return null
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val posted = manager.activeNotifications.firstOrNull { it.id == NOTIFICATION_ID }
+            ?: return null
+        return (posted.notification.flags and android.app.Notification.FLAG_PROMOTED_ONGOING) != 0
+    }
+
+    /** 채널 중요도. 승격 실격 조건(IMPORTANCE_MIN)에 걸렸는지 확인용. */
+    fun channelImportance(context: Context): Int {
+        if (Build.VERSION.SDK_INT < 26) return -1
+        val manager = context.getSystemService(NotificationManager::class.java)
+        return manager.getNotificationChannel(CHANNEL_ID)?.importance ?: -1
     }
 
     fun cancel(context: Context) {
@@ -102,6 +139,7 @@ object TripNotifier {
      * 아니다 — 앱이 직접 세워도 승격되지 않는다.
      */
     private fun applyProgress(
+        context: Context,
         builder: NotificationCompat.Builder,
         frame: LiveTripFrame,
         now: Long,
@@ -124,6 +162,11 @@ object TripNotifier {
         // 그대로 넘기지 않고 실제로 쌓은 세그먼트 합으로 clamp한다. 분 단위를
         // 반올림하면서 둘이 1~2 어긋날 수 있는데, 그때 범위 밖 값이 들어간다.
         style.setProgress(progress.coerceIn(0, totalLength))
+        // 진행 막대 위를 따라가는 표식. NowBar/상태바에서 카드가 "살아 있는 활동"
+        // 으로 보이게 하는 요소라, 실제로 NowBar에 뜨는 앱들이 공통으로 쓴다.
+        style.setProgressTrackerIcon(
+            IconCompat.createWithResource(context, R.drawable.ic_trip_notification),
+        )
 
         builder.setStyle(style)
         // 상태바 칩에 들어갈 짧은 문구. 자리가 좁아 TS가 미리 줄여 보낸다.

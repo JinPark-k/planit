@@ -2,7 +2,10 @@ package com.planit.mobile.liveupdate
 
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -60,6 +63,74 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun getCapability(promise: Promise) {
         promise.resolve(computeCapability(reactApplicationContext))
+    }
+
+    /**
+     * 승격 알림 설정 화면을 연다. 사용자가 앱별로 Live Updates를 꺼 두면
+     * 잠금화면 알림은 떠도 상태바/NowBar로는 올라가지 않는데, 앱 안에서는
+     * 그 사실만 알릴 수 있을 뿐 켜 줄 수는 없다 — 설정으로 데려다주는 게
+     * 우리가 할 수 있는 전부다.
+     */
+    @ReactMethod
+    fun openPromotionSettings(promise: Promise) {
+        // 화면을 순서대로 시도한다. 승격 전용 설정은 AOSP에만 있고 OEM 설정 앱이
+        // 처리하지 않을 수 있다 — 갤럭시에서 버튼을 눌러도 아무 반응이 없었던 것이
+        // 그 경우다(startActivity가 ActivityNotFoundException으로 떨어졌다).
+        // 그럴 때 아무 데도 못 가는 것보다 앱 알림 설정이라도 열어 주는 게 낫다.
+        val candidates = buildList {
+            if (Build.VERSION.SDK_INT >= 36) {
+                // 상수 이름은 ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS다.
+                // 문서/블로그에 도는 ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS는
+                // 실제 SDK에 없다(android-36 android.jar를 javap으로 확인).
+                add(
+                    Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, reactApplicationContext.packageName),
+                )
+            }
+            add(
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, reactApplicationContext.packageName),
+            )
+            add(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.fromParts("package", reactApplicationContext.packageName, null)),
+            )
+        }
+
+        for (intent in candidates) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                reactApplicationContext.startActivity(intent)
+                promise.resolve(intent.action)
+                return
+            } catch (_: Exception) {
+                // 이 기기가 처리하지 못하는 화면이다. 다음 후보로.
+            }
+        }
+        promise.reject("LIVE_UPDATE_SETTINGS_FAILED", "열 수 있는 설정 화면이 없습니다")
+    }
+
+    /**
+     * 실기기 진단용. 케이블이 없어 logcat을 볼 수 없는 상황에서, 승격이 왜
+     * 막혔는지를 기기가 직접 답하게 한다. 화면에서 안내 카드를 길게 눌러 본다.
+     */
+    @ReactMethod
+    fun getDiagnostics(promise: Promise) {
+        val context = reactApplicationContext
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val result = Arguments.createMap()
+        result.putInt("sdkInt", Build.VERSION.SDK_INT)
+        // Live Updates는 안정판 Android 16에서 기본 비활성이고 QPR1부터 켜진다.
+        // sdkInt(36)만으로는 둘을 구분할 수 없어 빌드 문자열을 함께 보여준다.
+        result.putString("build", "${Build.MANUFACTURER} ${Build.MODEL} / ${Build.DISPLAY}")
+        result.putBoolean("notificationsEnabled", manager.areNotificationsEnabled())
+        result.putInt("channelImportance", TripNotifier.channelImportance(context))
+        if (Build.VERSION.SDK_INT >= 36) {
+            result.putBoolean("canPostPromoted", manager.canPostPromotedNotifications())
+        }
+        TripNotifier.lastPromotable?.let { result.putBoolean("promotable", it) }
+        TripNotifier.postedPromoted(context)?.let { result.putBoolean("postedPromoted", it) }
+        promise.resolve(result)
     }
 
     companion object {

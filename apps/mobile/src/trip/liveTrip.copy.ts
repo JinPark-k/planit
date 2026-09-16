@@ -6,14 +6,27 @@
  * 필요가 없어야 한다.
  */
 
-const CHIP_MAX_LENGTH = 8;
+/**
+ * 상태바 칩(setShortCriticalText)에 들어갈 수 있는 글자 수.
+ *
+ * 실무 보고에 따르면 7자 제한이 사실상 엄격하고, 넘으면 시스템이 글자를 통째로
+ * 버리고 아이콘만 띄운다. 실제로 에뮬레이터에서도 칩에 아이콘만 뜨고 문구가
+ * 보이지 않았다.
+ *
+ * 중요한 건 이 상한이 **완성된 문구 전체**에 걸린다는 점이다. 장소명만 잘라서는
+ * 부족하다 — "이동" 같은 꼬리말이 붙으면 다시 넘어간다.
+ */
+const CHIP_MAX_LENGTH = 7;
 
-/** 상태바 칩은 자리가 좁아서 8자를 넘는 장소명은 말줄임한다. */
+/** 이동 중 칩에 붙는 꼬리말. 길이 계산에 쓰려고 상수로 둔다. */
+const TRAVEL_SUFFIX = ' 이동';
+
+/** 상한을 넘으면 말줄임표를 포함해 정확히 maxLength자가 되게 자른다. */
 export function truncateForChip(name: string, maxLength: number = CHIP_MAX_LENGTH): string {
   if (name.length <= maxLength) {
     return name;
   }
-  return `${name.slice(0, maxLength)}…`;
+  return `${name.slice(0, maxLength - 1)}…`;
 }
 
 function formatHHMM(epochMs: number): string {
@@ -71,7 +84,8 @@ export function travelCopy(params: { nextPlaceName: string; nextStartAt: number 
   return {
     title: `${withDirectionParticle(nextPlaceName)} 이동 중`,
     body: `${formatHHMM(nextStartAt)} 도착 예정`,
-    shortText: `${truncateForChip(nextPlaceName)} 이동`,
+    // 꼬리말 자리를 먼저 빼고 이름을 자른다 — 완성된 문구가 상한 안에 들어와야 한다.
+    shortText: `${truncateForChip(nextPlaceName, CHIP_MAX_LENGTH - TRAVEL_SUFFIX.length)}${TRAVEL_SUFFIX}`,
   };
 }
 

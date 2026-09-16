@@ -50,6 +50,29 @@ export async function endLiveTrip(): Promise<void> {
   }
 }
 
+/**
+ * 상태바·NowBar 표시 설정 화면을 연다.
+ *
+ * 승격은 요청일 뿐 보장이 아니라서, 사용자가 꺼 두면 앱은 그 사실을 알 수만
+ * 있고 켤 수는 없다 — 설정으로 데려다주는 게 우리가 할 수 있는 전부다.
+ */
+export async function openLiveTripSettings(): Promise<void> {
+  try {
+    await nativeModule()?.openPromotionSettings();
+  } catch {
+    // 설정 화면이 없는 기기/버전도 있다. 열리지 않아도 앱은 그대로 돈다.
+  }
+}
+
+/** 실기기 진단값(Android 전용). 실패하면 빈 객체 — 진단이 앱을 막으면 안 된다. */
+export async function getLiveTripDiagnostics(): Promise<Record<string, unknown>> {
+  try {
+    return (await nativeModule()?.getDiagnostics()) ?? {};
+  } catch {
+    return {};
+  }
+}
+
 export async function getLiveTripCapability(): Promise<LiveTripCapability> {
   try {
     return (await nativeModule()?.getCapability()) ?? UNAVAILABLE_CAPABILITY;

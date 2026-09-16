@@ -13,12 +13,12 @@ describe('truncateForChip', () => {
     expect(truncateForChip('제주공항')).toBe('제주공항');
   });
 
-  it('8자를 넘으면 8자로 자르고 …을 붙인다', () => {
-    expect(truncateForChip('아주아주아주아주긴장소명')).toBe('아주아주아주아주…');
+  it('상한을 넘으면 말줄임표를 포함해 정확히 상한 길이가 된다', () => {
+    expect(truncateForChip('아주아주아주아주긴장소명')).toBe('아주아주아주…');
   });
 
-  it('정확히 경계(8자)면 자르지 않는다', () => {
-    expect(truncateForChip('12345678')).toBe('12345678');
+  it('정확히 경계(7자)면 자르지 않는다', () => {
+    expect(truncateForChip('1234567')).toBe('1234567');
   });
 });
 
@@ -39,9 +39,9 @@ describe('stayCopy', () => {
     expect(copy.body).toBe('오늘 일정 마지막');
   });
 
-  it('shortText는 8자를 넘으면 말줄임한다', () => {
+  it('shortText는 상한을 넘으면 말줄임한다', () => {
     const copy = stayCopy({ placeName: '아주아주아주아주긴장소명', endAt: t(11, 30) });
-    expect(copy.shortText).toBe('아주아주아주아주…');
+    expect(copy.shortText).toBe('아주아주아주…');
   });
 });
 
@@ -64,7 +64,9 @@ describe('travelCopy', () => {
 
   it('shortText에도 말줄임이 적용된다', () => {
     const copy = travelCopy({ nextPlaceName: '아주아주아주아주긴장소명', nextStartAt: t(9, 0) });
-    expect(copy.shortText).toBe('아주아주아주아주… 이동');
+    // 꼬리말까지 합쳐 7자를 넘지 않아야 한다.
+    expect(copy.shortText).toBe('아주아… 이동');
+    expect(copy.shortText.length).toBeLessThanOrEqual(7);
   });
 });
 
