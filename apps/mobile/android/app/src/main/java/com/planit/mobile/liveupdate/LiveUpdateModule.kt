@@ -3,6 +3,7 @@ package com.planit.mobile.liveupdate
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import com.facebook.react.bridge.Arguments
@@ -72,23 +73,41 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
      */
     @ReactMethod
     fun openPromotionSettings(promise: Promise) {
-        try {
-            // 상수 이름은 ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS다. 문서/블로그에
-            // 돌아다니는 ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS는 실제 SDK에 없다
-            // (android-36 android.jar를 javap으로 확인).
-            val intent = if (Build.VERSION.SDK_INT >= 36) {
-                Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS)
-            } else {
-                // API 36 미만에는 승격 설정 자체가 없다. 일반 알림 설정으로 보낸다.
-                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        // 화면을 순서대로 시도한다. 승격 전용 설정은 AOSP에만 있고 OEM 설정 앱이
+        // 처리하지 않을 수 있다 — 갤럭시에서 버튼을 눌러도 아무 반응이 없었던 것이
+        // 그 경우다(startActivity가 ActivityNotFoundException으로 떨어졌다).
+        // 그럴 때 아무 데도 못 가는 것보다 앱 알림 설정이라도 열어 주는 게 낫다.
+        val candidates = buildList {
+            if (Build.VERSION.SDK_INT >= 36) {
+                // 상수 이름은 ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS다.
+                // 문서/블로그에 도는 ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS는
+                // 실제 SDK에 없다(android-36 android.jar를 javap으로 확인).
+                add(
+                    Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, reactApplicationContext.packageName),
+                )
             }
-            intent.putExtra(Settings.EXTRA_APP_PACKAGE, reactApplicationContext.packageName)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            reactApplicationContext.startActivity(intent)
-            promise.resolve(null)
-        } catch (e: Exception) {
-            promise.reject("LIVE_UPDATE_SETTINGS_FAILED", e)
+            add(
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, reactApplicationContext.packageName),
+            )
+            add(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.fromParts("package", reactApplicationContext.packageName, null)),
+            )
         }
+
+        for (intent in candidates) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                reactApplicationContext.startActivity(intent)
+                promise.resolve(intent.action)
+                return
+            } catch (_: Exception) {
+                // 이 기기가 처리하지 못하는 화면이다. 다음 후보로.
+            }
+        }
+        promise.reject("LIVE_UPDATE_SETTINGS_FAILED", "열 수 있는 설정 화면이 없습니다")
     }
 
     companion object {
