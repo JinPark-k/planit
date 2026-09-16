@@ -97,6 +97,20 @@ describe('TripStartScreen 안내 문구', () => {
     }
   });
 
+  it('알림 자체가 꺼져 있어도 설정으로 보낸다', () => {
+    // 승격이 막힌 경우에만 버튼을 띄웠더니, 정작 더 막혀 있는 쪽에서 갈 곳이
+    // 없었다(실기기에서 안내 문구만 뜨고 누를 게 없었다).
+    const onOpenSettings = jest.fn();
+    const tree = renderScreen({
+      capability: { supported: true, allowed: false, statusBar: false },
+      onOpenSettings,
+    });
+    ReactTestRenderer.act(() => {
+      pressableByLabel(tree, '실시간 업데이트 설정 열기').props.onPress();
+    });
+    expect(onOpenSettings).toHaveBeenCalled();
+  });
+
   it('안드로이드: 상태바 표시가 꺼져 있으면 알리고 설정으로 보낸다', () => {
     const originalOS = require('react-native').Platform.OS;
     require('react-native').Platform.OS = 'android';

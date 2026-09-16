@@ -123,10 +123,15 @@ export function TripStartScreen({
           onLongPress={onShowDiagnostics}
           style={styles.guidanceCard}>
           <Text style={styles.guidanceText}>{guidance}</Text>
+          {/*
+            알림이 꺼져 있을 때도 설정으로 보낸다. 앞서는 승격이 막힌 경우에만
+            버튼을 띄웠는데, 정작 더 막혀 있는 쪽(알림 자체가 꺼짐)에서 갈 곳이
+            없었다 — 실기기에서 "알림을 허용하면…"만 뜨고 아무것도 누를 수
+            없는 상태를 봤다.
+          */}
           {onOpenSettings !== undefined &&
             capability.supported &&
-            capability.allowed &&
-            !capability.statusBar && (
+            (!capability.allowed || !capability.statusBar) && (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="실시간 업데이트 설정 열기"
