@@ -178,13 +178,6 @@ object TripNotifier {
             IconCompat.createWithResource(context, R.drawable.ic_trip_notification),
         )
 
-        // 삼성 전용 extra. One UI의 Ongoing Activity가 읽는 값으로 알려져 있다
-        // (매니페스트의 com.samsung.android.support.ongoing_activity와 짝).
-        // 표준 AOSP에는 없는 키라 다른 기기에서는 그냥 무시된다.
-        builder.addExtras(
-            android.os.Bundle().apply { putInt("android.ongoingActivityNoti.style", 1) },
-        )
-
         builder.setStyle(style)
         // 상태바 칩에 들어갈 짧은 문구. 자리가 좁아 TS가 미리 줄여 보낸다.
         frame.shortText?.let { builder.setShortCriticalText(it) }

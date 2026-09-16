@@ -46,17 +46,6 @@
         시스템만 보낼 수 있는 protected broadcast라 정상 수신된다 — 알람 발화와
         "여행 종료" 액션은 명시적 Intent로 직접 보내므로 별도 필터가 필요 없다.
       -->
-      <!--
-        삼성 전용 후크. One UI의 Ongoing Activity(NowBar/실시간 정보)가 앱을
-        후보로 인식할 때 보는 값으로 알려져 있다. AOSP 표준만으로는 갤럭시에서
-        canPostPromotedNotifications()가 계속 false였고 앱별 "실시간 정보" 설정
-        자체가 나타나지 않았다. 삼성이 문서화하지 않은 영역이라 확실하지 않지만,
-        다른 기기에서는 모르는 meta-data로 무시되므로 넣어 두는 비용이 없다.
-      -->
-      <meta-data
-        android:name="com.samsung.android.support.ongoing_activity"
-        android:value="true" />
-
       <service
         android:name=".liveupdate.LiveTripService"
         android:exported="false"
