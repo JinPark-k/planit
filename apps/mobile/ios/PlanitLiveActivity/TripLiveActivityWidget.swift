@@ -2,6 +2,24 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
+/// apps/mobile/src/theme/colors.ts의 브랜드 토큰을 옮겨온 값.
+///
+/// `Color.accentColor`를 쓰고 있었지만 이 타깃의 Images.xcassets에 AccentColor
+/// 컬러셋이 없어서 시스템 기본 파랑으로 렌더됐다. 자산 카탈로그에 기대지 않고
+/// 값을 명시한다.
+///
+/// TS 토큰과 자동으로 동기화되지 않는다. 팔레트를 바꾸면 여기와 Android의
+/// TripNotifier 상수도 같이 손대야 한다(CI가 Swift/Kotlin을 컴파일하지 않으므로
+/// PR에서 잡히지 않는다).
+private enum PlanItBrand {
+    /// accent — Trail Purple #6B33CC. 진행바의 채워진 구간(= 지나온 경로).
+    static let accent = Color(red: 107 / 255, green: 51 / 255, blue: 204 / 255)
+    /// placeholder — #E1DCE9. 아직 지나지 않은 구간.
+    static let track = Color(red: 225 / 255, green: 220 / 255, blue: 233 / 255)
+    /// text — Ink #1F182A. 잠금화면 카드 배경 틴트에 쓴다.
+    static let ink = Color(red: 31 / 255, green: 24 / 255, blue: 42 / 255)
+}
+
 /// 잠금화면 + Dynamic Island에 여행 진행 상황을 그린다.
 ///
 /// 이 파일은 프레임을 다시 계산하지 않는다 — TripActivityAttributes.ContentState는
@@ -75,10 +93,9 @@ private struct LockScreenView: View {
             }
         }
         .padding(16)
-        // 브랜드 컬러가 아직 정해지지 않아 임시로 고른 값이다(Android
-        // TripNotifier의 FILLED/UNFILLED_SEGMENT_COLOR 주석과 같은 사정).
-        // 나중에 디자인 시스템이 나오면 여기와 SegmentedProgressBar만 바꾸면 된다.
-        .activityBackgroundTint(Color.black.opacity(0.85))
+        // 순수한 검정이 아니라 브랜드 잉크를 쓴다 — 중립색도 accent의 색조를
+        // 따르게 통일한 팔레트와 맞추기 위한 것이다.
+        .activityBackgroundTint(PlanItBrand.ink.opacity(0.85))
         .activitySystemActionForegroundColor(.white)
     }
 }
@@ -178,7 +195,7 @@ private struct SegmentedProgressBar: View {
             HStack(spacing: 2) {
                 ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
                     Capsule()
-                        .fill(segment.filled ? Color.accentColor : Color.gray.opacity(0.3))
+                        .fill(segment.filled ? PlanItBrand.accent : PlanItBrand.track)
                         .frame(width: geo.size.width * CGFloat(segment.minutes / total))
                 }
             }

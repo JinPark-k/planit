@@ -27,11 +27,16 @@ object TripNotifier {
     private const val REQUEST_CODE_END_ACTION = 2
     private const val TAG = "TripNotifier"
 
-    // 디자인 시스템/브랜드 컬러가 아직 정해지지 않아 직접 고른 값이다.
-    // 채워진 구간 = 진한 파랑, 안 채워진 구간 = 옅은 회색. 나중에 브랜드 컬러가
-    // 나오면 이 두 상수만 바꾸면 된다.
-    private const val FILLED_SEGMENT_COLOR = 0xFF2F6FED.toInt()
-    private const val UNFILLED_SEGMENT_COLOR = 0xFFD9DDE3.toInt()
+    // apps/mobile/src/theme/colors.ts의 브랜드 토큰을 그대로 옮겨온 값이다.
+    // 진행바는 여행의 경로를 그리는 것이라 accent(Trail Purple)를 쓴다 —
+    // DESIGN.md의 Discovery vs Route 규칙에서 경로는 퍼플이 담당한다.
+    // 안 채워진 구간은 같은 색조의 옅은 중립색(placeholder).
+    //
+    // TS 토큰과 이 두 상수는 자동으로 동기화되지 않는다. 팔레트를 바꾸면
+    // 여기와 iOS의 PlanItBrand도 같이 손대야 한다(CI가 Kotlin/Swift를
+    // 컴파일하지 않으므로 PR에서 잡히지 않는다).
+    private const val FILLED_SEGMENT_COLOR = 0xFF6B33CC.toInt()
+    private const val UNFILLED_SEGMENT_COLOR = 0xFFE1DCE9.toInt()
 
     private var channelCreated = false
 
