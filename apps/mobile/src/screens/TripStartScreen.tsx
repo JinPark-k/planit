@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import {
-  ActivityIndicator,
   Platform,
   Pressable,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { ScheduleDay } from '../api/types';
+import { Button } from '../components/Button';
 import { StartDatePicker } from '../components/StartDatePicker';
 import { LiveTripCapability } from '../native/types';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
@@ -148,22 +148,11 @@ export function TripStartScreen({
 
       <View style={styles.footer}>
         {error !== undefined && <Text style={styles.errorText}>{error}</Text>}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="여행 시작"
-          accessibilityState={{ disabled: starting === true }}
-          disabled={starting === true}
+        <Button
+          label="여행 시작"
           onPress={onConfirm}
-          style={[
-            styles.confirmButton,
-            starting === true && styles.confirmButtonDisabled,
-          ]}>
-          {starting === true ? (
-            <ActivityIndicator color={colors.surface} />
-          ) : (
-            <Text style={styles.confirmButtonText}>여행 시작</Text>
-          )}
-        </Pressable>
+          loading={starting === true}
+        />
       </View>
     </View>
   );
@@ -269,22 +258,5 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.warn,
     textAlign: 'center',
-  },
-  confirmButton: {
-    height: 52,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-  },
-  confirmButtonDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  confirmButtonText: {
-    ...typography.button,
-    // 라임 채우기 위 라벨은 흰색으로 통일한다(아래 DESIGN.md의
-    // Lime-Fill 규칙). 측정상 2.20:1로 WCAG AA에는 못 미치지만,
-    // 실기기에서 보고 내린 디자인 결정이다.
-    color: colors.surface,
   },
 });

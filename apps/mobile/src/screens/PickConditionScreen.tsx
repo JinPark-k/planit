@@ -1,11 +1,12 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button } from '../components/Button';
 import { DayCountPicker } from '../components/DayCountPicker';
 import { KeywordPicker, MAX_KEYWORDS } from '../components/KeywordPicker';
 import { RegionPicker } from '../components/RegionPicker';
 import { Section } from '../components/Section';
 import { usePickSession } from '../navigation/pickSession';
-import { colors, radius, spacing, typography } from '../theme';
+import { colors, spacing, typography } from '../theme';
 
 /**
  * 골라 담기 1단계 — 무엇을 볼지 정한다.
@@ -43,20 +44,11 @@ export function PickConditionScreen({ onNext }: { onNext: () => void }) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: region === null }}
-          disabled={region === null}
+        <Button
+          label={region === null ? '지역을 골라 주세요' : '장소 보기'}
           onPress={onNext}
-          style={[styles.button, region === null && styles.buttonDisabled]}>
-          <Text
-            style={[
-              styles.buttonText,
-              region === null && styles.buttonTextDisabled,
-            ]}>
-            {region === null ? '지역을 골라 주세요' : '장소 보기'}
-          </Text>
-        </Pressable>
+          disabled={region === null}
+        />
       </View>
     </View>
   );
@@ -86,24 +78,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
-  },
-  button: {
-    height: 52,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-  },
-  buttonDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  buttonText: {
-    ...typography.button,
-    color: colors.surface,
-  },
-  buttonTextDisabled: {
-    // 비활성 채우기(disabled)는 옅은 라벤더라 활성 라임과 명도가 달라,
-    // 라벨 색을 따로 잡는다. 활성 라벨을 바꿔도 여기는 따라오지 않는다.
-    color: colors.text,
   },
 });
