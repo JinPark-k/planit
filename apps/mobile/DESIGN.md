@@ -144,7 +144,7 @@ Depth comes from tone and hairline borders, not shadows — there is no `box-sha
 - Two brand colors split by role, not by feature: lime (`primary`) is the fill under an action, purple (`accent`) is the route/itinerary *and* the interface chrome (titles, labels, active tab) — never blended, never decorative
 - Lime is a fill only, always under a white label (a deliberate contrast trade — see **The Lime-Fill Rule**); a separate darker step (`primary-deep`) exists for lime-as-foreground (links, spinners) where the bright fill would fail
 - Flat by default: borders and tonal fills carry depth, not shadows
-- Two shared primitives carry the repeated elements: `Chip` for every pill, `Button` for every full-width CTA — screens pass intent, not styling
+- Three shared primitives carry the repeated elements: `Chip` for every pill, `Button` for every full-width CTA, `ScreenHeader` for every back-button bar — screens pass intent, not styling
 - System font only — no custom typeface committed yet
 
 ## Colors
@@ -278,7 +278,8 @@ None exist yet — no `TextInput` appears anywhere in the current implementation
 
 ### Navigation
 - **Bottom tab bar:** 64dp height, `colors.surface` fill, 1px top border in `colors.border`. Active/inactive state is a tint swap (`colors.accent` / `colors.text-muted`) on both the Lucide line icon (24px, 1.75 stroke weight — no filled or color-emoji icons) and the `typography.micro` label beneath it. The active tab is chrome, so it takes purple (**The Chrome-Purple Rule**); note this document previously described the active tint as `primary-deep` while the code had always used `accent` — the code was right and the text has been corrected.
-- **Screen headers (custom-built, not the native-stack header):** `colors.surface` fill, 1px bottom border, a 36×36 circular back button with a plain "←" glyph, and a `typography.heading` title. Both the glyph and the title are `colors.accent`. Place Detail's floating hero back button is the same glyph in the same color, over a `rgba(255,255,255,0.9)` disc so it holds against a photo.
+- **Screen headers (custom-built, not the native-stack header):** one component, `src/components/ScreenHeader.tsx`, used by every screen that has a back button. `colors.surface` fill, 1px bottom border, a 36×36 back button with a plain "←" glyph, and a `typography.heading` title — glyph and title both `colors.accent`. The title is always clipped to one line, because a long region name wrapping the bar to two lines pushes the content below it. Screens pass `title` and `onBack`; `backLabel` exists only for when going back means something more specific than "back" (골라 담기 reads it as "조건 바꾸기").
+- **Two headers stay outside that component**, both deliberately: Place Detail's floating hero back button is the same glyph and color but sits on a `rgba(255,255,255,0.9)` disc over a photo, and 내 여행 is a tab root with no back button at all — it stacks a title over a subtitle with its own padding.
 - **Native-idiom note:** because the platform is recorded as adaptive but the current implementation is one shared React Native chrome, none of this navigation yet uses SF Symbols/Material iconography or the Material navigation-bar/rail pattern described in `ios.md`/`android.md`. Treat that divergence as a known gap, not as this system's current voice.
 
 ## Do's and Don'ts
