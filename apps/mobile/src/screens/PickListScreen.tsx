@@ -208,7 +208,11 @@ export function PickListScreen({
           {submitting ? (
             <ActivityIndicator color={colors.surface} />
           ) : (
-            <Text style={styles.submitText}>
+            <Text
+              style={[
+                styles.submitText,
+                !canSubmit && styles.submitTextDisabled,
+              ]}>
               {picked.length > 0
                 ? `일정 만들기 (${picked.length}곳)`
                 : '일정 만들기'}
@@ -440,6 +444,11 @@ const styles = StyleSheet.create({
   submitText: {
     ...typography.button,
     // primary가 밝은 라임이라 흰 텍스트는 대비를 통과하지 못한다.
+    color: colors.text,
+  },
+  submitTextDisabled: {
+    // 비활성 채우기(disabled)는 옅은 라벤더라 활성 라임과 명도가 달라,
+    // 라벨 색을 따로 잡는다. 활성 라벨을 바꿔도 여기는 따라오지 않는다.
     color: colors.text,
   },
 });
