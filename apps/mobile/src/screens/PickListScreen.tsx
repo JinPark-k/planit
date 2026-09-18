@@ -407,9 +407,9 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   checkMarkPicked: {
-    // primary(Fresh Lime)는 밝아서 흰 텍스트가 대비를 통과하지 못한다.
-    // 채우기 위에는 항상 어두운 텍스트를 얹는다.
-    color: colors.text,
+    // 라임 채우기 위 글자는 흰색(Lime-Fill 규칙). 담김 체크도 버튼·칩과
+    // 같은 처리를 따라간다.
+    color: colors.surface,
   },
   emptyText: {
     marginTop: spacing.xxxl,
@@ -443,8 +443,10 @@ const styles = StyleSheet.create({
   },
   submitText: {
     ...typography.button,
-    // primary가 밝은 라임이라 흰 텍스트는 대비를 통과하지 못한다.
-    color: colors.text,
+    // 라임 채우기 위 라벨은 흰색으로 통일한다(아래 DESIGN.md의
+    // Lime-Fill 규칙). 측정상 2.20:1로 WCAG AA에는 못 미치지만,
+    // 실기기에서 보고 내린 디자인 결정이다.
+    color: colors.surface,
   },
   submitTextDisabled: {
     // 비활성 채우기(disabled)는 옅은 라벤더라 활성 라임과 명도가 달라,
