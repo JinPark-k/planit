@@ -144,7 +144,7 @@ Depth comes from tone and hairline borders, not shadows — there is no `box-sha
 - Two brand colors split by role, not by feature: lime (`primary`) is the fill under an action, purple (`accent`) is the route/itinerary *and* the interface chrome (titles, labels, active tab) — never blended, never decorative
 - Lime is a fill only, always under a white label (a deliberate contrast trade — see **The Lime-Fill Rule**); a separate darker step (`primary-deep`) exists for lime-as-foreground (links, spinners) where the bright fill would fail
 - Flat by default: borders and tonal fills carry depth, not shadows
-- A true-pill radius (999) for every selectable/tag element, routed through one shared `Chip` component
+- Two shared primitives carry the repeated elements: `Chip` for every pill, `Button` for every full-width CTA — screens pass intent, not styling
 - System font only — no custom typeface committed yet
 
 ## Colors
@@ -243,12 +243,19 @@ Borders are always a 1px line in `colors.border`, and that token is brand-tinted
 ## Components
 
 ### Buttons
-- **Shape:** `rounded.lg` (16px).
-- **Primary:** `colors.primary` (Fresh Lime) fill, `colors.surface` (white) label. `typography.button`, fixed height. See **The Lime-Fill Rule** for why white, and what it costs. Two near-duplicate heights are currently in use — 52px (Plan Form's submit) and 50px (Schedule's restart) — these should converge on one value rather than both being treated as intentional.
-- **Pressed:** fill swaps to `colors.primary-pressed`; label stays white.
-- **Disabled:** fill swaps to `colors.disabled` (not an opacity reduction); the label swaps to `colors.text` through its own style — white would be 1.85:1 on that fill.
-- **Pressed states are now wired on both primary CTAs** (Plan Form's submit, Schedule's restart) via the `({pressed}) =>` style-function pattern already used elsewhere in the codebase. The schedule timeline row still swaps to a tonal background on press and the map-open button still drops to 70% opacity — those two remain unconverged with the button pattern; worth revisiting together.
-- No secondary/outline/ghost button variant is formalized yet — Plan Form's "다시 시도" retry control (bordered, `colors.surface` fill, `rounded.sm`, `colors.accent` text — a Trail Purple secondary action, not lime) is the closest precedent if one is needed.
+
+Every full-width CTA in the app goes through one component, `src/components/Button.tsx` — the same move `Chip` made for pills. Screens pass `label`, `onPress`, `variant`, `disabled` and `loading`; they do not get to set color, height or radius. The `style` prop exists but is for **placement only** (flex, margin), because letting a caller override the look is exactly how the values drifted apart the first time.
+
+- **Shape:** `rounded.lg` (16px), height **52**. (Schedule's CTAs used to be 50px; they were converged onto 52, which five other screens already used.)
+- **Primary:** `colors.primary` (Fresh Lime) fill, `colors.surface` (white) label, `typography.button`. See **The Lime-Fill Rule** for why white, and what it costs.
+- **Secondary:** `colors.surface` fill, 1px `colors.accent` border, `colors.accent` label — a Trail Purple secondary action, not lime. Used for "여행 종료" and for "다시 만들기" when a save button is also present.
+- **Pressed:** primary swaps its fill to `colors.primary-pressed`; secondary swaps to a tonal `colors.accent-light` background. Every CTA has this now — `PickCondition` and `FestivalPlan` previously had no pressed feedback at all.
+- **Disabled:** primary swaps its fill to `colors.disabled` (not an opacity reduction — Schedule used to dim to 0.55 and was converged onto the fill swap) and its label to `colors.text`, because white would be 1.85:1 on that pale lavender. Secondary instead drops its border and label to muted, since its background stays white.
+- **Loading:** the label is replaced by an `ActivityIndicator` and the press is blocked, so a second tap during an in-flight request cannot fire it twice. Callers pass `loading`; they no longer branch on it themselves.
+
+Still hand-rolled, and a reasonable next step: the small in-content buttons (the "다시 불러오기" pill on an empty list, the bordered `rounded.sm` retry under a failed keyword load). They are a different shape — auto-width, sitting inside content rather than pinned to a footer — so they were left out rather than bent into this component.
+
+The schedule timeline row still swaps to a tonal background on press and the map-open button still drops to 70% opacity; those two remain unconverged with the button pattern.
 
 ### Chips
 One shared component (`src/components/Chip.tsx`) renders every pill in the app — keyword picker, day-count picker, region picker, schedule day tabs, place tags, and the category badge. It was built specifically to stop four screens from drifting to four different pill paddings/radii.
