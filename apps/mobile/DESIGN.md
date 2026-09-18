@@ -9,7 +9,7 @@ colors:
   accent: "#6B33CC"
   accent-pressed: "#452183"
   accent-light: "#F0EBF9"
-  warn: "#F2A65A"
+  warn: "#A84C18"
   text: "#1B1F27"
   text-muted: "#6B7280"
   border: "#E3E6EC"
@@ -172,7 +172,7 @@ Two brand hues on a white/near-white base: lime for discovery and primary action
 - **Disabled Gray** (`#B8BCC4`) — `disabled`: disabled primary-button fill (a color swap, not an opacity trick).
 
 ### Functional
-- **Warm Amber Warn** (`#F2A65A`) — `warn`: error/failure text only (keyword-load failure, schedule-generation failure). No warning backgrounds or icons use it yet — text color only. Unchanged by the lime/purple redesign.
+- **Burnt Amber Warn** (`#A84C18`) — `warn`: error/failure text only (keyword-load failure, schedule-generation failure). No warning backgrounds or icons use it yet — text color only. Because this token is *only* ever text, contrast is the constraint that picks its value: the previous Warm Amber (`#F2A65A`) measured 2.02:1 against white, far under the 4.5:1 floor for body text, so it was darkened at the same hue to reach 5.66:1 on white and 5.08:1 on `warnLight`. Read it as "amber, dark enough to be text" — if a future warning *fill* or icon is needed, add a separate lighter step rather than brightening this one back up.
 
 ### Named Rules
 **The Lime-Fill, Purple-Text Rule.** Lime is only ever a *fill* paired with dark text (`primary`/`primary-pressed` + `text`) — never a foreground color on its own, because its brightness fails contrast as text or a small icon. Purple has no such restriction: `accent` works as fill-with-white-text or as foreground-on-white interchangeably.

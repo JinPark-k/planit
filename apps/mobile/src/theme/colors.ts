@@ -18,7 +18,12 @@ export const colors = {
   accent: '#6B33CC',
   accentPressed: '#452183',
   accentLight: '#F0EBF9',
-  warn: '#F2A65A',
+  /**
+   * 실패/에러 문구 색. 글자로만 쓰는 토큰이라 대비가 기준이다.
+   * 예전 값(#F2A65A)은 흰 배경에서 2.02:1로 WCAG AA(4.5)를 크게 밑돌았다.
+   * 채도를 유지한 채 어둡게 내려 5.66:1(warnLight 위 5.08:1)을 확보했다.
+   */
+  warn: '#A84C18',
   /** warn의 연한 배경. 경고 문구 카드에 쓴다(primaryLight와 같은 역할). */
   warnLight: '#FDF1E3',
   text: '#1B1F27',
