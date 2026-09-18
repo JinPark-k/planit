@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
 } from 'react-native';
 import { GenerateScheduleRequest, RegionCode } from '../api/types';
+import { Button } from '../components/Button';
 import { DayCountPicker } from '../components/DayCountPicker';
 import { KeywordPicker, MAX_KEYWORDS } from '../components/KeywordPicker';
 import { RegionPicker } from '../components/RegionPicker';
 import { Section } from '../components/Section';
-import { colors, radius, spacing, typography } from '../theme';
+import { colors, spacing, typography } from '../theme';
 
 const DEFAULT_DAY_COUNT = 2;
 
@@ -57,32 +56,24 @@ export function PlanFormScreen({ onSubmit, submitting, submitError }: Props) {
         <Text style={styles.errorText}>{submitError}</Text>
       )}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled: !canSubmit }}
-        disabled={!canSubmit}
+      <Button
+        label="일정 만들기"
         onPress={() =>
           region !== null && onSubmit({ keywords, region, dayCount })
         }
-        style={({ pressed }) => [
-          styles.submitButton,
-          pressed && canSubmit && styles.submitButtonPressed,
-          !canSubmit && styles.submitButtonDisabled,
-        ]}>
-        {submitting ? (
-          <ActivityIndicator color={colors.surface} />
-        ) : (
-          <Text
-            style={[styles.submitText, !canSubmit && styles.submitTextDisabled]}>
-            일정 만들기
-          </Text>
-        )}
-      </Pressable>
+        disabled={!canSubmit}
+        loading={submitting}
+        style={styles.submit}
+      />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  // Button은 색·높이·모서리를 스스로 정한다. 여기서는 배치만 준다.
+  submit: {
+    marginTop: spacing.xxxl,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -104,31 +95,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     ...typography.caption,
     color: colors.warn,
-  },
-  submitButton: {
-    marginTop: spacing.xxxl,
-    height: 52,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-  },
-  submitButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-  },
-  submitButtonDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  submitText: {
-    ...typography.button,
-    // 라임 채우기 위 라벨은 흰색으로 통일한다(아래 DESIGN.md의
-    // Lime-Fill 규칙). 측정상 2.20:1로 WCAG AA에는 못 미치지만,
-    // 실기기에서 보고 내린 디자인 결정이다.
-    color: colors.surface,
-  },
-  submitTextDisabled: {
-    // 비활성 채우기(disabled)는 옅은 라벤더라 활성 라임과 명도가 달라,
-    // 라벨 색을 따로 잡는다. 활성 라벨을 바꿔도 여기는 따라오지 않는다.
-    color: colors.text,
   },
 });

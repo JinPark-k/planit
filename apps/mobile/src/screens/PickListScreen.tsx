@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { fetchRecommendations } from '../api/recommend';
 import { Place, PlaceCategory } from '../api/types';
+import { Button } from '../components/Button';
 import { CategoryPicker } from '../components/CategoryPicker';
 import { Chip } from '../components/Chip';
 import { PlaceImage } from '../components/PlaceImage';
@@ -187,10 +188,12 @@ export function PickListScreen({
         {submitError !== undefined && (
           <Text style={styles.errorText}>{submitError}</Text>
         )}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !canSubmit }}
-          disabled={!canSubmit}
+        <Button
+          label={
+            picked.length > 0
+              ? `일정 만들기 (${picked.length}곳)`
+              : '일정 만들기'
+          }
           onPress={() => {
             if (region === null) return;
             onSubmit({
@@ -200,25 +203,9 @@ export function PickListScreen({
               keywords,
             });
           }}
-          style={({ pressed }) => [
-            styles.submitButton,
-            pressed && canSubmit && styles.submitButtonPressed,
-            !canSubmit && styles.submitButtonDisabled,
-          ]}>
-          {submitting ? (
-            <ActivityIndicator color={colors.surface} />
-          ) : (
-            <Text
-              style={[
-                styles.submitText,
-                !canSubmit && styles.submitTextDisabled,
-              ]}>
-              {picked.length > 0
-                ? `일정 만들기 (${picked.length}곳)`
-                : '일정 만들기'}
-            </Text>
-          )}
-        </Pressable>
+          disabled={!canSubmit}
+          loading={submitting}
+        />
       </View>
     </View>
   );
@@ -427,30 +414,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
-  },
-  submitButton: {
-    height: 52,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-  },
-  submitButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-  },
-  submitButtonDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  submitText: {
-    ...typography.button,
-    // 라임 채우기 위 라벨은 흰색으로 통일한다(아래 DESIGN.md의
-    // Lime-Fill 규칙). 측정상 2.20:1로 WCAG AA에는 못 미치지만,
-    // 실기기에서 보고 내린 디자인 결정이다.
-    color: colors.surface,
-  },
-  submitTextDisabled: {
-    // 비활성 채우기(disabled)는 옅은 라벤더라 활성 라임과 명도가 달라,
-    // 라벨 색을 따로 잡는다. 활성 라벨을 바꿔도 여기는 따라오지 않는다.
-    color: colors.text,
   },
 });

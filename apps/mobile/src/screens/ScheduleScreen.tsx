@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { ExcludedPlace, ScheduleDay, ScheduleItem } from '../api/types';
+import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { PlaceImage } from '../components/PlaceImage';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
@@ -187,75 +188,39 @@ export function ScheduleScreen({
             <Text style={styles.saveError}>{saveError}</Text>
           )}
           {liveFrame === undefined && onStartTrip !== undefined && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="여행 시작하기"
-              disabled={!hasAnyItem}
+            <Button
+              label="여행 시작하기"
               onPress={onStartTrip}
-              style={({ pressed }) => [
-                styles.primaryButton,
-                !hasAnyItem && styles.primaryButtonDisabled,
-                pressed && hasAnyItem && styles.primaryButtonPressed,
-              ]}>
-              <Text style={styles.primaryButtonText}>여행 시작하기</Text>
-            </Pressable>
+              disabled={!hasAnyItem}
+            />
           )}
           {liveFrame !== undefined && onEndTrip !== undefined && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="여행 종료"
+            <Button
+              label="여행 종료"
+              variant="secondary"
               onPress={onEndTrip}
-              style={({ pressed }) => [
-                styles.secondaryButton,
-                pressed && styles.secondaryButtonPressed,
-              ]}>
-              <Text style={styles.secondaryButtonText}>여행 종료</Text>
-            </Pressable>
+            />
           )}
           {onSave !== undefined && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="여행 저장하기"
-              disabled={saveState !== 'idle' || !hasAnyItem}
-              onPress={onSave}
-              style={({ pressed }) => [
-                styles.primaryButton,
-                (saveState !== 'idle' || !hasAnyItem) &&
-                  styles.primaryButtonDisabled,
-                pressed && saveState === 'idle' && styles.primaryButtonPressed,
-              ]}>
-              <Text style={styles.primaryButtonText}>
-                {saveState === 'saving'
+            <Button
+              label={
+                saveState === 'saving'
                   ? '저장 중...'
                   : saveState === 'saved'
                     ? '저장 완료'
-                    : '여행 저장하기'}
-              </Text>
-            </Pressable>
+                    : '여행 저장하기'
+              }
+              accessibilityLabel="여행 저장하기"
+              onPress={onSave}
+              disabled={saveState !== 'idle' || !hasAnyItem}
+            />
           )}
           {onRestart !== undefined && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="다시 만들기"
+            <Button
+              label="다시 만들기"
+              variant={onSave === undefined ? 'primary' : 'secondary'}
               onPress={onRestart}
-              style={({ pressed }) => [
-                onSave === undefined
-                  ? styles.primaryButton
-                  : styles.secondaryButton,
-                pressed &&
-                  (onSave === undefined
-                    ? styles.primaryButtonPressed
-                    : styles.secondaryButtonPressed),
-              ]}>
-              <Text
-                style={
-                  onSave === undefined
-                    ? styles.primaryButtonText
-                    : styles.secondaryButtonText
-                }>
-                다시 만들기
-              </Text>
-            </Pressable>
+            />
           )}
         </View>
       )}
@@ -516,42 +481,5 @@ const styles = StyleSheet.create({
     ...typography.micro,
     color: colors.warn,
     textAlign: 'center',
-  },
-  primaryButton: {
-    height: 50,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // 이 화면의 주 버튼(다시 만들기)이라 CTA 패턴대로 primary(라임)를 쓴다.
-    backgroundColor: colors.primary,
-  },
-  primaryButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-  },
-  primaryButtonDisabled: {
-    opacity: 0.55,
-  },
-  primaryButtonText: {
-    ...typography.button,
-    // 라임 채우기 위 라벨은 흰색으로 통일한다(아래 DESIGN.md의
-    // Lime-Fill 규칙). 측정상 2.20:1로 WCAG AA에는 못 미치지만,
-    // 실기기에서 보고 내린 디자인 결정이다.
-    color: colors.surface,
-  },
-  secondaryButton: {
-    height: 50,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  secondaryButtonPressed: {
-    backgroundColor: colors.accentLight,
-  },
-  secondaryButtonText: {
-    ...typography.button,
-    color: colors.accent,
   },
 });

@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { Festival } from '../api/types';
+import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { DayCountPicker } from '../components/DayCountPicker';
 import { PlaceImage } from '../components/PlaceImage';
@@ -112,18 +112,11 @@ export function FestivalPlanScreen({
         {submitError !== undefined && (
           <Text style={styles.errorText}>{submitError}</Text>
         )}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: submitting === true }}
-          disabled={submitting === true}
+        <Button
+          label="이 축제로 일정 만들기"
           onPress={() => onSubmit(dayCount)}
-          style={[styles.submitButton, submitting === true && styles.disabled]}>
-          {submitting === true ? (
-            <ActivityIndicator color={colors.surface} />
-          ) : (
-            <Text style={styles.submitText}>이 축제로 일정 만들기</Text>
-          )}
-        </Pressable>
+          loading={submitting === true}
+        />
       </View>
     </View>
   );
@@ -219,20 +212,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
-  },
-  submitButton: {
-    height: 52,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-  },
-  disabled: {
-    backgroundColor: colors.disabled,
-  },
-  submitText: {
-    ...typography.button,
-    color: colors.surface,
   },
   errorText: {
     marginBottom: spacing.sm,
