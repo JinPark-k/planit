@@ -7,10 +7,11 @@ import {
   View,
 } from 'react-native';
 import { ExcludedPlace, ScheduleDay, ScheduleItem } from '../api/types';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { PlaceImage } from '../components/PlaceImage';
-import { colors, iconSize, radius, spacing, typography } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import {
   DayTab,
   filterByTab,
@@ -83,18 +84,10 @@ export function ScheduleScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="뒤로"
-          onPress={onBack}
-          style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>
-          {scheduleTitle(regionLabel, days.length)}
-        </Text>
-      </View>
+      <ScreenHeader
+        title={scheduleTitle(regionLabel, days.length)}
+        onBack={onBack}
+      />
 
       <ScrollView
         horizontal
@@ -292,30 +285,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: iconSize.md,
-    color: colors.accent,
-  },
-  headerTitle: {
-    flex: 1,
-    ...typography.heading,
-    color: colors.accent,
   },
   tabScroll: {
     flexGrow: 0,

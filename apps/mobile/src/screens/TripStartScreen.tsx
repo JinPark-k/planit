@@ -8,10 +8,11 @@ import {
   View,
 } from 'react-native';
 import { ScheduleDay } from '../api/types';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { Button } from '../components/Button';
 import { StartDatePicker } from '../components/StartDatePicker';
 import { LiveTripCapability } from '../native/types';
-import { colors, iconSize, radius, spacing, typography } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import { addDays, toDateKey } from '../trip/tripDate';
 import { dayDateLabels } from './tripStart.format';
 
@@ -85,16 +86,7 @@ export function TripStartScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="뒤로"
-          onPress={onBack}
-          style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>여행 시작하기</Text>
-      </View>
+      <ScreenHeader title="여행 시작하기" onBack={onBack} />
 
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.sectionLabel}>출발일을 골라 주세요</Text>
@@ -162,30 +154,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: iconSize.md,
-    color: colors.accent,
-  },
-  headerTitle: {
-    flex: 1,
-    ...typography.heading,
-    color: colors.accent,
   },
   body: {
     paddingHorizontal: spacing.xl,

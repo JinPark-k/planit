@@ -1,19 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { Festival } from '../api/types';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { DayCountPicker } from '../components/DayCountPicker';
 import { PlaceImage } from '../components/PlaceImage';
 import { Section } from '../components/Section';
 import { REGION_OPTIONS } from '../constants/regions';
-import { colors, iconSize, radius, spacing, typography } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import {
   festivalPeriod,
   festivalTiming,
@@ -56,18 +56,7 @@ export function FestivalPlanScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="뒤로"
-          onPress={onBack}
-          style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          축제로 여행 만들기
-        </Text>
-      </View>
+      <ScreenHeader title="축제로 여행 만들기" onBack={onBack} />
 
       <ScrollView contentContainerStyle={styles.body}>
         <PlaceImage place={festival} style={styles.image} size="hero" />
@@ -128,30 +117,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: iconSize.md,
-    color: colors.accent,
-  },
-  headerTitle: {
-    flex: 1,
-    ...typography.heading,
-    color: colors.accent,
   },
   body: {
     paddingHorizontal: spacing.xl,
