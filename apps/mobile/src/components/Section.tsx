@@ -29,8 +29,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
   },
   label: {
+    // 구획 라벨은 내용이 아니라 크롬이라 accent를 쓴다(헤더 타이틀과 같은 역할).
     ...typography.bodyStrong,
-    color: colors.text,
+    color: colors.accent,
     marginBottom: spacing.sm,
   },
 });

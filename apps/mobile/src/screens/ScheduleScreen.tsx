@@ -345,12 +345,12 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: iconSize.md,
-    color: colors.text,
+    color: colors.accent,
   },
   headerTitle: {
     flex: 1,
     ...typography.heading,
-    color: colors.text,
+    color: colors.accent,
   },
   tabScroll: {
     flexGrow: 0,

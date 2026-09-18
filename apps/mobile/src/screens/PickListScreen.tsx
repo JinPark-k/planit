@@ -301,12 +301,12 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: iconSize.md,
-    color: colors.text,
+    color: colors.accent,
   },
   headerTitle: {
     flex: 1,
     ...typography.heading,
-    color: colors.text,
+    color: colors.accent,
   },
   // 종류는 목록과 함께 스크롤되지 않고 위에 고정된다. 훑는 중에 오가는
   // 필터라 손이 닿는 자리에 있어야 한다.

@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: iconSize.md,
-    color: colors.text,
+    color: colors.accent,
   },
   body: {
     padding: spacing.xl,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     ...typography.label,
-    color: colors.textMuted,
+    color: colors.accent,
   },
   sectionValue: {
     marginTop: spacing.sm,

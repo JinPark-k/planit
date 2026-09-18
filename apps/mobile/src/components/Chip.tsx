@@ -96,8 +96,11 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   textMd: {
+    // 고르는 칩의 라벨은 크롬이라 accent를 쓴다. selected일 때는 아래
+    // textSelected가, soft일 때는 textSoft가 이 값을 덮는다 — 라임 채우기 위에
+    // 퍼플이 얹히는 일은 없다.
     ...typography.small,
-    color: colors.text,
+    color: colors.accent,
   },
   textSm: {
     ...typography.micro,

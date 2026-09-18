@@ -79,7 +79,7 @@ spacing:
 components:
   chip-outline:
     backgroundColor: "{colors.surface}"
-    textColor: "{colors.text}"
+    textColor: "{colors.accent}"
     typography: "{typography.small}"
     rounded: "{rounded.pill}"
     padding: "8px 12px"
@@ -141,7 +141,7 @@ PlanIt's signature interaction is the dot-and-connecting-line rail that runs dow
 Depth comes from tone and hairline borders, not shadows — there is no `box-shadow` or elevation anywhere in the current implementation. Corners default to a true pill for anything selectable and a moderate 12–16px radius for containers; nothing is sharp-cornered by default, but nothing is heavily rounded either. Type rides the OS system font (SF Pro on iOS, Roboto on Android) with no brand display face yet, so the interface currently reads as a trustworthy utility rather than a branded surface — a deliberate emptiness future work can fill in, not an oversight to "fix" reflexively.
 
 **Key Characteristics:**
-- Two brand colors, each with one job: lime (`primary`) for discovery/action, purple (`accent`) for the route/itinerary — never blended, never decorative
+- Two brand colors split by role, not by feature: lime (`primary`) is the fill under an action, purple (`accent`) is the route/itinerary *and* the interface chrome (titles, labels, active tab) — never blended, never decorative
 - Lime is bright enough to need dark text on its fills; a separate darker step (`primary-deep`) exists specifically for lime-as-foreground (links, active tab) where the bright fill would fail contrast
 - Flat by default: borders and tonal fills carry depth, not shadows
 - A true-pill radius (999) for every selectable/tag element, routed through one shared `Chip` component
@@ -155,10 +155,10 @@ Two brand hues on a white/near-white base: lime for discovery and primary action
 - **Fresh Lime** (`#73C322`): the brand-primary fill. Primary CTA buttons (일정 만들기, 다시 만들기), selected day/region/keyword chip fill. Always paired with dark text/icon on top — its brightness fails contrast against white text.
 - **Pressed Lime** (`#66A71B`): pressed/active state of any Fresh Lime fill. Still paired with dark text.
 - **Lime Surface** (`#F0F9E7`): a whisper-light tonal wash of Fresh Lime. Used for "recommendation info" tonal surfaces — currently the category-badge chip (`soft` variant).
-- **Trailhead Green** (`#367010`): the text-safe deep step of the lime family. Used wherever lime needs to sit as a *foreground* color against white/near-white — links, the active bottom-tab icon/label, the keyword-loading spinner, and text on Lime Surface. Fresh Lime itself is never used as text or a small icon; it exists only as a fill.
+- **Trailhead Green** (`#367010`): the text-safe deep step of the lime family. Used wherever lime needs to sit as a *foreground* color against white/near-white — links, the keyword-loading spinner, text on Lime Surface, and the Schedule screen's meal-anchor label and border. Fresh Lime itself is never used as text or a small icon; it exists only as a fill. (The active bottom tab used to be listed here; it is chrome, so it is `accent` now — and the code always did that.)
 
 ### Secondary
-- **Trail Purple** (`#6B33CC`): the route/itinerary color — literally the Trail Line. Schedule timeline dot and connecting line (line rendered at 35% opacity so it doesn't dominate a long scroll), day headers, timeline time labels, trip-total text, visit-context text, "카카오맵으로 열기" map-open text, and secondary actions like the keyword-retry link. Dark enough at full saturation to pair with white text directly — no separate deep step needed the way lime has one.
+- **Trail Purple** (`#6B33CC`): the route/itinerary color — literally the Trail Line — and the app's chrome color. As route: Schedule timeline dot and connecting line (line rendered at 35% opacity so it doesn't dominate a long scroll), day headers, timeline time labels, trip-total text, visit-context text, "카카오맵으로 열기" map-open text, the calendar's selected day (a solid purple fill with white type), and secondary actions like the keyword-retry link. As chrome: header titles and back glyphs, screen titles, section/field labels, unselected chip labels, and the active bottom tab. Dark enough at full saturation to pair with white text directly — no separate deep step needed the way lime has one, and it clears 4.5:1 on every light surface in the system (7.07:1 on white).
 - **Pressed Purple** (`#452183`): pressed/active state, reserved for a future solid-purple control (none of the current screens use a solid purple fill yet — today's purple usage is all tonal-surface or text/icon).
 - **Purple Surface** (`#F0EBF9`): tonal wash of Trail Purple. Trip-total card, visit-context card, map-open button background, and the pressed state of a timeline row (replacing the old lime-tinted press, since the row belongs to the itinerary timeline).
 
@@ -180,7 +180,11 @@ Two brand hues on a white/near-white base: lime for discovery and primary action
 ### Named Rules
 **The Lime-Fill, Purple-Text Rule.** Lime is only ever a *fill* paired with dark text (`primary`/`primary-pressed` + `text`) — never a foreground color on its own, because its brightness fails contrast as text or a small icon. Purple has no such restriction: `accent` works as fill-with-white-text or as foreground-on-white interchangeably.
 
-**The Discovery vs. Route Rule.** Lime marks discovery/action moments (making a choice, submitting, the primary CTA). Purple marks anything that is the trip's route or timeline itself (the Schedule rail, day/time labels, trip totals, "open in map"). A control doesn't get to be both — pick the one that matches what the user is doing.
+**The Discovery vs. Route Rule.** Lime is the color of *committing* — the fill under a choice being made or an action being taken (a selected chip, the primary CTA). Purple is the color of everything the app says *around* that choice: the trip's route and timeline (the Schedule rail, day/time labels, trip totals, "open in map") **and the interface chrome** (header titles and back glyphs, screen titles, section labels, unselected chip labels, the active tab). So the two are not split by screen or by feature — they are split by whether the pixel is a fill under an action (lime) or type and structure the user reads (purple).
+
+This is wider than purple's original scope, which was the route alone. It was widened deliberately: the neutrals had been carrying the chrome in a leftover blue-grey, which read as unbranded, and moving chrome onto purple is what makes the app look like itself. The boundary that still holds absolutely: **a lime fill never gets purple type on it.** `Chip`'s `selected` and `soft` variants override the purple label for exactly that reason.
+
+**The Chrome-Purple Rule.** Purple for chrome, ink for content, muted for metadata. Concretely — header/screen titles, back glyphs, section labels and unselected chip labels are `accent`; place names, body copy, card titles and dates are `text`; addresses, travel/stay times, subtitles and read-only tags are `text-muted`. When adding a new text style, decide which of those three it is before picking a token; "it looked better" is not one of the three.
 
 ## Typography
 
@@ -246,7 +250,7 @@ Borders are always a 1px line in `colors.border`, and that token is brand-tinted
 One shared component (`src/components/Chip.tsx`) renders every pill in the app — keyword picker, day-count picker, region picker, schedule day tabs, place tags, and the category badge. It was built specifically to stop four screens from drifting to four different pill paddings/radii.
 - **Shape:** always `rounded.pill`.
 - **Sizes:** `md` (8px/12px padding, `typography.small` text) and `sm` (4px/8px padding, `typography.micro` text).
-- **Structural variants:** `outline` (1px `colors.border`, `colors.surface` fill — the default) and `soft` (no border, `colors.primary-light` fill, `colors.primary-deep` text — used for read-only tags like the category badge; the text uses the deep step, not the bright fill color, because bright-on-light-tint fails contrast too).
+- **Structural variants:** `outline` (1px `colors.border`, `colors.surface` fill, `colors.accent` label — the default; the label is chrome, so it is purple) and `soft` (no border, `colors.primary-light` fill, `colors.primary-deep` text — used for read-only tags like the category badge; the text uses the deep step, not the bright fill color, because bright-on-light-tint fails contrast too). The `sm` size keeps `text-muted` instead, because at that size a chip is a read-only tag — metadata, not chrome.
 - **State modifiers, composable on either variant:** `selected` (fills `colors.primary`, **dark** `colors.text` label — not white) and `dimmed` (0.4 opacity, used when a selection cap like "max 3 keywords" is reached).
 - Every `Chip` use in the app — including the Schedule screen's day tabs — goes through this one selected-state contract (lime fill, dark text). Purple is reserved for the itinerary *visualization* itself (the timeline rail, labels, summary cards), not for chip-style pickers, even on the Schedule screen.
 - Renders as a plain `View` (not `Pressable`) when it has no `onPress`, so read-only tags don't register as buttons in the accessibility tree.
@@ -262,8 +266,8 @@ Two variants, chosen by emphasis rather than by content type — and now also by
 None exist yet — no `TextInput` appears anywhere in the current implementation. Establish this section's conventions (stroke, focus treatment, error state) when the Search tab's real keyword search input ships, rather than inventing one now.
 
 ### Navigation
-- **Bottom tab bar:** 64dp height, `colors.surface` fill, 1px top border in `colors.border`. Active/inactive state is a tint swap (`colors.primary-deep` / `colors.text-muted`) on both the Lucide line icon (24px, 1.75 stroke weight — no filled or color-emoji icons) and the `typography.micro` label beneath it. Uses the deep lime step, not the bright fill color — the active tint sits directly on white tab-bar background as a foreground color, where Fresh Lime fails contrast.
-- **Screen headers (custom-built, not the native-stack header):** `colors.surface` fill, 1px bottom border, a 36×36 circular back button with a plain "←" glyph, and a `typography.heading` title.
+- **Bottom tab bar:** 64dp height, `colors.surface` fill, 1px top border in `colors.border`. Active/inactive state is a tint swap (`colors.accent` / `colors.text-muted`) on both the Lucide line icon (24px, 1.75 stroke weight — no filled or color-emoji icons) and the `typography.micro` label beneath it. The active tab is chrome, so it takes purple (**The Chrome-Purple Rule**); note this document previously described the active tint as `primary-deep` while the code had always used `accent` — the code was right and the text has been corrected.
+- **Screen headers (custom-built, not the native-stack header):** `colors.surface` fill, 1px bottom border, a 36×36 circular back button with a plain "←" glyph, and a `typography.heading` title. Both the glyph and the title are `colors.accent`. Place Detail's floating hero back button is the same glyph in the same color, over a `rgba(255,255,255,0.9)` disc so it holds against a photo.
 - **Native-idiom note:** because the platform is recorded as adaptive but the current implementation is one shared React Native chrome, none of this navigation yet uses SF Symbols/Material iconography or the Material navigation-bar/rail pattern described in `ios.md`/`android.md`. Treat that divergence as a known gap, not as this system's current voice.
 
 ## Do's and Don'ts
@@ -272,7 +276,8 @@ None exist yet — no `TextInput` appears anywhere in the current implementation
 - **Do** route every pill-shaped element (selection chips, day tabs, tags, category badges) through the shared `Chip` component. Never hand-roll a pill in a screen's `StyleSheet` — that drift is exactly why `Chip` exists.
 - **Do** pair every Fresh/Pressed Lime fill with dark (`colors.text`) content, never white or the bright lime itself as text (**The Lime-Fill, Purple-Text Rule**).
 - **Do** use `primary-deep`, not `primary`, whenever lime needs to be a foreground color on a light background (links, active tab, icons/spinners) — the bright fill color fails contrast there.
-- **Do** reserve purple for the trip's route/itinerary — the Schedule timeline, its labels and summary cards, and route-related actions like opening the map (**The Discovery vs. Route Rule**). Reserve lime for discovery/action moments — picking, selecting, submitting.
+- **Do** reserve purple for the trip's route/itinerary *and* the interface chrome — the Schedule timeline and its labels, summary cards, route actions like opening the map, plus header/screen titles, section labels and unselected chip labels (**The Discovery vs. Route Rule**, **The Chrome-Purple Rule**). Reserve lime for the fill under an action — picking, selecting, submitting.
+- **Do** sort every new text style into chrome / content / metadata before choosing a token, and keep content on `text` and metadata on `text-muted` — turning body copy or a place name purple is what tips this palette from branded into noisy.
 - **Do** use a tonal fill (`primary-light` or `accent-light`), not a shadow, to raise emphasis on a surface. Zero `box-shadow`/elevation usage exists today; keep it that way (**The No-Shadow Rule**).
 - **Do** reach for `rounded.pill` for anything that must always resolve to a true half-circle regardless of content height (**The True Pill Rule**), and reserve `lg`/`md`/`sm` for fixed-shape corners.
 - **Do** pick text styles by role (`typography.body`, `.label`, …) rather than a raw font size (**The Role, Not Size Rule**).
