@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { fetchRecommendations } from '../api/recommend';
 import { Place, PlaceCategory } from '../api/types';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { Button } from '../components/Button';
 import { CategoryPicker } from '../components/CategoryPicker';
 import { Chip } from '../components/Chip';
@@ -17,7 +18,7 @@ import { PlaceImage } from '../components/PlaceImage';
 import { CATEGORY_LABELS } from '../constants/categories';
 import { REGION_OPTIONS } from '../constants/regions';
 import { usePickSession } from '../navigation/pickSession';
-import { colors, iconSize, radius, spacing, typography } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import { RegionCode } from '../api/types';
 import { pickCountLabel, pickGuide } from './pickList.format';
 
@@ -96,18 +97,7 @@ export function PickListScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="조건 바꾸기"
-          onPress={onBack}
-          style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {summary}
-        </Text>
-      </View>
+      <ScreenHeader title={summary} onBack={onBack} backLabel="조건 바꾸기" />
 
       <View style={styles.categoryRow}>
         <CategoryPicker value={category} onChange={setCategory} />
@@ -274,30 +264,6 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xxl,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: iconSize.md,
-    color: colors.accent,
-  },
-  headerTitle: {
-    flex: 1,
-    ...typography.heading,
-    color: colors.accent,
   },
   // 종류는 목록과 함께 스크롤되지 않고 위에 고정된다. 훑는 중에 오가는
   // 필터라 손이 닿는 자리에 있어야 한다.
