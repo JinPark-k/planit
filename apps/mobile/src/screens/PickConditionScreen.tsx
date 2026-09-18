@@ -49,7 +49,11 @@ export function PickConditionScreen({ onNext }: { onNext: () => void }) {
           disabled={region === null}
           onPress={onNext}
           style={[styles.button, region === null && styles.buttonDisabled]}>
-          <Text style={styles.buttonText}>
+          <Text
+            style={[
+              styles.buttonText,
+              region === null && styles.buttonTextDisabled,
+            ]}>
             {region === null ? '지역을 골라 주세요' : '장소 보기'}
           </Text>
         </Pressable>
@@ -96,5 +100,10 @@ const styles = StyleSheet.create({
   buttonText: {
     ...typography.button,
     color: colors.surface,
+  },
+  buttonTextDisabled: {
+    // 비활성 채우기(disabled)는 옅은 라벤더라 활성 라임과 명도가 달라,
+    // 라벨 색을 따로 잡는다. 활성 라벨을 바꿔도 여기는 따라오지 않는다.
+    color: colors.text,
   },
 });

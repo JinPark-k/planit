@@ -533,8 +533,10 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     ...typography.button,
-    // primary가 밝은 라임이라 흰 텍스트는 대비를 통과하지 못한다.
-    color: colors.text,
+    // 라임 채우기 위 라벨은 흰색으로 통일한다(아래 DESIGN.md의
+    // Lime-Fill 규칙). 측정상 2.20:1로 WCAG AA에는 못 미치지만,
+    // 실기기에서 보고 내린 디자인 결정이다.
+    color: colors.surface,
   },
   secondaryButton: {
     height: 50,

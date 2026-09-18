@@ -115,8 +115,8 @@ const styles = StyleSheet.create({
     color: colors.primaryDeep,
   },
   textSelected: {
-    // primary(Fresh Lime)는 밝아서 흰 텍스트가 대비를 통과하지 못한다.
-    // 채우기 위에는 항상 어두운 텍스트를 얹는다.
-    color: colors.text,
+    // 라임 채우기 위 라벨은 흰색으로 통일한다(DESIGN.md의 Lime-Fill 규칙).
+    // 버튼과 같은 처리라 고른 칩과 누르는 버튼이 한 벌로 보인다.
+    color: colors.surface,
   },
 });

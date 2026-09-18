@@ -204,7 +204,8 @@ const styles = StyleSheet.create({
   },
   retryText: {
     ...typography.smallStrong,
-    color: colors.text,
+    // 라임 채우기 위 라벨(Lime-Fill 규칙).
+    color: colors.surface,
   },
   list: {
     padding: spacing.lg,
