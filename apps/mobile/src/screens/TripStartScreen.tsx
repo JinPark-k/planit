@@ -191,12 +191,12 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: iconSize.md,
-    color: colors.text,
+    color: colors.accent,
   },
   headerTitle: {
     flex: 1,
     ...typography.heading,
-    color: colors.text,
+    color: colors.accent,
   },
   body: {
     paddingHorizontal: spacing.xl,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     marginBottom: spacing.sm,
     ...typography.bodyStrong,
-    color: colors.text,
+    color: colors.accent,
   },
   previewLabel: {
     marginTop: spacing.xxl,

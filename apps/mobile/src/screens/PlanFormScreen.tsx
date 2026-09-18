@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.display,
-    color: colors.text,
+    color: colors.accent,
   },
   subtitle: {
     marginTop: spacing.sm,
