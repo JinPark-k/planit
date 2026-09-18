@@ -9,6 +9,18 @@
  *   - primaryDeep(Trailhead Green): 흰 배경 위 전경색 전용(링크, 활성 탭).
  * 퍼플(accent)은 채도를 유지한 채로도 흰 텍스트 대비가 넉넉히 나와서
  * 라임처럼 나눌 필요가 없다 — 채우기와 전경 모두 accent 하나로 충분하다.
+ *
+ * ## 중립색은 accent의 색조(262°)를 따른다
+ *
+ * 중립색 6개는 원래 색조가 218~228°(파란끼)였다. 리디자인 전 primary였던
+ * 파란색 #2F6FED에 맞춰 고른 값인데, 브랜드가 라임+퍼플로 옮겨간 뒤에도
+ * 중립 램프만 그대로 남아 화면 대부분이 브랜드와 겉돌았다(중립색 사용처가
+ * text 39곳, textMuted 28곳, border 22곳, background 13곳이라 체감이 크다).
+ *
+ * 그래서 **명도(L)를 고정하고 색조만 262°로 옮겼다.** 명도를 건드리지 않았기
+ * 때문에 대비는 전부 유지되거나 좋아진다(text 16.51→17.18,
+ * textMuted 4.83→5.26, 라임 채우기 위 어두운 글자 7.51→7.82).
+ * 중립색을 새로 고를 때도 이 규칙을 지킨다 — 색조는 262°, 명도는 역할이 정한다.
  */
 export const colors = {
   primary: '#73C322',
@@ -26,11 +38,16 @@ export const colors = {
   warn: '#A84C18',
   /** warn의 연한 배경. 경고 문구 카드에 쓴다(primaryLight와 같은 역할). */
   warnLight: '#FDF1E3',
-  text: '#1B1F27',
-  textMuted: '#6B7280',
+  text: '#1F182A',
+  textMuted: '#726784',
   border: '#E3E6EC',
   surface: '#FFFFFF',
-  background: '#F6F7FB',
-  placeholder: '#DDE1E8',
-  disabled: '#B8BCC4',
+  background: '#F8F6FB',
+  placeholder: '#E1DCE9',
+  /**
+   * 비활성 버튼 채우기. 연보라 계열인 게 핵심이다 — 활성 라임(#73C322, 색조 90°)과
+   * 색조가 172° 떨어져 있어 "비활성"으로 읽힌다. 같은 연두 계열의 흐린 회색을 쓰면
+   * 비활성이 아니라 "그냥 연한 라임 버튼"으로 보여 눌러보려는 사용자가 생긴다.
+   */
+  disabled: '#C4BAD6',
 } as const;

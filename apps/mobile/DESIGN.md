@@ -10,13 +10,13 @@ colors:
   accent-pressed: "#452183"
   accent-light: "#F0EBF9"
   warn: "#A84C18"
-  text: "#1B1F27"
-  text-muted: "#6B7280"
+  text: "#1F182A"
+  text-muted: "#726784"
   border: "#E3E6EC"
   surface: "#FFFFFF"
-  background: "#F6F7FB"
-  placeholder: "#DDE1E8"
-  disabled: "#B8BCC4"
+  background: "#F8F6FB"
+  placeholder: "#E1DCE9"
+  disabled: "#C4BAD6"
 typography:
   display:
     fontFamily: "System (SF Pro Text on iOS, Roboto on Android)"
@@ -163,13 +163,16 @@ Two brand hues on a white/near-white base: lime for discovery and primary action
 - **Purple Surface** (`#F0EBF9`): tonal wash of Trail Purple. Trip-total card, visit-context card, map-open button background, and the pressed state of a timeline row (replacing the old lime-tinted press, since the row belongs to the itinerary timeline).
 
 ### Neutral
-- **Cloud White** (`#FFFFFF`) — `surface`: card, header, footer, and tab-bar backgrounds.
-- **Fog Background** (`#F6F7FB`) — `background`: base screen background, one step darker than surface so cards visibly sit on top of it without a shadow.
+
+**The neutrals carry the accent's hue (262°), not their own.** They used to sit at 218–228° — a blue bias chosen for the pre-redesign blue primary `#2F6FED` — and that hue was never migrated when the brand moved to lime and purple. Because the neutrals are the most-used tokens in the app (`text` 39 sites, `text-muted` 28, `border` 22, `background` 13), that orphaned blue was what made most screens read as generic grey rather than branded. They were re-hued to 262° **with lightness held fixed**, so every contrast ratio was preserved or improved (`text` 16.51→17.18 on white, `text-muted` 4.83→5.26, dark-on-lime 7.51→7.82). When adding or adjusting a neutral, keep that split: hue is 262°, and the role picks the lightness.
+
+- **Cloud White** (`#FFFFFF`) — `surface`: card, header, footer, and tab-bar backgrounds. The one neutral with no hue to carry.
+- **Fog Background** (`#F8F6FB`) — `background`: base screen background, one step darker than surface so cards visibly sit on top of it without a shadow.
 - **Hairline Border** (`#E3E6EC`) — `border`: 1px dividers and card outlines; the system's only depth cue besides tonal fill.
-- **Ink Text** (`#1B1F27`) — `text`: primary reading color for titles and body content, and the required dark text on every Fresh/Pressed Lime fill.
-- **Muted Slate** (`#6B7280`) — `text-muted`: secondary/meta text (timestamps, captions, subtitles).
-- **Image Placeholder** (`#DDE1E8`) — `placeholder`: empty-image fill on place thumbnails and hero images.
-- **Disabled Gray** (`#B8BCC4`) — `disabled`: disabled primary-button fill (a color swap, not an opacity trick).
+- **Ink Text** (`#1F182A`) — `text`: primary reading color for titles and body content, and the required dark text on every Fresh/Pressed Lime fill.
+- **Muted Slate** (`#726784`) — `text-muted`: secondary/meta text (timestamps, captions, subtitles).
+- **Image Placeholder** (`#E1DCE9`) — `placeholder`: empty-image fill on place thumbnails and hero images.
+- **Disabled Lavender** (`#C4BAD6`) — `disabled`: disabled primary-button fill (a color swap, not an opacity trick). Being *lavender* rather than a neutral grey is the point: it sits 172° from the active Fresh Lime, so the disabled state reads as a different color instead of a faded one. A lime-tinted grey was rejected for exactly that reason — only ~10° from the active fill, it reads as "a pale lime button" and invites taps.
 
 ### Functional
 - **Burnt Amber Warn** (`#A84C18`) — `warn`: error/failure text only (keyword-load failure, schedule-generation failure). No warning backgrounds or icons use it yet — text color only. Because this token is *only* ever text, contrast is the constraint that picks its value: the previous Warm Amber (`#F2A65A`) measured 2.02:1 against white, far under the 4.5:1 floor for body text, so it was darkened at the same hue to reach 5.66:1 on white and 5.08:1 on `warnLight`. Read it as "amber, dark enough to be text" — if a future warning *fill* or icon is needed, add a separate lighter step rather than brightening this one back up.
