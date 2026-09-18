@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { ScheduleDay } from '../api/types';
+import { Card } from '../components/Card';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Button } from '../components/Button';
 import { StartDatePicker } from '../components/StartDatePicker';
@@ -100,14 +101,14 @@ export function TripStartScreen({
         <Text style={[styles.sectionLabel, styles.previewLabel]}>
           {regionLabel} 일정 미리보기
         </Text>
-        <View style={styles.previewCard}>
+        <Card style={styles.previewCard}>
           {labels.map(({ day, label }) => (
             <View key={day} style={styles.previewRow}>
               <Text style={styles.previewDay}>{day}일차</Text>
               <Text style={styles.previewDate}>{label}</Text>
             </View>
           ))}
-        </View>
+        </Card>
 
         <Pressable
           accessibilityRole="button"
@@ -170,10 +171,6 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     padding: spacing.md,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
     gap: spacing.sm,
   },
   previewRow: {

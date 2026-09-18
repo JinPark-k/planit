@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import type { SavedTrip } from '../storage/savedTrips';
+import { Card } from '../components/Card';
 import { colors, radius, spacing, typography } from '../theme';
 
 interface Props {
@@ -96,11 +97,10 @@ function SavedTripCard({
   const remaining = Math.max(0, places.length - 3);
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Card
       accessibilityLabel={`${trip.regionLabel} 저장 여행 열기`}
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
+      style={styles.card}>
       <View style={styles.cardTop}>
         <View style={styles.cardTitleRow}>
           <Text style={styles.cardTitle}>{trip.regionLabel} 여행</Text>
@@ -126,7 +126,7 @@ function SavedTripCard({
       <Text style={styles.savedAt}>
         {formatSavedAt(trip.savedAt)} · 총 {places.length}곳
       </Text>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -221,13 +221,6 @@ const styles = StyleSheet.create({
   },
   card: {
     padding: spacing.lg,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardPressed: {
-    backgroundColor: colors.accentLight,
   },
   cardTop: {
     flexDirection: 'row',

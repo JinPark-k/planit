@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { ExcludedPlace, ScheduleDay, ScheduleItem } from '../api/types';
+import { Card } from '../components/Card';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
@@ -242,15 +242,10 @@ function TimelineRow({
         {!isLast && <View style={styles.line} />}
       </View>
 
-      <Pressable
-        accessibilityRole="button"
+      <Card
         accessibilityLabel={`${item.place.name} 상세 보기`}
         onPress={onPress}
-        style={({ pressed }) => [
-          styles.rowBody,
-          anchorLabel !== undefined && styles.rowAnchor,
-          pressed && styles.rowPressed,
-        ]}>
+        style={[styles.rowBody, anchorLabel !== undefined && styles.rowAnchor]}>
         <View style={styles.rowText}>
           <Text style={styles.time}>{item.startTime}</Text>
           <Text style={styles.placeName} numberOfLines={2}>
@@ -266,7 +261,7 @@ function TimelineRow({
         </View>
 
         <PlaceImage place={item.place} style={styles.thumb} size="thumb" />
-      </Pressable>
+      </Card>
     </View>
   );
 }
@@ -373,12 +368,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   rowAnchor: {
     borderColor: colors.primaryDeep,
@@ -388,11 +379,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     ...typography.smallStrong,
     color: colors.primaryDeep,
-  },
-  rowPressed: {
-    // 카드가 흰색이라 opacity로는 눌림이 거의 안 보인다. 배경을 바꿔 준다.
-    // 이 카드도 타임라인의 일부라 라임이 아니라 accentLight를 쓴다.
-    backgroundColor: colors.accentLight,
   },
   rowText: {
     flex: 1,
