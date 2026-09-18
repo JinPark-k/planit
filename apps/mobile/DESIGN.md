@@ -12,7 +12,7 @@ colors:
   warn: "#A84C18"
   text: "#1F182A"
   text-muted: "#726784"
-  border: "#E3E6EC"
+  border: "#CCBFE3"
   surface: "#FFFFFF"
   background: "#F8F6FB"
   placeholder: "#E1DCE9"
@@ -168,7 +168,7 @@ Two brand hues on a white/near-white base: lime for discovery and primary action
 
 - **Cloud White** (`#FFFFFF`) — `surface`: card, header, footer, and tab-bar backgrounds. The one neutral with no hue to carry.
 - **Fog Background** (`#F8F6FB`) — `background`: base screen background, one step darker than surface so cards visibly sit on top of it without a shadow.
-- **Hairline Border** (`#E3E6EC`) — `border`: 1px dividers and card outlines; the system's only depth cue besides tonal fill.
+- **Trail Hairline** (`#CCBFE3`) — `border`: 1px dividers and card outlines; the system's only depth cue besides tonal fill. The one neutral whose lightness moved as well as its hue: the previous grey measured 1.25:1 on a white card, meaning the app's only depth cue was effectively invisible, so this step was raised to 1.73:1. It is a brand-tinted line by design, not a neutral hairline.
 - **Ink Text** (`#1F182A`) — `text`: primary reading color for titles and body content, and the required dark text on every Fresh/Pressed Lime fill.
 - **Muted Slate** (`#726784`) — `text-muted`: secondary/meta text (timestamps, captions, subtitles).
 - **Image Placeholder** (`#E1DCE9`) — `placeholder`: empty-image fill on place thumbnails and hero images.
@@ -227,7 +227,7 @@ Four-step radius scale, chosen by role rather than by component:
 - **md (12px):** secondary/tonal surfaces and thumbnails — tonal cards, image thumbnails, category-badge context.
 - **sm (8px):** the one small, low-emphasis control observed (the keyword-retry button).
 
-Borders are always a 1px hairline in `colors.border`; nothing in the system uses a thicker or colored border.
+Borders are always a 1px line in `colors.border`, and that token is brand-tinted (`#CCBFE3`) rather than a neutral grey — so a default border in this system carries color. Nothing uses a *thicker* border, and no component picks its own border color: the two exceptions that set a border color directly are both deliberate emphasis, not new defaults — the Schedule screen's meal-anchor row (`1.5px` `primary-deep`) and the secondary-button outline (`accent`).
 
 ### Named Rules
 **The True Pill Rule.** Never hand-pick a radius for a pill-shaped element — use `rounded.pill` so height changes never break the shape.

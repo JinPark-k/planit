@@ -40,7 +40,15 @@ export const colors = {
   warnLight: '#FDF1E3',
   text: '#1F182A',
   textMuted: '#726784',
-  border: '#E3E6EC',
+  /**
+   * 카드·헤더·푸터·칩의 1px 테두리. 중립색 중 유일하게 명도까지 올렸다.
+   *
+   * 이전 값(#E3E6EC)은 흰 카드 위 1.25:1로 사실상 보이지 않아서, 앱의 유일한
+   * 깊이 단서인 테두리가 제 역할을 못 했다. 색조를 262°로 맞추면서 채도와
+   * 명도도 올려 1.73:1로 실제로 보이는 선이 되게 했다. 브랜드 톤을 띤 선이
+   * 기본이고, 예전처럼 "테두리는 항상 무채색 hairline"이 아니다.
+   */
+  border: '#CCBFE3',
   surface: '#FFFFFF',
   background: '#F8F6FB',
   placeholder: '#E1DCE9',
