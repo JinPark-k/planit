@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { fetchFestivals } from '../api/festivals';
 import { Festival } from '../api/types';
+import { Card } from '../components/Card';
 import { Chip } from '../components/Chip';
 import { PlaceImage } from '../components/PlaceImage';
 import { REGION_OPTIONS } from '../constants/regions';
@@ -141,11 +142,10 @@ function FestivalCard({
   const timing = festivalTiming(festival, today);
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Card
       accessibilityLabel={`${festival.name}, ${regionLabel(festival)}, ${festivalPeriod(festival)}`}
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
+      style={styles.card}>
       <PlaceImage place={festival} style={styles.image} size="hero" />
 
       <View style={styles.cardBody}>
@@ -175,7 +175,7 @@ function FestivalCard({
           </Text>
         )}
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -206,14 +206,7 @@ const styles = StyleSheet.create({
   },
   card: {
     marginTop: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
     overflow: 'hidden',
-  },
-  cardPressed: {
-    borderColor: colors.primaryDeep,
   },
   image: {
     width: '100%',

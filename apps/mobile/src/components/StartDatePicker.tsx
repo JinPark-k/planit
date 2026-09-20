@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { fromDateKey } from '../trip/tripDate';
+import { Card } from './Card';
 import { colors, iconSize, radius, spacing, typography } from '../theme';
 import { buildMonthGrid, monthLabel, shiftMonth } from '../screens/tripStart.format';
 
@@ -41,7 +42,7 @@ export function StartDatePicker({ value, onChange, minDateKey, maxDateKey }: Pro
   };
 
   return (
-    <View style={styles.container}>
+    <Card style={styles.container}>
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
@@ -100,7 +101,7 @@ export function StartDatePicker({ value, onChange, minDateKey, maxDateKey }: Pro
           ),
         )}
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -108,10 +109,6 @@ const CELL_SIZE = 40;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
   },
   header: {

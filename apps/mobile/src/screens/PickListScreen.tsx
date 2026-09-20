@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import { fetchRecommendations } from '../api/recommend';
 import { Place, PlaceCategory } from '../api/types';
+import { Card } from '../components/Card';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Button } from '../components/Button';
 import { CategoryPicker } from '../components/CategoryPicker';
@@ -212,16 +212,11 @@ function PlaceRow({
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: picked }}
+    <Card
       accessibilityLabel={`${place.name} ${picked ? '담기 취소' : '담기'}`}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.row,
-        picked && styles.rowPicked,
-        pressed && styles.rowPressed,
-      ]}>
+      selected={picked}
+      style={styles.row}>
       <PlaceImage place={place} style={styles.thumb} size="thumb" />
 
       <View style={styles.rowText}>
@@ -250,7 +245,7 @@ function PlaceRow({
           {picked ? '✓' : '+'}
         </Text>
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -308,16 +303,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginTop: spacing.md,
     padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  rowPicked: {
-    borderColor: colors.primary,
-  },
-  rowPressed: {
-    backgroundColor: colors.primaryLight,
   },
   thumb: {
     width: 64,

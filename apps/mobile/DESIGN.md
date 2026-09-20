@@ -144,7 +144,7 @@ Depth comes from tone and hairline borders, not shadows — there is no `box-sha
 - Two brand colors split by role, not by feature: lime (`primary`) is the fill under an action, purple (`accent`) is the route/itinerary *and* the interface chrome (titles, labels, active tab) — never blended, never decorative
 - Lime is a fill only, always under a white label (a deliberate contrast trade — see **The Lime-Fill Rule**); a separate darker step (`primary-deep`) exists for lime-as-foreground (links, spinners) where the bright fill would fail
 - Flat by default: borders and tonal fills carry depth, not shadows
-- Three shared primitives carry the repeated elements: `Chip` for every pill, `Button` for every full-width CTA, `ScreenHeader` for every back-button bar — screens pass intent, not styling
+- Four shared primitives carry the repeated elements: `Chip` for every pill, `Button` for every full-width CTA, `ScreenHeader` for every back-button bar, `Card` for every bordered surface — screens pass intent, not styling
 - System font only — no custom typeface committed yet
 
 ## Colors
@@ -222,7 +222,7 @@ The bottom tab bar is fixed at 64dp (raised from React Navigation's 49dp default
 
 ## Elevation & Depth
 
-Flat by design — there is no `shadow`/`elevation` usage anywhere in the codebase. Depth is conveyed two ways instead: a 1px hairline border (`colors.border`) around cards and between chrome regions, and a tonal fill (`colors.primary-light`) that marks an emphasized or "raised" surface (the soft chip variant, the visit-context card, the trip-total card, the "open in map" button, a pressed timeline row) in place of a shadow or scale change.
+Flat by design — there is no `shadow`/`elevation` usage anywhere in the codebase. Depth is conveyed two ways instead: a 1px hairline border (`colors.border`) around cards and between chrome regions, and a tonal fill that marks an emphasized or "raised" surface in place of a shadow or scale change — `colors.primary-light` for discovery content (the soft chip variant), `colors.accent-light` for route content (the visit-context card, the trip-total card, the "open in map" button) and for any pressed card.
 
 ### Named Rules
 **The No-Shadow Rule.** Depth is a border or a tint, never a `box-shadow`. If a new component reaches for elevation, translate it to a tonal fill or a border first.
@@ -267,10 +267,14 @@ One shared component (`src/components/Chip.tsx`) renders every pill in the app �
 - Renders as a plain `View` (not `Pressable`) when it has no `onPress`, so read-only tags don't register as buttons in the accessibility tree.
 
 ### Cards / Containers
-Two variants, chosen by emphasis rather than by content type — and now also by which brand color owns the content:
-- **Bordered neutral:** `colors.surface` fill, 1px `colors.border`, `rounded.lg` — the schedule timeline row.
-- **Tonal, lime family:** `colors.primary-light` fill, `colors.primary-deep` text, no border, `rounded.md` — recommendation/discovery info (currently just the category badge chip).
-- **Tonal, purple family:** `colors.accent-light` fill, `colors.accent` text, no border, `rounded.md` — route/itinerary summaries: the visit-context card, the trip-total card, and the "카카오맵으로 열기" map button.
+
+The bordered card shell lives in one component, `src/components/Card.tsx`. It owns the shell (`colors.surface` fill, 1px `colors.border`, `rounded.lg`) and the press response; callers keep padding and layout, because those genuinely differ by content — the festival card has no padding at all so its image can run edge to edge, while the pick row and timeline row are horizontal with a gap. `onPress` omitted renders a plain `View`, so a display-only card is not a button in the accessibility tree (the same rule `Chip` follows).
+
+- **Pressed:** a tonal `colors.accent-light` fill, on every pressable card. This used to be three different things — the festival card darkened its border to `primary-deep`, the pick row filled with `primary-light`, the timeline row and trip card filled with `accent-light`. They were converged on the purple tonal: it was the plurality, and a tonal fill reads as pressed more clearly than a border going one shade darker.
+- **Selected:** `selected` marks a card the user picks rather than navigates through (only the 골라 담기 place row today). It makes the card a `checkbox` in the accessibility tree and turns its border `colors.primary`. Accessibility meaning and appearance sit on one prop so neither can be set without the other.
+- **Tonal, lime family:** `colors.primary-light` fill, `colors.primary-deep` text, no border, `rounded.md` — recommendation/discovery info (currently just the category badge chip). Not a `Card`; these are tonal surfaces, not bordered ones.
+- **Tonal, purple family:** `colors.accent-light` fill, `colors.accent` text, no border, `rounded.md` — route/itinerary summaries: the visit-context card, the trip-total card, and the "카카오맵으로 열기" map button. Also not a `Card`.
+- **Content-specific border emphasis** goes through `style`, not a variant — the Schedule screen's meal-anchor row (1.5px `primary-deep`) marks a meaning, not a selection, so it stays with the screen that understands it. `Card` layers the press response *after* `style`, so a card with an overridden border still shows that it was pressed.
 - **Shadow strategy:** none — see Elevation & Depth.
 
 ### Inputs / Fields
