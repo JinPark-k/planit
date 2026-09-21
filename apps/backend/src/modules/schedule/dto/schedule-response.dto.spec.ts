@@ -85,7 +85,8 @@ describe('toScheduleResponse', () => {
 
   it('core의 Place에 없는 표시 필드를 row에서 다시 붙인다', () => {
     const [result] = toScheduleResponse([day()], rowById);
-    expect(result.items[0].place.imageUrl).toBe('http://img/1.jpg');
+    // toPlaceResponse를 거치며 http가 https로 승격된다 (place-response.dto.spec.ts 참고).
+    expect(result.items[0].place.imageUrl).toBe('https://img/1.jpg');
     expect(result.items[0].place.address).toBe('주소-용두암');
   });
 

@@ -38,7 +38,8 @@ describe('toPlaceResponse', () => {
     // core의 Place에는 이 필드들이 없어서 화면을 못 그린다. 이 매퍼가 존재하는 이유다.
     const dto = toPlaceResponse(row());
     expect(dto.address).toBe('제주특별자치도 제주시 탑동로 119 (삼도이동)');
-    expect(dto.imageUrl).toBe('http://tong.visitkorea.or.kr/img.jpg');
+    // http로 저장된 원본이 https로 승격된다 (아래 imageUrl 스킴 describe 참고).
+    expect(dto.imageUrl).toBe('https://tong.visitkorea.or.kr/img.jpg');
     expect(dto.tel).toBe('064-000-0000');
   });
 
@@ -80,5 +81,35 @@ describe('toPlaceResponse', () => {
     expect(dto).not.toHaveProperty('rating');
     expect(dto).not.toHaveProperty('raw_response');
     expect(dto).not.toHaveProperty('region_code');
+  });
+
+  describe('imageUrl 스킴', () => {
+    // tong.visitkorea.or.kr 단일 호스트에 http/https가 섞여 있고, 같은 URL을
+    // https로 바꿔도 동일한 바이트가 내려온다(호스트가 https를 지원). iOS ATS와
+    // Android cleartext 차단 때문에 http 이미지는 화면에서 사진 없음으로
+    // 떨어져서, 응답 단계에서 http만 https로 올린다.
+    it('http를 https로 올린다', () => {
+      const dto = toPlaceResponse(
+        row({ image_url: 'http://tong.visitkorea.or.kr/img.jpg' }),
+      );
+      expect(dto.imageUrl).toBe('https://tong.visitkorea.or.kr/img.jpg');
+    });
+
+    it('이미 https이면 그대로 둔다', () => {
+      const dto = toPlaceResponse(
+        row({ image_url: 'https://tong.visitkorea.or.kr/img.jpg' }),
+      );
+      expect(dto.imageUrl).toBe('https://tong.visitkorea.or.kr/img.jpg');
+    });
+
+    it('값이 없으면(undefined) 그대로 둔다', () => {
+      expect(
+        toPlaceResponse(row({ image_url: null })).imageUrl,
+      ).toBeUndefined();
+    });
+
+    it('빈 문자열이면 그대로 둔다 (optional() 동작 유지)', () => {
+      expect(toPlaceResponse(row({ image_url: '' })).imageUrl).toBeUndefined();
+    });
   });
 });
